@@ -1,36 +1,20 @@
-// src/cycle/cycle.model.ts
-import { Table, Column, Model, DataType, HasOne } from 'sequelize-typescript';
-import { CycleScore } from './cycle_score.model';
+// cycle.model.ts
+import { Table, Column, Model, DataType, HasOne, HasMany, ForeignKey } from 'sequelize-typescript';
+import { WhoopCycleScore } from './cycle_score.model';
+import { WhoopSleep } from './sleep.model';
 
 @Table({ tableName: 'whoop_cycle', timestamps: false })
-export class Cycle extends Model<Cycle> {
-  @Column({ type: DataType.BIGINT, primaryKey: true })
-  declare id: number;
+export class WhoopCycle extends Model<WhoopCycle> {
+  @Column({ type: DataType.BIGINT, primaryKey: true }) declare id: number;
+  @Column(DataType.BIGINT) user_id: number;
+  @Column(DataType.DATE) created_at: Date;
+  @Column(DataType.DATE) updated_at: Date;
+  @Column(DataType.DATE) start: Date;
+  @Column(DataType.DATE) end?: Date;
+  @Column(DataType.STRING(6)) timezone_offset: string;
+  @Column(DataType.ENUM('SCORED','PENDING_SCORE','UNSCORABLE')) score_state: string;
 
-  @Column({ type: DataType.BIGINT, allowNull: false })
-  user_id: number;
-
-  @Column({ type: DataType.DATE, allowNull: false })
-  created_at: Date;
-
-  @Column({ type: DataType.DATE, allowNull: false })
-  updated_at: Date;
-
-  @Column({ type: DataType.DATE, allowNull: false })
-  start: Date;
-
-  @Column({ type: DataType.DATE, allowNull: true })
-  end?: Date;
-
-  @Column({ type: DataType.STRING(6), allowNull: false })
-  timezone_offset: string;
-
-  @Column({
-    type: DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'),
-    allowNull: false,
-  })
-  score_state: 'SCORED' | 'PENDING_SCORE' | 'UNSCORABLE';
-
-  @HasOne(() => CycleScore, { foreignKey: 'cycle_id' })
-  score?: CycleScore;
+  @HasOne(() => WhoopCycleScore) score?: WhoopCycleScore;
+  @HasMany(() => WhoopSleep) sleeps?: WhoopSleep[];
 }
+

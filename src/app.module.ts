@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { CycleScore } from './db/whoop/cycle_score.model';
-import { Cycle } from './db/whoop/cycle.model';
+import { WhoopCycle, WhoopCycleScore, WhoopWorkout, WhoopWorkoutScore, WhoopWorkoutZoneDurations, WhoopRecovery, WhoopRecoveryScore, WhoopSleep, WhoopSleepScore, WhoopSleepStageSummary, WhoopSleepNeeded } from './db/whoop';
 
 // Validate required environment variables
 const requiredEnvVars = ['POSTGRES_HOST', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB'];
@@ -25,7 +24,7 @@ for (const envVar of requiredEnvVars) {
       autoLoadModels: true,
       synchronize: true, // ⚠️ only in dev
     }),
-    SequelizeModule.forFeature([Cycle, CycleScore]),
+    SequelizeModule.forFeature([WhoopCycle, WhoopCycleScore, WhoopWorkout, WhoopWorkoutScore, WhoopWorkoutZoneDurations, WhoopRecovery, WhoopRecoveryScore, WhoopSleep, WhoopSleepScore, WhoopSleepStageSummary, WhoopSleepNeeded]),
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,0 +1,11 @@
+export { WhoopCycleScore } from './cycle_score.model';
+export { WhoopWorkoutZoneDurations } from './workout_zone_durations.model';
+export { WhoopWorkoutScore } from './workout_score.model';
+export { WhoopWorkout } from './workout.model';
+export { WhoopRecoveryScore } from './recovery_score.model';
+export { WhoopRecovery } from './recovery.model';
+export { WhoopSleepStageSummary } from './sleep_stage_summary.model';
+export { WhoopSleepNeeded } from './sleep_needed.model';
+export { WhoopSleepScore } from './sleep_score.model';
+export { WhoopSleep } from './sleep.model';
+export { WhoopCycle } from './cycle.model';
