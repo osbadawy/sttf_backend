@@ -1,11 +1,17 @@
-import { Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
-import { WhoopRecovery } from "./recovery.model";
-
+import {
+  Column,
+  DataType,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript';
+import { WhoopRecovery } from './recovery.model';
 
 @Table({ tableName: 'whoop_recovery_score', timestamps: false })
 export class WhoopRecoveryScore extends Model<WhoopRecoveryScore> {
   @ForeignKey(() => WhoopRecovery)
-  @Column({ type: DataType.BIGINT, primaryKey: true }) recovery_id: number;
+  @Column({ type: DataType.BIGINT, primaryKey: true })
+  recovery_id: number;
 
   @Column(DataType.BOOLEAN) user_calibrating: boolean;
   @Column(DataType.DOUBLE) recovery_score: number;

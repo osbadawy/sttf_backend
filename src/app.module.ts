@@ -8,7 +8,12 @@ import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 
 // Validate required environment variables
-const requiredEnvVars = ['POSTGRES_HOST', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB'];
+const requiredEnvVars = [
+  'POSTGRES_HOST',
+  'POSTGRES_USER',
+  'POSTGRES_PASSWORD',
+  'POSTGRES_DB',
+];
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
     throw new Error(`Missing required environment variable: ${envVar}`);
@@ -26,7 +31,7 @@ for (const envVar of requiredEnvVars) {
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
       autoLoadModels: true,
-      synchronize: true, // ⚠️ only in dev
+      synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
     }),
     WhoopModule,
   ],

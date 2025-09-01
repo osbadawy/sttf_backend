@@ -1,5 +1,5 @@
-import { Column, DataType, HasOne, Model, Table } from "sequelize-typescript";
-import { WhoopWorkoutScore } from "./workout_score.model"
+import { Column, DataType, HasOne, Model, Table } from 'sequelize-typescript';
+import { WhoopWorkoutScore } from './workout_score.model';
 
 // workout.model.ts
 @Table({ tableName: 'whoop_workout', timestamps: false })
@@ -13,7 +13,8 @@ export class WhoopWorkout extends Model<WhoopWorkout> {
   @Column(DataType.DATE) end: Date;
   @Column(DataType.STRING(6)) timezone_offset: string;
   @Column(DataType.STRING) sport_name: string;
-  @Column(DataType.ENUM('SCORED','PENDING_SCORE','UNSCORABLE')) score_state: string;
+  @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'))
+  score_state: string;
   // @Column(DataType.INTEGER) sport_id?: number; // soon to be deprecated
 
   @HasOne(() => WhoopWorkoutScore) score?: WhoopWorkoutScore;
