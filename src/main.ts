@@ -1,8 +1,8 @@
 // IMPORTANT: Make sure to import `instrument.ts` at the top of your file.
 // If you're using CommonJS (CJS) syntax, use `require("./instrument.ts");`
+import 'dotenv/config';
 import "./instrument";
 
-import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
