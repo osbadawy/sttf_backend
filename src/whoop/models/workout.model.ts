@@ -1,8 +1,14 @@
 import { Column, DataType, HasOne, Model, Table } from 'sequelize-typescript';
 import { WhoopWorkoutScore } from './workout_score.model';
+import { PlayerActivity } from '../../user_auth/models/player_activity.model';
 
 // workout.model.ts
-@Table({ tableName: 'whoop_workout', timestamps: false })
+@Table({ 
+  tableName: 'whoop_workout', 
+  timestamps: false,   
+  underscored: true 
+})
+
 export class WhoopWorkout extends Model<WhoopWorkout> {
   @Column({ type: DataType.UUID, primaryKey: true }) declare id: string;
   // @Column(DataType.BIGINT) v1_id?: number;  // soon to be deprecated
@@ -18,4 +24,5 @@ export class WhoopWorkout extends Model<WhoopWorkout> {
   // @Column(DataType.INTEGER) sport_id?: number; // soon to be deprecated
 
   @HasOne(() => WhoopWorkoutScore) score?: WhoopWorkoutScore;
+  @HasOne(() => PlayerActivity) player_activity?: PlayerActivity;
 }

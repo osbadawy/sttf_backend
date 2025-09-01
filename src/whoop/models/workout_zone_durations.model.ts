@@ -7,7 +7,12 @@ import {
 } from 'sequelize-typescript';
 import { WhoopWorkoutScore } from './workout_score.model';
 
-@Table({ tableName: 'whoop_workout_zone_durations', timestamps: false })
+@Table({ 
+  tableName: 'whoop_workout_zone_durations', 
+  timestamps: false,  
+  underscored: true 
+})
+
 export class WhoopWorkoutZoneDurations extends Model<WhoopWorkoutZoneDurations> {
   @ForeignKey(() => WhoopWorkoutScore)
   @Column(DataType.UUID)
