@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { WhoopModule } from './whoop/whoop.module';
+import { APP_FILTER } from '@nestjs/core';
+import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 
 // Validate required environment variables
 const requiredEnvVars = ['POSTGRES_HOST', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB'];
@@ -14,6 +17,7 @@ for (const envVar of requiredEnvVars) {
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     SequelizeModule.forRoot({
       dialect: 'postgres',
       host: process.env.POSTGRES_HOST,
@@ -27,6 +31,12 @@ for (const envVar of requiredEnvVars) {
     WhoopModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ],
 })
 export class AppModule {}
