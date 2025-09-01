@@ -39,7 +39,7 @@ jobs:
           echo "POSTGRES_PORT: $POSTGRES_PORT"
           echo "NODE_ENV: $NODE_ENV"
           echo "APP_PORT: $APP_PORT"
-          echo "SENTRY_DSN: $SENTRY_DSN
+          echo "SENTRY_DSN: $SENTRY_DSN"
         
       - name: Build and start services
         run: docker compose up --build -d
