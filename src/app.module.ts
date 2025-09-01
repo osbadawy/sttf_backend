@@ -26,7 +26,7 @@ for (const envVar of requiredEnvVars) {
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
       autoLoadModels: true,
-      synchronize: true, // ⚠️ only in dev
+      synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
     }),
     WhoopModule,
   ],
