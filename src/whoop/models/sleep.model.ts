@@ -1,4 +1,12 @@
-import { Table, Column, Model, DataType, HasOne, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  HasOne,
+  ForeignKey,
+  BelongsTo,
+} from 'sequelize-typescript';
 import { WhoopSleepScore } from './sleep_score.model';
 import { WhoopCycle } from './cycle.model';
 
@@ -16,7 +24,8 @@ export class WhoopSleep extends Model<WhoopSleep> {
   @Column(DataType.DATE) end: Date;
   @Column(DataType.STRING(6)) timezone_offset: string;
   @Column(DataType.BOOLEAN) nap: boolean;
-  @Column(DataType.ENUM('SCORED','PENDING_SCORE','UNSCORABLE')) score_state: string;
+  @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'))
+  score_state: string;
 
   @HasOne(() => WhoopSleepScore) score?: WhoopSleepScore;
   @BelongsTo(() => WhoopCycle) cycle?: WhoopCycle;

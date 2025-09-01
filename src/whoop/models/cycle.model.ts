@@ -1,5 +1,12 @@
 // cycle.model.ts
-import { Table, Column, Model, DataType, HasOne, HasMany, ForeignKey } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  HasOne,
+  HasMany,
+} from 'sequelize-typescript';
 import { WhoopCycleScore } from './cycle_score.model';
 import { WhoopSleep } from './sleep.model';
 
@@ -12,9 +19,9 @@ export class WhoopCycle extends Model<WhoopCycle> {
   @Column(DataType.DATE) start: Date;
   @Column(DataType.DATE) end?: Date;
   @Column(DataType.STRING(6)) timezone_offset: string;
-  @Column(DataType.ENUM('SCORED','PENDING_SCORE','UNSCORABLE')) score_state: string;
+  @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'))
+  score_state: string;
 
   @HasOne(() => WhoopCycleScore) score?: WhoopCycleScore;
   @HasMany(() => WhoopSleep) sleeps?: WhoopSleep[];
 }
-
