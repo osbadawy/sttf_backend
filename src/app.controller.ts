@@ -12,6 +12,6 @@ export class AppController {
 
   @Get("/debug-sentry")
   getError() {
-    throw new Error("My first Sentry error! New");
+    throw new Error("My first Sentry error!");
   }
 }
