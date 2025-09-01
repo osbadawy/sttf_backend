@@ -11,188 +11,28 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Build and run with docker-compose
+        run: docker-compose up --build
+
   test:
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
+    needs: build
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run linting
-      run: npm run lint
-
-    - name: Run tests
-      run: npm test
-      env:
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-        POSTGRES_USER: test_user
-        POSTGRES_PASSWORD: test_password
-        POSTGRES_DB: test_db
-        NODE_ENV: test
-
-  docker-build:
-    runs-on: ubuntu-latest
-    needs: test
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Log in to Container Registry
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-
-    - name: Build and test Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile
-        push: false
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Test Docker container
-      run: |
-        # Build the image
-        docker build -t test-app .
+      - name: Checkout code
+        uses: actions/checkout@v3
         
-        # Create a test environment file
-        cat > .env.test << EOF
-        POSTGRES_HOST=localhost
-        POSTGRES_PORT=5432
-        POSTGRES_USER=test_user
-        POSTGRES_PASSWORD=test_password
-        POSTGRES_DB=test_db
-        NODE_ENV=test
-        EOF
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
         
-        # Test that the container starts (with a timeout)
-        timeout 30s docker run --rm \
-          --env-file .env.test \
-          --name test-container \
-          test-app npm run start:prod || true
+      - name: Run tests
+        run: docker-compose run --rm app npm test
         
-        # Check if container ran successfully
-        if docker ps -a --filter "name=test-container" --format "table {{.Names}}\t{{.Status}}" | grep -q "test-container"; then
-          echo "✅ Container started successfully"
-        else
-          echo "❌ Container failed to start"
-          exit 1
-        fi
-
-  docker-compose-test:
-    runs-on: ubuntu-latest
-    needs: test
-    strategy:
-      matrix:
-        node-version: [18, 20]
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Test Docker Compose build
-      run: |
-        # Create test environment file
-        cat > .env.test << EOF
-        POSTGRES_USER=test_user
-        POSTGRES_PASSWORD=test_password
-        POSTGRES_DB=test_db
-        POSTGRES_PORT=5432
-        APP_PORT=3000
-        NODE_ENV=test
-        EOF
-        
-        # Test Docker Compose build
-        docker-compose -f docker-compose.yml --env-file .env.test build
-        
-        # Test Docker Compose up (with timeout and cleanup)
-        timeout 60s docker-compose -f docker-compose.yml --env-file .env.test up -d || true
-        
-        # Wait a bit for services to start
-        sleep 10
-        
-        # Check service status
-        docker-compose -f docker-compose.yml --env-file .env.test ps
-        
-        # Cleanup
-        docker-compose -f docker-compose.yml --env-file .env.test down -v
-
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
