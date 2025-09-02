@@ -1,11 +1,4 @@
-import {
-  Table,
-  Model,
-  Column,
-  DataType,
-  HasMany,
-  Index,
-} from 'sequelize-typescript';
+import { Table, Model, Column, DataType, HasMany } from 'sequelize-typescript';
 import { User } from './user.model';
 
 @Table({
