@@ -7,12 +7,11 @@ import {
 } from 'sequelize-typescript';
 import { WhoopSleepScore } from './sleep_score.model';
 
-@Table({ 
-  tableName: 'whoop_sleep_needed', 
-  timestamps: false, 
-  underscored: true 
+@Table({
+  tableName: 'whoop_sleep_needed',
+  timestamps: false,
+  underscored: true,
 })
-
 export class WhoopSleepNeeded extends Model<WhoopSleepNeeded> {
   @ForeignKey(() => WhoopSleepScore)
   @Column(DataType.BIGINT)

@@ -12,7 +12,11 @@ export const FirebaseAdminProvider: Provider = {
 
     if (!admin.apps.length) {
       admin.initializeApp({
-        credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
       });
     }
     return admin;

@@ -7,12 +7,11 @@ import {
 } from 'sequelize-typescript';
 import { WhoopSleep } from './sleep.model';
 
-@Table({ 
-  tableName: 'whoop_sleep_score', 
-  timestamps: false, 
-  underscored: true 
+@Table({
+  tableName: 'whoop_sleep_score',
+  timestamps: false,
+  underscored: true,
 })
-
 export class WhoopSleepScore extends Model<WhoopSleepScore> {
   @ForeignKey(() => WhoopSleep)
   @Column({ type: DataType.UUID, primaryKey: true })

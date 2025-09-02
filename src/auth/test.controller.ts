@@ -11,6 +11,6 @@ export class TestAuthController {
   @UseGuards(FirebaseAuthGuard)
   @Get('me')
   me(@Req() req: any) {
-    return req.user; 
+    return req.user;
   }
 }

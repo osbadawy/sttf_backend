@@ -14,7 +14,11 @@ import { User } from './user.model';
   underscored: true,
 })
 export class Team extends Model<Team> {
-  @Column({ type: DataType.UUID, defaultValue: DataType.UUIDV4, primaryKey: true })
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
   declare id: string;
 
   @Column(DataType.STRING) team?: string;

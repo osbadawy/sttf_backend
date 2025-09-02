@@ -7,7 +7,7 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import { HasOne,HasMany  } from 'sequelize-typescript';
+import { HasOne, HasMany } from 'sequelize-typescript';
 import { Team } from './team.model';
 import { PlayerStats } from './player_stats.model';
 import { PlayerActivity } from './player_activity.model';
@@ -18,7 +18,11 @@ import { PlayerActivity } from './player_activity.model';
   underscored: true,
 })
 export class User extends Model<User> {
-  @Column({ type: DataType.UUID, defaultValue: DataType.UUIDV4, primaryKey: true })
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
   declare id: string;
 
   @Index({ name: 'firebase_id', unique: true })
@@ -39,7 +43,6 @@ export class User extends Model<User> {
   @Column({ type: DataType.UUID, allowNull: true })
   team_id?: string;
 
-
   @Index({ name: 'email', unique: true })
   @Column({
     type: DataType.STRING,
@@ -52,7 +55,7 @@ export class User extends Model<User> {
   @Column(DataType.INTEGER) phone?: number;
   @Column(DataType.STRING) nationality?: string;
   @Column(DataType.STRING) avatar_url?: string;
-  @Column(DataType.STRING) timezone?: string;      
+  @Column(DataType.STRING) timezone?: string;
   @Column(DataType.DATE) last_login_at?: Date;
   @Column(DataType.JSONB) metadata?: Record<string, unknown>;
 
