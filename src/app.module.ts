@@ -6,6 +6,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { WhoopModule } from './whoop/whoop.module';
 import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
+import {AuthModule} from './auth/auth.module'
 
 // Validate required environment variables
 const requiredEnvVars = [
@@ -34,6 +35,7 @@ for (const envVar of requiredEnvVars) {
       synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
     }),
     WhoopModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
