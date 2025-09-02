@@ -1,34 +1,9 @@
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
-import {
-  WhoopCycle,
-  WhoopCycleScore,
-  WhoopWorkout,
-  WhoopWorkoutScore,
-  WhoopWorkoutZoneDurations,
-  WhoopRecovery,
-  WhoopRecoveryScore,
-  WhoopSleep,
-  WhoopSleepScore,
-  WhoopSleepStageSummary,
-  WhoopSleepNeeded,
-} from './models';
+import { ModelsModule } from '../database/models.module';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([
-      WhoopCycle,
-      WhoopCycleScore,
-      WhoopWorkout,
-      WhoopWorkoutScore,
-      WhoopWorkoutZoneDurations,
-      WhoopRecovery,
-      WhoopRecoveryScore,
-      WhoopSleep,
-      WhoopSleepScore,
-      WhoopSleepStageSummary,
-      WhoopSleepNeeded,
-    ]),
-  ],
+  imports: [ModelsModule],
+  exports: [ModelsModule],
 })
 export class WhoopModule {}
+

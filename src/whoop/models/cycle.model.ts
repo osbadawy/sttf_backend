@@ -10,7 +10,11 @@ import {
 import { WhoopCycleScore } from './cycle_score.model';
 import { WhoopSleep } from './sleep.model';
 
-@Table({ tableName: 'whoop_cycle', timestamps: false })
+@Table({ 
+  tableName: 'whoop_cycle', 
+  timestamps: false, 
+  underscored: true 
+})
 export class WhoopCycle extends Model<WhoopCycle> {
   @Column({ type: DataType.BIGINT, primaryKey: true }) declare id: number;
   @Column(DataType.BIGINT) user_id: number;

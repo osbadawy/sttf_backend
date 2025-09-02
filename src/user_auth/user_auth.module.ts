@@ -1,14 +1,8 @@
-// import { Module } from '@nestjs/common';
-// import { SequelizeModule } from '@nestjs/sequelize';
-// import {
+import { Module } from '@nestjs/common';
+import { ModelsModule } from '../database/models.module';
 
-// } from './models';
-
-// @Module({
-//   imports: [
-//     SequelizeModule.forFeature([
-
-//     ]),
-//   ],
-// })
-// export class WhoopModule {}
+@Module({
+  imports: [ModelsModule],
+  exports: [ModelsModule],
+})
+export class UserAuthModule {}

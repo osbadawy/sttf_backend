@@ -10,7 +10,12 @@ import { WhoopRecoveryScore } from './recovery_score.model';
 import { WhoopCycle } from './cycle.model';
 import { WhoopSleep } from './sleep.model';
 
-@Table({ tableName: 'whoop_recovery', timestamps: false })
+@Table({ 
+  tableName: 'whoop_recovery', 
+  timestamps: false, 
+  underscored: true 
+})
+
 export class WhoopRecovery extends Model<WhoopRecovery> {
   @ForeignKey(() => WhoopCycle)
   @Column({ type: DataType.BIGINT, primaryKey: true })
