@@ -8,12 +8,11 @@ import {
 import { WhoopWorkout } from './workout.model';
 
 // workout_score.model.ts
-@Table({ 
-  tableName: 'whoop_workout_score', 
-  timestamps: false,   
-  underscored: true 
+@Table({
+  tableName: 'whoop_workout_score',
+  timestamps: false,
+  underscored: true,
 })
-
 export class WhoopWorkoutScore extends Model<WhoopWorkoutScore> {
   @ForeignKey(() => WhoopWorkout)
   @Column({ type: DataType.UUID, primaryKey: true })

@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ModelsModule } from '../database/models.module';
+import * as Models from './models';
+import { SequelizeModule } from '@nestjs/sequelize';
+
+const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
 
 @Module({
-  imports: [ModelsModule],
-  exports: [ModelsModule],
+  imports: [SequelizeModule.forFeature(ALL_MODELS)],
+  exports: [SequelizeModule],
 })
 export class WhoopModule {}
-

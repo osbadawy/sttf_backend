@@ -8,12 +8,11 @@ import {
 import { WhoopCycle } from './cycle.model';
 
 // cycle_score.model.ts
-@Table({ 
-  tableName: 'whoop_cycle_score', 
-  timestamps: false, 
-  underscored: true 
+@Table({
+  tableName: 'whoop_cycle_score',
+  timestamps: false,
+  underscored: true,
 })
-
 export class WhoopCycleScore extends Model<WhoopCycleScore> {
   @ForeignKey(() => WhoopCycle)
   @Column({ type: DataType.BIGINT, primaryKey: true })

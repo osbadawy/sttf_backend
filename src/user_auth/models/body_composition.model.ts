@@ -15,7 +15,11 @@ import { PlayerStats } from './player_stats.model';
   underscored: true,
 })
 export class BodyComposition extends Model<BodyComposition> {
-  @Column({ type: DataType.UUID, defaultValue: DataType.UUIDV4, primaryKey: true })
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
   declare id: string;
 
   @Index('body_comp_player_stats_id')
@@ -23,10 +27,10 @@ export class BodyComposition extends Model<BodyComposition> {
   @Column({ type: DataType.UUID, allowNull: false })
   player_stats_id!: string;
 
-  @Column(DataType.DECIMAL(6,2)) weight?: string; // kg
-  @Column(DataType.DECIMAL(4,1)) bmi?: string;
-  @Column(DataType.DECIMAL(5,2)) body_fat_percentage?: string; 
-  @Column(DataType.DECIMAL(5,2)) muscle_mass_percentage?: string; 
+  @Column(DataType.DECIMAL(6, 2)) weight?: string; // kg
+  @Column(DataType.DECIMAL(4, 1)) bmi?: string;
+  @Column(DataType.DECIMAL(5, 2)) body_fat_percentage?: string;
+  @Column(DataType.DECIMAL(5, 2)) muscle_mass_percentage?: string;
 
   @BelongsTo(() => PlayerStats) player_stats?: PlayerStats;
 }

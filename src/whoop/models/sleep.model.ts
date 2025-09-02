@@ -11,12 +11,11 @@ import { WhoopSleepScore } from './sleep_score.model';
 import { WhoopCycle } from './cycle.model';
 
 // sleep.model.ts
-@Table({ 
-  tableName: 'whoop_sleep', 
-  timestamps: false, 
-  underscored: true 
+@Table({
+  tableName: 'whoop_sleep',
+  timestamps: false,
+  underscored: true,
 })
-
 export class WhoopSleep extends Model<WhoopSleep> {
   @Column({ type: DataType.UUID, primaryKey: true }) declare id: string;
   @ForeignKey(() => WhoopCycle) @Column(DataType.BIGINT) cycle_id: number;
