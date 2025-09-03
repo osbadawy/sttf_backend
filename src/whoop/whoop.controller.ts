@@ -20,7 +20,7 @@ export class WhoopController {
   @UseGuards(AuthGuard('whoop'))
   whoopCallback(@Req() req: any, @Res() res: Response) {
     // req.user comes from validate()
-    // const whoopAccount = req.user;
+    // const whoopAccount = req.user.whoop;
 
     // redirect back to your frontend
     const successUrl = process.env.APP_WEB_SUCCESS_URL!;

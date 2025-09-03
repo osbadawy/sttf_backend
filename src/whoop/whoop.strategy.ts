@@ -35,7 +35,9 @@ export class WhoopStrategy extends PassportStrategy(Strategy, 'whoop') {
       state: req.query.state,
     };
 
-    return whoopAccount;
+    return {
+      whoop: whoopAccount,
+    };
 
     // store in DB here, or emit to a service
     // done(null, whoopAccount);
