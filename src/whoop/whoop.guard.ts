@@ -7,21 +7,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import type { Response } from 'express';
-
-interface WhoopTokens {
-  authorization_token: string;
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  expires_at: number;
-  user_id: string;
-  scope: string;
-}
-
-interface WhoopRequest {
-  query: { code?: string; state?: string; error?: string };
-  whoopTokens?: WhoopTokens;
-}
+import type { WhoopCallbackRequest } from './dtos';
 
 @Injectable()
 export class WhoopOAuthGuard implements CanActivate {
@@ -66,11 +52,13 @@ export class WhoopCallbackGuard implements CanActivate {
   constructor(private readonly httpService: HttpService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest<WhoopRequest>();
+    const req = context.switchToHttp().getRequest<WhoopCallbackRequest>();
     return await this.exchangeCodeForToken(req);
   }
 
-  private async exchangeCodeForToken(req: WhoopRequest): Promise<boolean> {
+  private async exchangeCodeForToken(
+    req: WhoopCallbackRequest,
+  ): Promise<boolean> {
     try {
       const client_id = process.env.WHOOP_CLIENT_ID;
       const client_secret = process.env.WHOOP_CLIENT_SECRET;
@@ -111,7 +99,7 @@ export class WhoopCallbackGuard implements CanActivate {
         access_token,
         refresh_token,
         expires_in,
-        expires_at: Date.now() + expires_in * 1000,
+        expires_at: new Date(Date.now() + expires_in * 1000),
         authorization_token: code,
         user_id: user_id || '',
         scope:

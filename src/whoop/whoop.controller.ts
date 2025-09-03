@@ -4,19 +4,7 @@ import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
 import { WhoopService } from './whoop.service';
-
-interface WhoopTokens {
-  authorization_token: string;
-  access_token: string;
-  refresh_token: string;
-  expires_at: Date;
-  user_id: string;
-  scope: string;
-}
-
-interface WhoopRequest {
-  whoopTokens?: WhoopTokens;
-}
+import type { WhoopRequest } from './dtos';
 
 @Controller('whoop')
 export class WhoopController {
