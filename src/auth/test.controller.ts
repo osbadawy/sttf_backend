@@ -22,3 +22,4 @@ export class TestAuthController {
     return req.user;
   }
 }
+
