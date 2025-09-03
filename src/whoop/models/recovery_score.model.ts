@@ -7,12 +7,11 @@ import {
 } from 'sequelize-typescript';
 import { WhoopRecovery } from './recovery.model';
 
-@Table({ 
-  tableName: 'whoop_recovery_score', 
-  timestamps: false, 
-  underscored: true 
+@Table({
+  tableName: 'whoop_recovery_score',
+  timestamps: false,
+  underscored: true,
 })
-
 export class WhoopRecoveryScore extends Model<WhoopRecoveryScore> {
   @ForeignKey(() => WhoopRecovery)
   @Column({ type: DataType.BIGINT, primaryKey: true })

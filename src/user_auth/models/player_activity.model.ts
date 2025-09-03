@@ -16,7 +16,11 @@ import { WhoopWorkout } from '../../whoop/models/workout.model';
   underscored: true,
 })
 export class PlayerActivity extends Model<PlayerActivity> {
-  @Column({ type: DataType.UUID, defaultValue: DataType.UUIDV4, primaryKey: true })
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
   declare id: string;
 
   @ForeignKey(() => User)
@@ -25,9 +29,9 @@ export class PlayerActivity extends Model<PlayerActivity> {
 
   @Index({ name: 'player_activity_workout_id', unique: true })
   @ForeignKey(() => WhoopWorkout)
-
-  @Column({ type: DataType.UUID, allowNull: true }) workout_id?: string;
-  @Column(DataType.STRING) activity_type?: string; 
+  @Column({ type: DataType.UUID, allowNull: true })
+  workout_id?: string;
+  @Column(DataType.STRING) activity_type?: string;
   @Column(DataType.DATE) started_at?: Date;
   @Column(DataType.DATE) ended_at?: Date;
   @Column(DataType.INTEGER) duration_seconds?: number;

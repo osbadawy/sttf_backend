@@ -16,7 +16,11 @@ import { PlayerStats } from './player_stats.model';
   underscored: true,
 })
 export class PlayerSelfAssessment extends Model<PlayerSelfAssessment> {
-  @Column({ type: DataType.UUID, defaultValue: DataType.UUIDV4, primaryKey: true })
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
   declare id: string;
 
   @Index('psa_player_stats_id')

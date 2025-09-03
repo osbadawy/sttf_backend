@@ -6,6 +6,8 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { WhoopModule } from './whoop/whoop.module';
 import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
+import { AuthModule } from './auth/auth.module';
+import { UserAuthModule } from './user_auth/user_auth.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { SentryGlobalFilter } from '@sentry/nestjs/setup';
       synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
     }),
     WhoopModule,
+    UserAuthModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
