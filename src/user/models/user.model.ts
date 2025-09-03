@@ -1,6 +1,12 @@
 // user.model.ts
 import {
-  Table, Model, Column, DataType, Index, ForeignKey, BelongsTo,
+  Table,
+  Model,
+  Column,
+  DataType,
+  Index,
+  ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { HasOne, HasMany } from 'sequelize-typescript';
 import { Team } from './team.model';
@@ -21,8 +27,8 @@ import type {
   underscored: true,
 })
 export class User extends Model<
-  InferAttributes<User>,                // runtime attributes
-  InferCreationAttributes<User>        // creation attributes
+  InferAttributes<User>, // runtime attributes
+  InferCreationAttributes<User> // creation attributes
 > {
   @Column({
     type: DataType.UUID,
@@ -47,14 +53,19 @@ export class User extends Model<
   @Column({ type: DataType.STRING, allowNull: false })
   declare email: string; // required at TS level too
 
-  @Column(DataType.STRING) declare display_name: CreationOptional<string | null>;
+  @Column(DataType.STRING) declare display_name: CreationOptional<
+    string | null
+  >;
   @Column(DataType.INTEGER) declare age: CreationOptional<number | null>;
   @Column(DataType.INTEGER) declare phone: CreationOptional<number | null>;
   @Column(DataType.STRING) declare nationality: CreationOptional<string | null>;
   @Column(DataType.STRING) declare avatar_url: CreationOptional<string | null>;
   @Column(DataType.STRING) declare timezone: CreationOptional<string | null>;
   @Column(DataType.DATE) declare last_login_at: CreationOptional<Date | null>;
-  @Column(DataType.JSONB) declare metadata: CreationOptional<Record<string, unknown> | null>;
+  @Column(DataType.JSONB) declare metadata: CreationOptional<Record<
+    string,
+    unknown
+  > | null>;
 
   // timestamps
   declare readonly createdAt: CreationOptional<Date>;
@@ -62,6 +73,9 @@ export class User extends Model<
 
   // associations should be NonAttribute so they don't pollute attribute typing
   @BelongsTo(() => Team) declare team: NonAttribute<Team | null>;
-  @HasOne(() => PlayerStats) declare player_stats: NonAttribute<PlayerStats | null>;
-  @HasMany(() => PlayerActivity) declare player_activities: NonAttribute<PlayerActivity[] | null>;
+  @HasOne(() => PlayerStats)
+  declare player_stats: NonAttribute<PlayerStats | null>;
+  @HasMany(() => PlayerActivity) declare player_activities: NonAttribute<
+    PlayerActivity[] | null
+  >;
 }
