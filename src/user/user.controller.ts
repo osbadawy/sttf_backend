@@ -1,26 +1,63 @@
 // src/users/user.controller.ts
 import {
   BadRequestException,
+  NotFoundException,
   Body,
   Controller,
   Post,
+  Get,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
-import { SignUpResponse } from './dtos/user.interfaces.dtos';
+import { SignUpResponse, getUserResponse } from './dtos/user.interfaces.dtos';
 
 type SignUpBody = {
   firebase_id: string;
   email: string;
 };
 
+type getUser = {
+    id: string;
+    email: string;
+}
+
 @Controller('user')
 @UseGuards(FirebaseAuthGuard)
 export class UserController {
   constructor(@InjectModel(User) private readonly userModel: typeof User) {}
+
+  @Get()
+  async getUser(@Body() body:getUser) : Promise<getUserResponse> {
+    const email = body.email
+    const id = body.id
+    console.log(id)
+    if(!email) throw new BadRequestException('email is required');
+    
+    try{
+        let user = await this.userModel.findByPk(id)
+        if(!user) throw new NotFoundException('user not found!');
+
+          const data: getUserResponse['data'] = {
+              email: user.email,                                       
+              avatar_url: user.avatar_url ?? '',                       
+              age: user.age ?? 0,                                     
+              phone: user.phone != null ? String(user.phone) : '',   
+              nationality: user.nationality ?? '',
+              display_name: user.display_name ?? '',
+            };
+
+        return { ok: true, data };
+    } catch (e: any) {
+        const errorMessage =
+          e instanceof Error ? e.message : 'Failed to save user.';
+        throw new UnauthorizedException(errorMessage);
+    }
+
+  }
+
 
   @Post('signup')
   async signUp(@Body() body: SignUpBody): Promise<SignUpResponse> {
@@ -49,4 +86,5 @@ export class UserController {
       throw new UnauthorizedException(errorMessage);
     }
   }
+
 }
