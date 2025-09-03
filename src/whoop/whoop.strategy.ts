@@ -12,9 +12,9 @@ export class WhoopStrategy extends PassportStrategy(Strategy, 'whoop') {
       tokenURL: process.env.WHOOP_TOKEN_URL!,
       clientID: process.env.WHOOP_CLIENT_ID!,
       clientSecret: process.env.WHOOP_CLIENT_SECRET!,
-      callbackURL: process.env.WHOOP_REDIRECT_WEB!,
       scope: ['offline'],
       passReqToCallback: true,
+      state: true
     });
   }
 
@@ -35,8 +35,11 @@ export class WhoopStrategy extends PassportStrategy(Strategy, 'whoop') {
       accessToken,
       refreshToken,
       expiresIn: params.expires_in,
-      scope: params.scope,
+      scope: req.query.scope,
+      state: req.query.state,
     };
+
+
 
     // store in DB here, or emit to a service
     done(null, whoopAccount);
