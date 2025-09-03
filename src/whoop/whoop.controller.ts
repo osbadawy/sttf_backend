@@ -10,7 +10,7 @@ import { WhoopService } from './whoop.service';
 export class WhoopController {
   constructor(private readonly whoopService: WhoopService) {}
 
-  // Step 1: kick off OAuth (Passport builds the URL)
+  // Step 1: kick off OAuth
   @Get('/auth/start')
   @UseGuards(FirebaseAuthGuard, WhoopOAuthGuard)
   whoopLogin() {

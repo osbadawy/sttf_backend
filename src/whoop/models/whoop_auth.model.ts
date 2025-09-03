@@ -3,9 +3,7 @@ import {
     Column,
     Model,
     DataType,
-    HasOne,
     ForeignKey,
-    BelongsTo,
 } from 'sequelize-typescript';
 import { User } from '../../user/models/user.model';
 import type {

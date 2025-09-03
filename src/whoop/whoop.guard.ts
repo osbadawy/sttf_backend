@@ -31,8 +31,6 @@ export class WhoopOAuthGuard implements CanActivate {
       state: state,
     });
 
-    console.log(`${process.env.WHOOP_AUTHORIZE_URL}?${params.toString()}`);
-
     return `${process.env.WHOOP_AUTHORIZE_URL}?${params.toString()}`;
   }
 }
@@ -86,7 +84,6 @@ export class WhoopCallbackGuard implements CanActivate {
         user_id,
       };
 
-      console.log('Successfully exchanged code for tokens');
       return true;
 
     } catch (error) {
