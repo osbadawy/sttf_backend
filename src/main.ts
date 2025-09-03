@@ -9,7 +9,7 @@ import session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Configure session middleware for OAuth state storage
   app.use(
     session({
@@ -22,7 +22,7 @@ async function bootstrap() {
       },
     }),
   );
-  
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap().catch((error) => {

@@ -10,7 +10,7 @@ export class WhoopController {
   // Step 1: kick off OAuth (Passport builds the URL)
   @Get('/auth/start')
   @UseGuards(AuthGuard('whoop'))
-  async whoopLogin() {
+  whoopLogin() {
     // Guard redirects to WHOOP automatically
     return { ok: true };
   }
@@ -18,10 +18,9 @@ export class WhoopController {
   // // Step 2: WHOOP redirects back here
   @Get('/auth/callback')
   @UseGuards(AuthGuard('whoop'))
-  async whoopCallback(@Req() req: any, @Res() res: Response) {
+  whoopCallback(@Req() req: any, @Res() res: Response) {
     // req.user comes from validate()
-    const whoopAccount = req.user;
-    console.log(whoopAccount);
+    // const whoopAccount = req.user;
 
     // redirect back to your frontend
     const successUrl = process.env.APP_WEB_SUCCESS_URL!;

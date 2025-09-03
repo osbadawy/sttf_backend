@@ -3,7 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { Strategy } from 'passport-oauth2';
 
-
 @Injectable()
 export class WhoopStrategy extends PassportStrategy(Strategy, 'whoop') {
   constructor() {
@@ -12,36 +11,33 @@ export class WhoopStrategy extends PassportStrategy(Strategy, 'whoop') {
       tokenURL: process.env.WHOOP_TOKEN_URL!,
       clientID: process.env.WHOOP_CLIENT_ID!,
       clientSecret: process.env.WHOOP_CLIENT_SECRET!,
-      scope: ['offline'],
+      scope: [
+        'read:profile',
+        'read:body_measurement',
+        'read:cycles',
+        'read:workout',
+        'read:sleep',
+        'read:recovery',
+      ],
       passReqToCallback: true,
-      state: true
+      state: 'Some String',
     });
   }
 
   // Passport calls this after exchanging code → token
-  async validate(
-    req: any,
+  validate(
+    req: { query: { scope: string; state: string } },
     accessToken: string,
-    refreshToken: string,
-    params: any,
-    profile: any,
-    done: Function,
   ) {
-    // params may contain expires_in, token_type, scope
-    const userId = req.user?.id || 'demo-user'; // pull from session/jwt
-
     const whoopAccount = {
-      userId,
       accessToken,
-      refreshToken,
-      expiresIn: params.expires_in,
       scope: req.query.scope,
       state: req.query.state,
     };
 
-
+    return whoopAccount;
 
     // store in DB here, or emit to a service
-    done(null, whoopAccount);
+    // done(null, whoopAccount);
   }
 }

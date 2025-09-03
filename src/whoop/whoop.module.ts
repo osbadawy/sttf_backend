@@ -11,8 +11,8 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
 
 @Module({
   imports: [
-    PassportModule.register({ session: true }), 
-    SequelizeModule.forFeature(ALL_MODELS)
+    PassportModule.register({ session: true }),
+    SequelizeModule.forFeature(ALL_MODELS),
   ],
   exports: [SequelizeModule],
   providers: [WhoopService, WhoopStrategy, FirebaseAuthGuard],
