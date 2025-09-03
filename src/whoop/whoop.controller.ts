@@ -1,29 +1,35 @@
 // whoop.controller.ts
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
+import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
+import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
+import { WhoopService } from './whoop.service';
+
 
 @Controller('whoop')
 export class WhoopController {
-  constructor() {}
+  constructor(private readonly whoopService: WhoopService) {}
 
   // Step 1: kick off OAuth (Passport builds the URL)
   @Get('/auth/start')
-  @UseGuards(AuthGuard('whoop'))
+  @UseGuards(FirebaseAuthGuard, WhoopOAuthGuard)
   whoopLogin() {
     // Guard redirects to WHOOP automatically
     return { ok: true };
   }
 
-  // // Step 2: WHOOP redirects back here
+  // Step 2: WHOOP redirects back here with authorization code
   @Get('/auth/callback')
-  @UseGuards(AuthGuard('whoop'))
-  whoopCallback(@Req() req: any, @Res() res: Response) {
-    // req.user comes from validate()
-    // const whoopAccount = req.user.whoop;
-
-    // redirect back to your frontend
-    const successUrl = process.env.APP_WEB_SUCCESS_URL!;
-    return res.redirect(successUrl);
+  @UseGuards(WhoopCallbackGuard)
+  async whoopCallback(@Req() req: any, @Res() res: Response) {
+    // The WhoopGuard has already exchanged the code for tokens
+    // and stored them in req.whoopTokens
+    
+    if (req.whoopTokens) {
+      const { authorization_token, access_token, refresh_token, expires_in, expires_at, user_id } = req.whoopTokens;
+      await this.whoopService.createWhoopAuth({ authorization_token, access_token, refresh_token, expires_at, firebase_id: user_id, scope: req.whoopTokens.scope });
+    }
+    
+    return res.redirect(process.env.APP_WEB_SUCCESS_URL!);
   }
 }

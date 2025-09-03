@@ -10,6 +10,14 @@ import session from 'express-session';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS with permissive settings
+  app.enableCors({
+    origin: true, // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    credentials: true, // Allow cookies and authorization headers
+  });
+
   // Configure session middleware for OAuth state storage
   app.use(
     session({
