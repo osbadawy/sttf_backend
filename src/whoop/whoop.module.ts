@@ -10,13 +10,14 @@ import { UserModule } from '../user/user.module';
 const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature(ALL_MODELS),
-    HttpModule,
-    UserModule,
-  ],
+  imports: [SequelizeModule.forFeature(ALL_MODELS), HttpModule, UserModule],
   exports: [SequelizeModule],
-  providers: [WhoopService, FirebaseAuthGuard, WhoopOAuthGuard, WhoopCallbackGuard],
+  providers: [
+    WhoopService,
+    FirebaseAuthGuard,
+    WhoopOAuthGuard,
+    WhoopCallbackGuard,
+  ],
   controllers: [WhoopController],
 })
 export class WhoopModule {}
