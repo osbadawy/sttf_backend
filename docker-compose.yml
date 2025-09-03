@@ -6,6 +6,7 @@ services:
     restart: always
     ports:
       - '${APP_PORT:-3000}:3000'
+      - '9229:9229'  # Debug port
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       APP_PORT: ${APP_PORT}

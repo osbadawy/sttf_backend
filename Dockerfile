@@ -18,8 +18,9 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Expose port
+# Expose ports
 EXPOSE 3000
+EXPOSE 9229
 
-# Start the application
-CMD ["npm", "run", "start:dev"]
+# Start the application in debug mode
+CMD ["npm", "run", "start:debug"]
