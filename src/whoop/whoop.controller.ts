@@ -1,7 +1,7 @@
 // whoop.controller.ts
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
-import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
+import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
 import { WhoopService } from './whoop.service';
 

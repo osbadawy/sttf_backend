@@ -1,7 +1,11 @@
-import { WhoopGuard } from './whoop.guard';
+import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
+import { HttpService } from '@nestjs/axios';
 
 describe('WhoopGuard', () => {
   it('should be defined', () => {
-    expect(new WhoopGuard()).toBeDefined();
+    expect(new WhoopOAuthGuard(new HttpService())).toBeDefined();
+  });
+  it('should be defined', () => {
+    expect(new WhoopCallbackGuard(new HttpService())).toBeDefined();
   });
 });
