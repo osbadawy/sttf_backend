@@ -9,19 +9,6 @@ import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 
-// Validate required environment variables
-const requiredEnvVars = [
-  'POSTGRES_HOST',
-  'POSTGRES_USER',
-  'POSTGRES_PASSWORD',
-  'POSTGRES_DB',
-];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-}
-
 @Module({
   imports: [
     SentryModule.forRoot(),

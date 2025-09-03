@@ -12,6 +12,7 @@ import { HasOne, HasMany } from 'sequelize-typescript';
 import { Team } from './team.model';
 import { PlayerStats } from './player_stats.model';
 import { PlayerActivity } from './player_activity.model';
+import { WhoopAuth } from '../../whoop/models/whoop_auth.model';
 
 // ✨ Import these from 'sequelize'
 import type {
@@ -78,4 +79,5 @@ export class User extends Model<
   @HasMany(() => PlayerActivity) declare player_activities: NonAttribute<
     PlayerActivity[] | null
   >;
+  @HasOne(() => WhoopAuth) declare whoop_auth: NonAttribute<WhoopAuth | null>;
 }
