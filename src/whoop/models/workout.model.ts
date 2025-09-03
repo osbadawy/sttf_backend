@@ -1,6 +1,6 @@
 import { Column, DataType, HasOne, Model, Table } from 'sequelize-typescript';
 import { WhoopWorkoutScore } from './workout_score.model';
-import { PlayerActivity } from '../../user_auth/models/player_activity.model';
+import { PlayerActivity } from '../../user/models/player_activity.model';
 
 // workout.model.ts
 @Table({
