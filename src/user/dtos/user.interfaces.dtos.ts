@@ -7,13 +7,13 @@ export interface SignUpResponse {
 }
 
 export interface getUserResponse {
-  ok : boolean;
-  data:{
+  ok: boolean;
+  data: {
     email: string;
     avatar_url: string;
     age: number;
-    phone: string;
+    phone: number;
     nationality: string;
     display_name: string;
-  }
+  };
 }

@@ -2,13 +2,16 @@
 import {
   BadRequestException,
   NotFoundException,
+  ConflictException,
   Body,
   Controller,
   Post,
   Get,
+  Patch,
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
+import { UniqueConstraintError } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
@@ -19,10 +22,20 @@ type SignUpBody = {
   email: string;
 };
 
-type getUser = {
+type getUserPk = {
     id: string;
-    email: string;
 }
+
+type PatchUserFields = {
+  email?: string;
+  avatar_url?: string;
+  age?: number;
+  phone?: number;          
+  nationality?: string;
+  display_name?: string;
+};
+
+type PatchUserBody = { id: string; data?: PatchUserFields } & PatchUserFields;
 
 @Controller('user')
 @UseGuards(FirebaseAuthGuard)
@@ -30,11 +43,10 @@ export class UserController {
   constructor(@InjectModel(User) private readonly userModel: typeof User) {}
 
   @Get()
-  async getUser(@Body() body:getUser) : Promise<getUserResponse> {
-    const email = body.email
+  async getUserByPk(@Body() body:getUserPk) : Promise<getUserResponse> {
     const id = body.id
-    console.log(id)
-    if(!email) throw new BadRequestException('email is required');
+
+    if(!id) throw new BadRequestException('id is required');
     
     try{
         let user = await this.userModel.findByPk(id)
@@ -44,7 +56,7 @@ export class UserController {
               email: user.email,                                       
               avatar_url: user.avatar_url ?? '',                       
               age: user.age ?? 0,                                     
-              phone: user.phone != null ? String(user.phone) : '',   
+              phone: user.phone ?? 0, 
               nationality: user.nationality ?? '',
               display_name: user.display_name ?? '',
             };
@@ -55,7 +67,69 @@ export class UserController {
           e instanceof Error ? e.message : 'Failed to save user.';
         throw new UnauthorizedException(errorMessage);
     }
+  }
 
+  @Patch()
+  async patchUserByPk(@Body() body:PatchUserBody) : Promise<getUserResponse> {
+    const id = String(body?.id ?? '').trim();
+    if (!id) throw new BadRequestException('id is required');
+
+    try {
+       const user = await this.userModel.findByPk(id);
+       if (!user) throw new NotFoundException('user not found!');
+    
+       const src: PatchUserFields =
+       body && typeof body.data === 'object' ? body.data! : body;
+    
+       const updates: Record<string, any> = {};
+    
+       if ('email' in src) {
+         const email = (src.email ?? '').trim().toLowerCase();
+         if (!email) throw new BadRequestException('email cannot be empty');
+         updates.email = email; 
+       }
+       if ('avatar_url' in src) updates.avatar_url = src.avatar_url ?? null;
+       if ('display_name' in src) updates.display_name = src.display_name ?? null;
+       if ('nationality' in src) updates.nationality = src.nationality ?? null;
+    
+       if ('age' in src) {
+         const ageNum = Number(src.age);
+         if (!Number.isFinite(ageNum) || ageNum < 0)
+           throw new BadRequestException('age must be a non-negative number');
+         updates.age = Math.floor(ageNum);
+       }
+    
+       if ('phone' in src) {
+         const digits = (src.phone ?? '')
+         updates.phone = digits ? Number(digits) : null; 
+       }
+    
+       if (Object.keys(updates).length > 0) {
+         try {
+           await user.update(updates);
+         } catch (err: any) {
+           if (err instanceof UniqueConstraintError) {
+             throw new ConflictException('Email already in use.');
+           }
+           throw err;
+         }
+       }
+    
+       const data: getUserResponse['data'] = {
+         email: user.email,
+         avatar_url: user.avatar_url ?? '',
+         age: user.age ?? 0,
+         phone: user.phone ?? 0,
+         nationality: user.nationality ?? '',
+         display_name: user.display_name ?? '',
+       };
+    
+       return { ok: true, data };
+     }catch (e: any) {
+        const errorMessage =
+          e instanceof Error ? e.message : 'Failed to save user.';
+        throw new UnauthorizedException(errorMessage);
+    }
   }
 
 
