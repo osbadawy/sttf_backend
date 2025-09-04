@@ -13,12 +13,14 @@ import { WhoopSleepScore } from './sleep_score.model';
   underscored: true,
 })
 export class WhoopSleepNeeded extends Model<WhoopSleepNeeded> {
+  @Column({ type: DataType.BIGINT, primaryKey: true, autoIncrement: true })
+  declare id: number;
   @ForeignKey(() => WhoopSleepScore)
   @Column(DataType.BIGINT)
-  sleep_score_id: number;
+  declare sleep_score_id: number;
 
-  @Column(DataType.BIGINT) baseline_milli: number;
-  @Column(DataType.BIGINT) need_from_sleep_debt_milli: number;
-  @Column(DataType.BIGINT) need_from_recent_strain_milli: number;
-  @Column(DataType.BIGINT) need_from_recent_nap_milli: number;
+  @Column(DataType.BIGINT) declare baseline_milli: number;
+  @Column(DataType.BIGINT) declare need_from_sleep_debt_milli: number;
+  @Column(DataType.BIGINT) declare need_from_recent_strain_milli: number;
+  @Column(DataType.BIGINT) declare need_from_recent_nap_milli: number;
 }

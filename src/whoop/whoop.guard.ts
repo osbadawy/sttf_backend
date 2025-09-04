@@ -7,7 +7,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import type { Response } from 'express';
-import type { WhoopCallbackRequest } from './dtos';
+import type { WhoopCallbackRequest, WhoopUserProfile } from './dtos';
 
 @Injectable()
 export class WhoopOAuthGuard implements CanActivate {
@@ -53,7 +53,10 @@ export class WhoopCallbackGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<WhoopCallbackRequest>();
-    return await this.exchangeCodeForToken(req);
+    await this.exchangeCodeForToken(req);
+    await this.getUserFromWhoop(req);
+
+    return true;
   }
 
   private async exchangeCodeForToken(
@@ -63,7 +66,6 @@ export class WhoopCallbackGuard implements CanActivate {
       const client_id = process.env.WHOOP_CLIENT_ID;
       const client_secret = process.env.WHOOP_CLIENT_SECRET;
       const code = req.query.code;
-      const user_id = req.query.state;
 
       if (!code) {
         throw new UnauthorizedException(
@@ -103,7 +105,7 @@ export class WhoopCallbackGuard implements CanActivate {
         expires_in,
         expires_at: new Date(Date.now() + expires_in * 1000),
         authorization_token: code,
-        user_id: user_id || '',
+        firebase_id: req.query.state || '',
         scope:
           'read:profile read:body_measurement read:cycles read:workout read:sleep read:recovery offline',
       };
@@ -130,5 +132,27 @@ export class WhoopCallbackGuard implements CanActivate {
         'Failed to exchange authorization code for tokens',
       );
     }
+  }
+
+  private async getUserFromWhoop(req: WhoopCallbackRequest): Promise<boolean> {
+    if (!req.whoopTokens) {
+      throw new UnauthorizedException('Whoop tokens are missing');
+    }
+
+    const { access_token } = req.whoopTokens;
+    const userResponse = await firstValueFrom(
+      this.httpService.get(
+        'https://api.prod.whoop.com/developer/v2/user/profile/basic',
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+          params: {
+            access_token: access_token,
+          },
+        },
+      ),
+    );
+
+    req.whoopUserProfile = userResponse.data as WhoopUserProfile;
+    return true;
   }
 }
