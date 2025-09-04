@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/sequelize';
 import { WhoopService } from './whoop.service';
-import { WhoopAuth } from './models/whoop_auth.model';
+import { WhoopUser } from './models/whoop_user.model';
 import { User } from '../user/models/user.model';
 
 describe('WhoopService', () => {
@@ -12,7 +12,7 @@ describe('WhoopService', () => {
       providers: [
         WhoopService,
         {
-          provide: getModelToken(WhoopAuth),
+          provide: getModelToken(WhoopUser),
           useValue: {
             findOne: jest.fn(),
             create: jest.fn(),

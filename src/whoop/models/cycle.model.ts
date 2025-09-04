@@ -6,9 +6,11 @@ import {
   DataType,
   HasOne,
   HasMany,
+  ForeignKey,
 } from 'sequelize-typescript';
 import { WhoopCycleScore } from './cycle_score.model';
 import { WhoopSleep } from './sleep.model';
+import { WhoopUser } from './whoop_user.model';
 
 @Table({
   tableName: 'whoop_cycle',
@@ -17,7 +19,7 @@ import { WhoopSleep } from './sleep.model';
 })
 export class WhoopCycle extends Model<WhoopCycle> {
   @Column({ type: DataType.BIGINT, primaryKey: true }) declare id: number;
-  @Column(DataType.BIGINT) user_id: number;
+  @ForeignKey(() => WhoopUser)@Column(DataType.BIGINT) declare user_id: number;
   @Column(DataType.DATE) created_at: Date;
   @Column(DataType.DATE) updated_at: Date;
   @Column(DataType.DATE) start: Date;

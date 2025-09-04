@@ -14,7 +14,7 @@ describe('WhoopController', () => {
         {
           provide: WhoopService,
           useValue: {
-            createWhoopAuth: jest.fn(),
+            createWhoopUser: jest.fn(),
           },
         },
         {

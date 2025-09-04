@@ -12,7 +12,7 @@ import { HasOne, HasMany } from 'sequelize-typescript';
 import { Team } from './team.model';
 import { PlayerStats } from './player_stats.model';
 import { PlayerActivity } from './player_activity.model';
-import { WhoopAuth } from '../../whoop/models/whoop_auth.model';
+import { WhoopUser } from '../../whoop/models/whoop_user.model';
 
 // ✨ Import these from 'sequelize'
 import type {
@@ -41,10 +41,6 @@ export class User extends Model<
   @Index({ name: 'firebase_id', unique: true })
   @Column({ type: DataType.STRING, allowNull: false })
   declare firebase_id: string;
-
-  @Index({ name: 'whoop_id', unique: true })
-  @Column({ type: DataType.STRING, allowNull: true })
-  declare whoop_id: CreationOptional<string | null>;
 
   @ForeignKey(() => Team)
   @Column({ type: DataType.UUID, allowNull: true })
@@ -79,5 +75,5 @@ export class User extends Model<
   @HasMany(() => PlayerActivity) declare player_activities: NonAttribute<
     PlayerActivity[] | null
   >;
-  @HasOne(() => WhoopAuth) declare whoop_auth: NonAttribute<WhoopAuth | null>;
+  @HasOne(() => WhoopUser) declare whoop_user: NonAttribute<WhoopUser | null>;
 }

@@ -4,6 +4,6 @@ export interface WhoopTokens {
   refresh_token: string;
   expires_in: number;
   expires_at: Date;
-  user_id: string;
+  firebase_id: string;
   scope: string;
 }

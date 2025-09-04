@@ -9,4 +9,4 @@ export { WhoopSleepNeeded } from './sleep_needed.model';
 export { WhoopSleepScore } from './sleep_score.model';
 export { WhoopSleep } from './sleep.model';
 export { WhoopCycle } from './cycle.model';
-export { WhoopAuth } from './whoop_auth.model';
+export { WhoopUser } from './whoop_user.model';
