@@ -19,7 +19,7 @@ import { WhoopUser } from './whoop_user.model';
 })
 export class WhoopCycle extends Model<WhoopCycle> {
   @Column({ type: DataType.BIGINT, primaryKey: true }) declare id: number;
-  @ForeignKey(() => WhoopUser)@Column(DataType.BIGINT) declare user_id: number;
+  @ForeignKey(() => WhoopUser) @Column(DataType.BIGINT) declare user_id: number;
   @Column(DataType.DATE) created_at: Date;
   @Column(DataType.DATE) updated_at: Date;
   @Column(DataType.DATE) start: Date;

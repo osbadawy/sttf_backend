@@ -6,7 +6,6 @@ import { CryptoUtil } from '../utils';
 import { WhoopTokens } from './dtos/whoop-tokens.dto';
 import { WhoopUserProfile } from './dtos/whoop-user-profile.dto';
 
-
 interface CreateWhoopUserParams {
   whoopTokens: WhoopTokens;
   whoopUserProfile: WhoopUserProfile;
@@ -24,17 +23,24 @@ export class WhoopService {
   async createWhoopUser({
     whoopTokens,
     whoopUserProfile,
-  }) {
-    const user = await this.userModel.findOne({ where: { firebase_id: whoopTokens.firebase_id } });
+  }: CreateWhoopUserParams) {
+    const user = await this.userModel.findOne({
+      where: { firebase_id: whoopTokens.firebase_id },
+    });
     if (!user) {
       throw new Error('User not found');
     }
 
     // Encrypt the tokens before storing
-    const encryptedAuthorizationToken =
-      this.cryptoUtil.simpleEncrypt(whoopTokens.authorization_token);
-    const encryptedAccessToken = this.cryptoUtil.simpleEncrypt(whoopTokens.access_token);
-    const encryptedRefreshToken = this.cryptoUtil.simpleEncrypt(whoopTokens.refresh_token);
+    const encryptedAuthorizationToken = this.cryptoUtil.simpleEncrypt(
+      whoopTokens.authorization_token,
+    );
+    const encryptedAccessToken = this.cryptoUtil.simpleEncrypt(
+      whoopTokens.access_token,
+    );
+    const encryptedRefreshToken = this.cryptoUtil.simpleEncrypt(
+      whoopTokens.refresh_token,
+    );
 
     const whoopUserData = {
       id: whoopUserProfile.user_id,
@@ -48,8 +54,6 @@ export class WhoopService {
       scope: whoopTokens.scope,
       expires_at: whoopTokens.expires_at,
     };
-
-    console.log('whoopUserData', whoopUserData);
 
     // Check if WhoopUser record exists for this user
     const existingWhoopUser = await this.whoopUserModel.findOne({

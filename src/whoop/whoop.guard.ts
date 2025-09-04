@@ -138,15 +138,18 @@ export class WhoopCallbackGuard implements CanActivate {
     if (!req.whoopTokens) {
       throw new UnauthorizedException('Whoop tokens are missing');
     }
-    
+
     const { access_token } = req.whoopTokens;
     const userResponse = await firstValueFrom(
-      this.httpService.get("https://api.prod.whoop.com/developer/v2/user/profile/basic", {
-        headers: { Authorization: `Bearer ${access_token}` },
-        params: {
-          access_token: access_token,
+      this.httpService.get(
+        'https://api.prod.whoop.com/developer/v2/user/profile/basic',
+        {
+          headers: { Authorization: `Bearer ${access_token}` },
+          params: {
+            access_token: access_token,
+          },
         },
-      }),
+      ),
     );
 
     req.whoopUserProfile = userResponse.data as WhoopUserProfile;

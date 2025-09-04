@@ -20,8 +20,7 @@ import { WhoopUser } from './whoop_user.model';
 export class WhoopSleep extends Model<WhoopSleep> {
   @Column({ type: DataType.UUID, primaryKey: true }) declare id: string;
   @ForeignKey(() => WhoopCycle) @Column(DataType.BIGINT) cycle_id: number;
-  @ForeignKey(() => WhoopUser)@Column(DataType.BIGINT) declare user_id: number;
-
+  @ForeignKey(() => WhoopUser) @Column(DataType.BIGINT) declare user_id: number;
 
   // @Column(DataType.BIGINT) v1_id?: number; #v1 not used
   @Column(DataType.DATE) created_at: Date;
