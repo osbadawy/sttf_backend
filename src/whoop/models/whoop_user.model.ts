@@ -5,7 +5,7 @@ import {
   DataType,
   ForeignKey,
 } from 'sequelize-typescript';
-import { User } from '../../user/models/user.model';
+import { User } from 'src/user/models/user.model';
 import type { InferAttributes, InferCreationAttributes } from 'sequelize';
 
 @Table({

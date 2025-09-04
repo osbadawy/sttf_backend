@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { WhoopUser } from 'src/whoop/models/whoop_user.model';
+import { WhoopUser } from 'src/whoop/models';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { CreateWhoopUserParams } from 'src/whoop/dtos';
