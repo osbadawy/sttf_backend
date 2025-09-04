@@ -66,7 +66,9 @@ export class WhoopCallbackGuard implements CanActivate {
       const user_id = req.query.state;
 
       if (!code) {
-        throw new UnauthorizedException('Authorization code is missing');
+        throw new UnauthorizedException(
+          'Authorization code is missing. Query: ' + JSON.stringify(req.query),
+        );
       }
 
       // Make request to WHOOP token endpoint

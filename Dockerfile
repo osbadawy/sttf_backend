@@ -19,7 +19,7 @@ COPY . .
 RUN npm run build
 
 # Expose ports
-EXPOSE 3000
+EXPOSE 5000
 EXPOSE 9229
 
 # Start the application in debug mode
