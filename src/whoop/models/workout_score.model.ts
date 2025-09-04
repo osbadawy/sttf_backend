@@ -14,16 +14,22 @@ import { WhoopWorkout } from './workout.model';
   underscored: true,
 })
 export class WhoopWorkoutScore extends Model<WhoopWorkoutScore> {
+  @Column({ type: DataType.BIGINT, primaryKey: true, autoIncrement: true })
+  declare id: number;
   @ForeignKey(() => WhoopWorkout)
-  @Column({ type: DataType.UUID, primaryKey: true })
-  workout_id: string;
+  @Column({ type: DataType.UUID })
+  declare workout_id: string;
 
-  @Column(DataType.DOUBLE) strain: number;
-  @Column(DataType.INTEGER) average_heart_rate: number;
-  @Column(DataType.INTEGER) max_heart_rate: number;
-  @Column(DataType.DOUBLE) kilojoule: number;
-  @Column(DataType.DOUBLE) percent_recorded: number;
-  @Column(DataType.DOUBLE) distance_meter?: number;
-  @Column(DataType.DOUBLE) altitude_gain_meter?: number;
-  @Column(DataType.DOUBLE) altitude_change_meter?: number;
+  @Column(DataType.DOUBLE) declare strain: number;
+  @Column(DataType.INTEGER) declare average_heart_rate: number;
+  @Column(DataType.INTEGER) declare max_heart_rate: number;
+  @Column(DataType.DOUBLE) declare kilojoule: number;
+  @Column(DataType.DOUBLE) declare percent_recorded: number;
+  @Column({ type: DataType.DOUBLE, allowNull: true }) declare distance_meter?:
+    | number
+    | null;
+  @Column({ type: DataType.DOUBLE, allowNull: true })
+  declare altitude_gain_meter?: number | null;
+  @Column({ type: DataType.DOUBLE, allowNull: true })
+  declare altitude_change_meter?: number | null;
 }

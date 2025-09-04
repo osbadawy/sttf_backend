@@ -1,0 +1,340 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel, InjectConnection } from '@nestjs/sequelize';
+import { Transaction, Sequelize } from 'sequelize';
+import { WhoopUser } from 'src/whoop/models/whoop_user.model';
+import { WhoopWorkout } from 'src/whoop/models/workout.model';
+import { WhoopWorkoutScore } from 'src/whoop/models/workout_score.model';
+import { WhoopWorkoutZoneDurations } from 'src/whoop/models/workout_zone_durations.model';
+import { CryptoUtil } from 'src/utils';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import {
+  WhoopWorkoutApiData,
+  WhoopWorkoutApiResponse,
+  WhoopWorkoutDatabaseData,
+  WhoopWorkoutServiceResponse,
+} from '../dtos';
+
+@Injectable()
+export class WhoopWorkoutService {
+  private readonly cryptoUtil = new CryptoUtil();
+
+  constructor(
+    @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
+    @InjectModel(WhoopWorkout)
+    private readonly whoopWorkoutModel: typeof WhoopWorkout,
+    @InjectModel(WhoopWorkoutScore)
+    private readonly whoopWorkoutScoreModel: typeof WhoopWorkoutScore,
+    @InjectModel(WhoopWorkoutZoneDurations)
+    private readonly whoopWorkoutZoneDurationsModel: typeof WhoopWorkoutZoneDurations,
+    @InjectConnection() private readonly sequelize: Sequelize,
+    private readonly httpService: HttpService,
+  ) {}
+
+  private async getWorkoutsFromWhoopApi(
+    access_token: string,
+    next_token: string | null,
+  ): Promise<WhoopWorkoutApiResponse> {
+    let url = `https://api.prod.whoop.com/developer/v2/activity/workout`;
+    if (next_token) {
+      url += `?next_token=${next_token}`;
+    }
+
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopWorkoutApiResponse>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
+  }
+
+  private async saveSingleWorkoutRecord(
+    workoutRecord: WhoopWorkoutApiData,
+    whoopUserId: number,
+    transaction: Transaction,
+  ): Promise<WhoopWorkoutDatabaseData> {
+    console.log(
+      `Processing workout record ${workoutRecord.id}, score_state: ${workoutRecord.score_state}`,
+    );
+
+    // Upsert workout record
+    const [workout] = await this.whoopWorkoutModel.upsert(
+      {
+        id: workoutRecord.id,
+        user_id: whoopUserId,
+        created_at: new Date(workoutRecord.created_at),
+        updated_at: new Date(workoutRecord.updated_at),
+        start: new Date(workoutRecord.start),
+        end: new Date(workoutRecord.end),
+        timezone_offset: workoutRecord.timezone_offset,
+        sport_name: workoutRecord.sport_name,
+        score_state: workoutRecord.score_state,
+      } as WhoopWorkout,
+      { transaction },
+    );
+
+    console.log(`Workout record ${workoutRecord.id} saved successfully`);
+
+    // Initialize score data
+    let score: WhoopWorkoutScore | null = null;
+    let zoneDurations: WhoopWorkoutZoneDurations | null = null;
+
+    // Process score data if available
+    if (workoutRecord.score_state === 'SCORED' && workoutRecord.score) {
+      console.log(
+        `Processing score data for workout record ${workoutRecord.id}`,
+      );
+
+      // Find or create workout score
+      console.log(
+        `Looking for existing workout score for workout_id: ${workout.id}`,
+      );
+      const [savedScore, created] =
+        await this.whoopWorkoutScoreModel.findOrCreate({
+          where: { workout_id: workout.id },
+          defaults: {
+            workout_id: workout.id,
+            strain: workoutRecord.score.strain,
+            average_heart_rate: workoutRecord.score.average_heart_rate,
+            max_heart_rate: workoutRecord.score.max_heart_rate,
+            kilojoule: workoutRecord.score.kilojoule,
+            percent_recorded: workoutRecord.score.percent_recorded,
+            distance_meter: workoutRecord.score.distance_meter,
+            altitude_gain_meter: workoutRecord.score.altitude_gain_meter,
+            altitude_change_meter: workoutRecord.score.altitude_change_meter,
+          } as WhoopWorkoutScore,
+          transaction,
+        });
+
+      console.log(
+        `Workout score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
+      );
+
+      // Update if it already existed
+      if (!created) {
+        console.log(`Updating existing workout score ID: ${savedScore.id}`);
+        await savedScore.update(
+          {
+            strain: workoutRecord.score.strain,
+            average_heart_rate: workoutRecord.score.average_heart_rate,
+            max_heart_rate: workoutRecord.score.max_heart_rate,
+            kilojoule: workoutRecord.score.kilojoule,
+            percent_recorded: workoutRecord.score.percent_recorded,
+            distance_meter: workoutRecord.score.distance_meter,
+            altitude_gain_meter: workoutRecord.score.altitude_gain_meter,
+            altitude_change_meter: workoutRecord.score.altitude_change_meter,
+          },
+          { transaction },
+        );
+      }
+
+      score = savedScore;
+
+      // Save zone durations if available
+      if (workoutRecord.score.zone_durations) {
+        console.log(
+          `Processing zone durations for workout_score_id: ${score.id}`,
+        );
+        // Find existing zone durations or create new one
+        const existingZoneDurations =
+          await this.whoopWorkoutZoneDurationsModel.findOne({
+            where: { workout_score_id: score.id },
+            transaction,
+          });
+
+        if (existingZoneDurations) {
+          console.log(
+            `Updating existing zone durations for workout_score_id: ${score.id}`,
+          );
+          // Update existing zone durations
+          await existingZoneDurations.update(
+            {
+              zone_zero_milli:
+                workoutRecord.score.zone_durations.zone_zero_milli,
+              zone_one_milli: workoutRecord.score.zone_durations.zone_one_milli,
+              zone_two_milli: workoutRecord.score.zone_durations.zone_two_milli,
+              zone_three_milli:
+                workoutRecord.score.zone_durations.zone_three_milli,
+              zone_four_milli:
+                workoutRecord.score.zone_durations.zone_four_milli,
+              zone_five_milli:
+                workoutRecord.score.zone_durations.zone_five_milli,
+            },
+            { transaction },
+          );
+          zoneDurations = existingZoneDurations;
+        } else {
+          console.log(
+            `Creating new zone durations for workout_score_id: ${score.id}`,
+          );
+          // Create new zone durations
+          zoneDurations = await this.whoopWorkoutZoneDurationsModel.create(
+            {
+              workout_score_id: score.id,
+              zone_zero_milli:
+                workoutRecord.score.zone_durations.zone_zero_milli,
+              zone_one_milli: workoutRecord.score.zone_durations.zone_one_milli,
+              zone_two_milli: workoutRecord.score.zone_durations.zone_two_milli,
+              zone_three_milli:
+                workoutRecord.score.zone_durations.zone_three_milli,
+              zone_four_milli:
+                workoutRecord.score.zone_durations.zone_four_milli,
+              zone_five_milli:
+                workoutRecord.score.zone_durations.zone_five_milli,
+            } as any,
+            { transaction },
+          );
+        }
+        console.log(`Zone durations processed successfully`);
+      }
+    } else {
+      console.log(`No score data for workout record ${workoutRecord.id}`);
+    }
+
+    // Build the complete workout record with score data
+    const workoutWithScore: WhoopWorkoutDatabaseData = {
+      ...workout.toJSON(),
+      score: score
+        ? {
+            id: score.id,
+            workout_id: score.workout_id,
+            strain: score.strain,
+            average_heart_rate: score.average_heart_rate,
+            max_heart_rate: score.max_heart_rate,
+            kilojoule: score.kilojoule,
+            percent_recorded: score.percent_recorded,
+            distance_meter: score.distance_meter,
+            altitude_gain_meter: score.altitude_gain_meter,
+            altitude_change_meter: score.altitude_change_meter,
+            zone_durations: zoneDurations
+              ? {
+                  zone_zero_milli: zoneDurations.zone_zero_milli,
+                  zone_one_milli: zoneDurations.zone_one_milli,
+                  zone_two_milli: zoneDurations.zone_two_milli,
+                  zone_three_milli: zoneDurations.zone_three_milli,
+                  zone_four_milli: zoneDurations.zone_four_milli,
+                  zone_five_milli: zoneDurations.zone_five_milli,
+                }
+              : undefined,
+          }
+        : null,
+    };
+
+    console.log(
+      `Successfully processed workout record ${workoutRecord.id} in transaction`,
+    );
+    return workoutWithScore;
+  }
+
+  private async saveWorkoutsToDatabase(
+    workoutsData: WhoopWorkoutApiData[],
+    whoopUserId: number,
+  ): Promise<{
+    savedWorkouts: WhoopWorkoutDatabaseData[];
+    allWorkoutsWorked: boolean;
+  }> {
+    const savedWorkouts: WhoopWorkoutDatabaseData[] = [];
+    let allWorkoutsWorked = true;
+    let processedCount = 0;
+    console.log(
+      `Starting to save ${workoutsData.length} workout records to database`,
+    );
+
+    for (const workoutRecord of workoutsData) {
+      processedCount++;
+
+      // Create a transaction for each workout record
+      const transaction = await this.sequelize.transaction();
+
+      try {
+        const workoutWithScore = await this.saveSingleWorkoutRecord(
+          workoutRecord,
+          whoopUserId,
+          transaction,
+        );
+
+        // Commit the transaction
+        await transaction.commit();
+        savedWorkouts.push(workoutWithScore);
+        console.log(
+          `Successfully processed workout record ${workoutRecord.id}`,
+        );
+      } catch (error) {
+        allWorkoutsWorked = false;
+        // Rollback the transaction on error
+        await transaction.rollback();
+        console.error(
+          `Error saving workout record ${workoutRecord.id}:`,
+          error,
+        );
+        // Continue with other workout records even if one fails
+      }
+    }
+
+    console.log(
+      `Successfully saved ${savedWorkouts.length} workout records to database`,
+    );
+    console.log(
+      `Processed ${processedCount} out of ${workoutsData.length} total records from API`,
+    );
+    return {
+      savedWorkouts,
+      allWorkoutsWorked,
+    };
+  }
+
+  async createWorkout(
+    whoop_user_id: number,
+    max_pages: number = 10,
+  ): Promise<WhoopWorkoutServiceResponse> {
+    // Find Whoop user
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { id: whoop_user_id },
+    });
+    if (!whoopUser) {
+      throw new Error('Whoop user not found');
+    }
+
+    const access_token = this.cryptoUtil.simpleDecrypt(
+      whoopUser.access_token_encrypted,
+    );
+
+    let allSavedWorkouts: WhoopWorkoutDatabaseData[] = [];
+
+    try {
+      let next_token: string | null = null;
+      for (let i = 0; i < max_pages; i++) {
+        const workoutsResponse = await this.getWorkoutsFromWhoopApi(
+          access_token,
+          next_token,
+        );
+
+        next_token = workoutsResponse.next_token;
+
+        const { savedWorkouts, allWorkoutsWorked } =
+          await this.saveWorkoutsToDatabase(
+            workoutsResponse.records,
+            whoop_user_id,
+          );
+
+        allSavedWorkouts = allSavedWorkouts.concat(savedWorkouts);
+
+        if (!allWorkoutsWorked) {
+          break;
+        }
+      }
+
+      return {
+        ok: true,
+        message: `Successfully processed ${allSavedWorkouts.length} workout records`,
+        data: {
+          saved_workout_records: allSavedWorkouts.length,
+          workout_records: allSavedWorkouts,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching or saving workout data:', error);
+      throw new Error('Failed to fetch or save workout data from Whoop API');
+    }
+  }
+}

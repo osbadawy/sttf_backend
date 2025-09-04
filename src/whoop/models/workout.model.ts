@@ -7,7 +7,7 @@ import {
   ForeignKey,
 } from 'sequelize-typescript';
 import { WhoopWorkoutScore } from './workout_score.model';
-import { PlayerActivity } from '../../user/models/player_activity.model';
+import { PlayerActivity } from 'src/user/models/player_activity.model';
 import { WhoopUser } from './whoop_user.model';
 
 // workout.model.ts
@@ -21,16 +21,16 @@ export class WhoopWorkout extends Model<WhoopWorkout> {
   // @Column(DataType.BIGINT) v1_id?: number;  // soon to be deprecated
   @ForeignKey(() => WhoopUser) @Column(DataType.BIGINT) declare user_id: number;
 
-  @Column(DataType.DATE) created_at: Date;
-  @Column(DataType.DATE) updated_at: Date;
-  @Column(DataType.DATE) start: Date;
-  @Column(DataType.DATE) end: Date;
-  @Column(DataType.STRING(6)) timezone_offset: string;
-  @Column(DataType.STRING) sport_name: string;
+  @Column(DataType.DATE) declare created_at: Date;
+  @Column(DataType.DATE) declare updated_at: Date;
+  @Column(DataType.DATE) declare start: Date;
+  @Column(DataType.DATE) declare end: Date;
+  @Column(DataType.STRING(6)) declare timezone_offset: string;
+  @Column(DataType.STRING) declare sport_name: string;
   @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'))
-  score_state: string;
+  declare score_state: string;
   // @Column(DataType.INTEGER) sport_id?: number; // soon to be deprecated
 
-  @HasOne(() => WhoopWorkoutScore) score?: WhoopWorkoutScore;
-  @HasOne(() => PlayerActivity) player_activity?: PlayerActivity;
+  @HasOne(() => WhoopWorkoutScore) declare score?: WhoopWorkoutScore;
+  @HasOne(() => PlayerActivity) declare player_activity?: PlayerActivity;
 }

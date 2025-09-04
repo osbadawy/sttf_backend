@@ -4,6 +4,7 @@ import {
   WhoopCycleService,
   WhoopSleepService,
   WhoopRecoveryService,
+  WhoopWorkoutService,
 } from './services';
 import { WhoopController } from './whoop.controller';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
@@ -22,6 +23,7 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
     WhoopCycleService,
     WhoopSleepService,
     WhoopRecoveryService,
+    WhoopWorkoutService,
     FirebaseAuthGuard,
     WhoopOAuthGuard,
     WhoopCallbackGuard,

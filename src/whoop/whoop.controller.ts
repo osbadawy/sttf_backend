@@ -9,6 +9,7 @@ import {
   WhoopUserService,
   WhoopSleepService,
   WhoopRecoveryService,
+  WhoopWorkoutService,
 } from './services';
 
 @Controller('whoop')
@@ -18,10 +19,11 @@ export class WhoopController {
     private readonly whoopCycleService: WhoopCycleService,
     private readonly whoopSleepService: WhoopSleepService,
     private readonly whoopRecoveryService: WhoopRecoveryService,
+    private readonly whoopWorkoutService: WhoopWorkoutService,
   ) {}
 
   // Step 1: kick off OAuth
-  @Get('/auth/start')
+  @Post('/auth/start')
   @UseGuards(FirebaseAuthGuard, WhoopOAuthGuard)
   whoopLogin() {
     // Guard redirects to WHOOP automatically
@@ -44,36 +46,16 @@ export class WhoopController {
       await this.whoopCycleService.createCycles(req.whoopUserProfile.user_id);
 
       await this.whoopSleepService.createSleep(req.whoopUserProfile.user_id);
+
+      await this.whoopRecoveryService.createRecovery(
+        req.whoopUserProfile.user_id,
+      );
+
+      await this.whoopWorkoutService.createWorkout(
+        req.whoopUserProfile.user_id,
+      );
     }
 
     return res.redirect(process.env.APP_WEB_SUCCESS_URL!);
-  }
-
-  @Post('cycle')
-  async test(@Req() req: Request) {
-    if ('whoop_user_id' in req.body!) {
-      return await this.whoopCycleService.createCycles(
-        req.body.whoop_user_id as number,
-      );
-    }
-  }
-
-  @Post('sleep')
-  async createSleep(@Req() req: Request) {
-    if ('whoop_user_id' in req.body!) {
-      return await this.whoopSleepService.createSleep(
-        req.body.whoop_user_id as number,
-      );
-    }
-    throw new Error('whoop_user_id is required');
-  }
-
-  @Post('recovery')
-  async createRecovery(@Req() req: Request) {
-    if ('whoop_user_id' in req.body!) {
-      return await this.whoopRecoveryService.createRecovery(
-        req.body.whoop_user_id as number,
-      );
-    }
   }
 }
