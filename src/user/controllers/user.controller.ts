@@ -1,4 +1,3 @@
-// src/users/user.controller.ts
 import {
   BadRequestException,
   NotFoundException,
@@ -13,29 +12,16 @@ import {
 } from '@nestjs/common';
 import { UniqueConstraintError } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
-import { User } from './models/user.model';
-import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
-import { SignUpResponse, getUserResponse } from './dtos/user.interfaces.dtos';
+import { User } from '../models/user.model';
+import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
+import { SignUpResponse, getUserResponse } from '../dtos/user.interfaces.dtos';
 
-type SignUpBody = {
-  firebase_id: string;
-  email: string;
-};
-
-type getUserPk = {
-  id: string;
-};
-
-type PatchUserFields = {
-  email?: string;
-  avatar_url?: string;
-  age?: number;
-  phone?: number;
-  nationality?: string;
-  display_name?: string;
-};
-
-type PatchUserBody = { id: string; data?: PatchUserFields } & PatchUserFields;
+import type {
+  SignUpBodyRequest,
+  getUserPkRequest,
+  PatchUserFieldsRequest,
+  PatchUserBodyRequest,
+} from '../dtos/user.request.dtos';
 
 @Controller('user')
 @UseGuards(FirebaseAuthGuard)
@@ -43,7 +29,7 @@ export class UserController {
   constructor(@InjectModel(User) private readonly userModel: typeof User) {}
 
   @Get()
-  async getUserByPk(@Body() body: getUserPk): Promise<getUserResponse> {
+  async getUserByPk(@Body() body: getUserPkRequest): Promise<getUserResponse> {
     const id = body.id;
 
     if (!id) throw new BadRequestException('id is required');
@@ -64,13 +50,15 @@ export class UserController {
       return { ok: true, data };
     } catch (e: any) {
       const errorMessage =
-        e instanceof Error ? e.message : 'Failed to save user.';
+        e instanceof Error ? e.message : 'Failed to get user.';
       throw new UnauthorizedException(errorMessage);
     }
   }
 
   @Patch()
-  async patchUserByPk(@Body() body: PatchUserBody): Promise<getUserResponse> {
+  async patchUserByPk(
+    @Body() body: PatchUserBodyRequest,
+  ): Promise<getUserResponse> {
     const id = String(body?.id ?? '').trim();
     if (!id) throw new BadRequestException('id is required');
 
@@ -78,7 +66,7 @@ export class UserController {
       const user = await this.userModel.findByPk(id);
       if (!user) throw new NotFoundException('user not found!');
 
-      const src: PatchUserFields =
+      const src: PatchUserFieldsRequest =
         body && typeof body.data === 'object' ? body.data : body;
 
       const updates: Record<string, any> = {};
@@ -128,13 +116,13 @@ export class UserController {
       return { ok: true, data };
     } catch (e: any) {
       const errorMessage =
-        e instanceof Error ? e.message : 'Failed to save user.';
+        e instanceof Error ? e.message : 'Failed to update user.';
       throw new UnauthorizedException(errorMessage);
     }
   }
 
   @Post('signup')
-  async signUp(@Body() body: SignUpBody): Promise<SignUpResponse> {
+  async signUp(@Body() body: SignUpBodyRequest): Promise<SignUpResponse> {
     const firebase_id = (body?.firebase_id ?? '').trim();
     const email = (body?.email ?? '').trim().toLowerCase();
 
