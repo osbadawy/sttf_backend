@@ -1,5 +1,4 @@
-import { WhoopTokens } from './whoop-tokens.dto';
-import { WhoopUserProfile } from './whoop-user-profile.dto';
+import { WhoopTokens, WhoopUserProfile } from './whoop_user.dto';
 
 export interface WhoopRequest {
   whoopTokens?: WhoopTokens;

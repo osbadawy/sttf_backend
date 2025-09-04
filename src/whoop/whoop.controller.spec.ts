@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
 import { WhoopController } from './whoop.controller';
-import { WhoopService } from './whoop.service';
+import { WhoopUserService, WhoopCycleService } from './services';
 import { FIREBASE_ADMIN } from '../auth/firebase-admin.provider';
 
 describe('WhoopController', () => {
@@ -12,9 +12,15 @@ describe('WhoopController', () => {
       controllers: [WhoopController],
       providers: [
         {
-          provide: WhoopService,
+          provide: WhoopUserService,
           useValue: {
             createWhoopUser: jest.fn(),
+          },
+        },
+        {
+          provide: WhoopCycleService,
+          useValue: {
+            createCycles: jest.fn(),
           },
         },
         {

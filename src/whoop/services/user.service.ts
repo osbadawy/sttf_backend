@@ -1,18 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { WhoopUser } from './models/whoop_user.model';
-import { User } from '../user/models/user.model';
-import { CryptoUtil } from '../utils';
-import { WhoopTokens } from './dtos/whoop-tokens.dto';
-import { WhoopUserProfile } from './dtos/whoop-user-profile.dto';
-
-interface CreateWhoopUserParams {
-  whoopTokens: WhoopTokens;
-  whoopUserProfile: WhoopUserProfile;
-}
+import { WhoopUser } from 'src/whoop/models/whoop_user.model';
+import { User } from 'src/user/models/user.model';
+import { CryptoUtil } from 'src/utils';
+import { CreateWhoopUserParams } from 'src/whoop/dtos';
 
 @Injectable()
-export class WhoopService {
+export class WhoopUserService {
   private readonly cryptoUtil = new CryptoUtil();
 
   constructor(
