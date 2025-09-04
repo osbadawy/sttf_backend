@@ -4,13 +4,14 @@ import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
 import type { WhoopCallbackRequest } from './dtos';
-import { WhoopCycleService, WhoopUserService } from './services';
+import { WhoopCycleService, WhoopUserService, WhoopSleepService } from './services';
 
 @Controller('whoop')
 export class WhoopController {
   constructor(
     private readonly whoopUserService: WhoopUserService,
     private readonly whoopCycleService: WhoopCycleService,
+    private readonly whoopSleepService: WhoopSleepService,
   ) {}
 
   // Step 1: kick off OAuth
@@ -42,12 +43,22 @@ export class WhoopController {
     return res.redirect(process.env.APP_WEB_SUCCESS_URL!);
   }
 
-  @Post('test')
+  @Post('cycle')
   async test(@Req() req: Request) {
     if ('whoop_user_id' in req.body!) {
       return await this.whoopCycleService.createCycles(
         req.body.whoop_user_id as number,
       );
     }
+  }
+
+  @Post('sleep')
+  async createSleep(@Req() req: Request) {
+    if ('whoop_user_id' in req.body!) {
+      return await this.whoopSleepService.createSleep(
+        req.body.whoop_user_id as number,
+      );
+    }
+    throw new Error('whoop_user_id is required');
   }
 }

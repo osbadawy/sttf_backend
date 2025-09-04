@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { WhoopUserService, WhoopCycleService } from './services';
+import { WhoopUserService, WhoopCycleService, WhoopSleepService } from './services';
 import { WhoopController } from './whoop.controller';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
@@ -15,6 +15,7 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
   providers: [
     WhoopUserService,
     WhoopCycleService,
+    WhoopSleepService,
     FirebaseAuthGuard,
     WhoopOAuthGuard,
     WhoopCallbackGuard,
