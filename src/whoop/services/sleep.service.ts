@@ -38,48 +38,23 @@ export class WhoopSleepService {
     private readonly httpService: HttpService,
   ) {}
 
-  private async getAllSleepFromWhoopApi(
+  private async getSleepFromWhoopApi(
     access_token: string,
-    max_pages: number = 1,
+    next_token: string | null,
   ): Promise<WhoopSleepApiResponse> {
-    let allSleep: WhoopSleepApiData[] = [];
-    let nextToken: string | null = null;
-    let hasMoreData = true;
-    let page = 0;
-    console.log(`Fetching sleep data from Whoop API, max_pages: ${max_pages}`);
-
-    // Fetch all pages of sleep data
-    while (hasMoreData && page < max_pages) {
-      const url = nextToken
-        ? `https://api.prod.whoop.com/developer/v2/activity/sleep?next_token=${nextToken}`
-        : `https://api.prod.whoop.com/developer/v2/activity/sleep`;
-
-      const response = await firstValueFrom(
-        this.httpService.get<WhoopSleepApiResponse>(url, {
-          headers: { Authorization: `Bearer ${access_token}` },
-        }),
-      );
-
-      const responseData: WhoopSleepApiResponse = response.data;
-      if (responseData && responseData.records) {
-        allSleep = allSleep.concat(responseData.records);
-      }
-      nextToken = (responseData && responseData.next_token) || null;
-      hasMoreData = nextToken !== null;
-      page++;
+    let url = `https://api.prod.whoop.com/developer/v2/activity/sleep`;
+    if (next_token) {
+      url += `?next_token=${next_token}`;
     }
 
-    console.log(`Fetched ${allSleep.length} total sleep records from Whoop API`);
-
-    return {
-      records: allSleep,
-      next_token: null, // We've fetched everything
-    };
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopSleepApiResponse>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
   }
 
-  /**
-   * Saves a single sleep record with all its related data in a single transaction
-   */
   private async saveSingleSleepRecord(
     sleepRecord: WhoopSleepApiData,
     whoopUserId: number,
@@ -261,48 +236,12 @@ export class WhoopSleepService {
     return sleepWithScore;
   }
 
-  /**
-   * Alternative method: Save all sleep records in a single transaction
-   * Use this for better performance when processing many records
-   */
-  private async saveAllSleepRecordsInSingleTransaction(
-    sleepData: WhoopSleepApiData[],
-    whoopUserId: number,
-  ): Promise<WhoopSleepDatabaseData[]> {
-    const transaction = await this.sequelize.transaction();
-    const savedSleep: WhoopSleepDatabaseData[] = [];
-    
-    try {
-      console.log(`Starting to save ${sleepData.length} sleep records in single transaction`);
-
-      for (const sleepRecord of sleepData) {
-        const sleepWithScore = await this.saveSingleSleepRecord(
-          sleepRecord,
-          whoopUserId,
-          transaction,
-        );
-        savedSleep.push(sleepWithScore);
-      }
-
-      // Commit the entire transaction
-      await transaction.commit();
-      console.log(`Successfully saved ${savedSleep.length} sleep records in single transaction`);
-      
-    } catch (error) {
-      // Rollback the entire transaction on any error
-      await transaction.rollback();
-      console.error('Error saving sleep records in transaction:', error);
-      throw error;
-    }
-
-    return savedSleep;
-  }
-
   private async saveSleepToDatabase(
     sleepData: WhoopSleepApiData[],
     whoopUserId: number,
-  ): Promise<WhoopSleepDatabaseData[]> {
+  ): Promise<{ savedSleep: WhoopSleepDatabaseData[], allSleepsWorked: boolean }> {
     const savedSleep: WhoopSleepDatabaseData[] = [];
+    let allSleepsWorked = true;
     let processedCount = 0;
     console.log(`Starting to save ${sleepData.length} sleep records to database`);
 
@@ -325,6 +264,7 @@ export class WhoopSleepService {
         console.log(`Successfully processed sleep record ${sleepRecord.id}`);
         
       } catch (error) {
+        allSleepsWorked = false;
         // Rollback the transaction on error
         await transaction.rollback();
         console.error(`Error saving sleep record ${sleepRecord.id}:`, error);
@@ -334,10 +274,13 @@ export class WhoopSleepService {
 
     console.log(`Successfully saved ${savedSleep.length} sleep records to database`);
     console.log(`Processed ${processedCount} out of ${sleepData.length} total records from API`);
-    return savedSleep;
+    return {
+      savedSleep,
+      allSleepsWorked,
+    };
   }
 
-  async createSleep(whoop_user_id: number): Promise<WhoopSleepServiceResponse> {
+  async createSleep(whoop_user_id: number, max_pages: number = 10): Promise<WhoopSleepServiceResponse> {
     // Find Whoop user
     const whoopUser = await this.whoopUserModel.findOne({
       where: { id: whoop_user_id },
@@ -350,23 +293,32 @@ export class WhoopSleepService {
       whoopUser.access_token_encrypted,
     );
 
-    try {
-      // Fetch sleep data from Whoop API
-      const sleepResponse = await this.getAllSleepFromWhoopApi(access_token);
+    let allSavedSleep: WhoopSleepDatabaseData[] = [];
 
-      // Save sleep data to database
-      const savedSleep = await this.saveSleepToDatabase(
-        sleepResponse.records,
-        whoop_user_id,
-      );
+    try {
+      let next_token: string | null = null;
+      for (let i = 0; i < max_pages; i++) {
+        const sleepResponse = await this.getSleepFromWhoopApi(access_token, next_token);
+        next_token = sleepResponse.next_token;
+
+        const { savedSleep, allSleepsWorked } = await this.saveSleepToDatabase(
+          sleepResponse.records,
+          whoop_user_id,
+        );
+
+        allSavedSleep = allSavedSleep.concat(savedSleep);
+
+        if (!allSleepsWorked) {
+          break;
+        }
+      }
 
       return {
         ok: true,
-        message: `Successfully processed ${savedSleep.length} sleep records`,
+        message: `Successfully processed ${allSavedSleep.length} sleep records`,
         data: {
-          total_sleep_records: sleepResponse.records.length,
-          saved_sleep_records: savedSleep.length,
-          sleep_records: savedSleep,
+          saved_sleep_records: allSavedSleep.length,
+          sleep_records: allSavedSleep,
         },
       };
     } catch (error) {

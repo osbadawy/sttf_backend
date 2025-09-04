@@ -72,7 +72,6 @@ export interface WhoopSleepServiceResponse {
   ok: boolean;
   message: string;
   data: {
-    total_sleep_records: number;
     saved_sleep_records: number;
     sleep_records: WhoopSleepDatabaseData[];
   };
