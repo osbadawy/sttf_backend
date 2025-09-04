@@ -4,7 +4,7 @@ import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
 import type { WhoopCallbackRequest } from './dtos';
-import { WhoopCycleService, WhoopUserService, WhoopSleepService } from './services';
+import { WhoopCycleService, WhoopUserService, WhoopSleepService, WhoopRecoveryService } from './services';
 
 @Controller('whoop')
 export class WhoopController {
@@ -12,6 +12,7 @@ export class WhoopController {
     private readonly whoopUserService: WhoopUserService,
     private readonly whoopCycleService: WhoopCycleService,
     private readonly whoopSleepService: WhoopSleepService,
+    private readonly whoopRecoveryService: WhoopRecoveryService,
   ) {}
 
   // Step 1: kick off OAuth
@@ -35,9 +36,13 @@ export class WhoopController {
         whoopUserProfile: req.whoopUserProfile,
       });
 
-      // await this.whoopCycleService.createCycles(
-      //   req.whoopUserProfile.user_id,
-      // );
+      await this.whoopCycleService.createCycles(
+        req.whoopUserProfile.user_id,
+      );
+
+      await this.whoopSleepService.createSleep(
+        req.whoopUserProfile.user_id as number,
+      );
     }
 
     return res.redirect(process.env.APP_WEB_SUCCESS_URL!);
@@ -60,5 +65,14 @@ export class WhoopController {
       );
     }
     throw new Error('whoop_user_id is required');
+  }
+
+  @Post('recovery')
+  async createRecovery(@Req() req: Request) {
+    if ('whoop_user_id' in req.body!) {
+      return await this.whoopRecoveryService.createRecovery(
+        req.body.whoop_user_id as number,
+      );
+    }
   }
 }
