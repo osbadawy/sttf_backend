@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
 import { Transaction, Sequelize } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
-import { User } from 'src/user/models/user.model';
 import { WhoopRecovery } from 'src/whoop/models/recovery.model';
 import { WhoopRecoveryScore } from 'src/whoop/models/recovery_score.model';
 import { WhoopCycle } from 'src/whoop/models/cycle.model';
@@ -10,13 +9,12 @@ import { WhoopSleep } from 'src/whoop/models/sleep.model';
 import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { 
-  WhoopRecoveryApiData, 
-  WhoopRecoveryApiResponse, 
-  WhoopRecoveryDatabaseData, 
-  WhoopRecoveryServiceResponse 
+import {
+  WhoopRecoveryApiData,
+  WhoopRecoveryApiResponse,
+  WhoopRecoveryDatabaseData,
+  WhoopRecoveryServiceResponse,
 } from '../dtos';
-
 
 @Injectable()
 export class WhoopRecoveryService {
@@ -24,13 +22,14 @@ export class WhoopRecoveryService {
 
   constructor(
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
-    @InjectModel(User) private readonly userModel: typeof User,
     @InjectModel(WhoopRecovery)
     private readonly whoopRecoveryModel: typeof WhoopRecovery,
     @InjectModel(WhoopRecoveryScore)
     private readonly whoopRecoveryScoreModel: typeof WhoopRecoveryScore,
-    @InjectModel(WhoopCycle) private readonly whoopCycleModel: typeof WhoopCycle,
-    @InjectModel(WhoopSleep) private readonly whoopSleepModel: typeof WhoopSleep,
+    @InjectModel(WhoopCycle)
+    private readonly whoopCycleModel: typeof WhoopCycle,
+    @InjectModel(WhoopSleep)
+    private readonly whoopSleepModel: typeof WhoopSleep,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
   ) {}
@@ -57,7 +56,9 @@ export class WhoopRecoveryService {
     whoopUserId: number,
     transaction: Transaction,
   ): Promise<WhoopRecoveryDatabaseData> {
-    console.log(`Processing recovery record ${recoveryRecord.id}, score_state: ${recoveryRecord.score_state}`);
+    console.log(
+      `Processing recovery record ${recoveryRecord.id}, score_state: ${recoveryRecord.score_state}`,
+    );
 
     // Check if cycle exists
     const cycleExists = await this.whoopCycleModel.findOne({
@@ -80,15 +81,18 @@ export class WhoopRecoveryService {
     }
 
     // Upsert recovery record
-    const [recovery] = await this.whoopRecoveryModel.upsert({
-      id: recoveryRecord.id,
-      cycle_id: recoveryRecord.cycle_id,
-      sleep_id: recoveryRecord.sleep_id,
-      user_id: whoopUserId,
-      created_at: new Date(recoveryRecord.created_at),
-      updated_at: new Date(recoveryRecord.updated_at),
-      score_state: recoveryRecord.score_state,
-    } as WhoopRecovery, { transaction });
+    const [recovery] = await this.whoopRecoveryModel.upsert(
+      {
+        id: recoveryRecord.id,
+        cycle_id: recoveryRecord.cycle_id,
+        sleep_id: recoveryRecord.sleep_id,
+        user_id: whoopUserId,
+        created_at: new Date(recoveryRecord.created_at),
+        updated_at: new Date(recoveryRecord.updated_at),
+        score_state: recoveryRecord.score_state,
+      } as WhoopRecovery,
+      { transaction },
+    );
 
     console.log(`Recovery record ${recoveryRecord.id} saved successfully`);
 
@@ -97,37 +101,47 @@ export class WhoopRecoveryService {
 
     // Process score data if available
     if (recoveryRecord.score_state === 'SCORED' && recoveryRecord.score) {
-      console.log(`Processing score data for recovery record ${recoveryRecord.id}`);
+      console.log(
+        `Processing score data for recovery record ${recoveryRecord.id}`,
+      );
 
       // Find or create recovery score
-      console.log(`Looking for existing recovery score for recovery_id: ${recovery.id}`);
-      const [savedScore, created] = await this.whoopRecoveryScoreModel.findOrCreate({
-        where: { recovery_id: recovery.id },
-        defaults: {
-          recovery_id: recovery.id,
-          user_calibrating: recoveryRecord.score.user_calibrating,
-          recovery_score: recoveryRecord.score.recovery_score,
-          resting_heart_rate: recoveryRecord.score.resting_heart_rate,
-          hrv_rmssd_milli: recoveryRecord.score.hrv_rmssd_milli,
-          spo2_percentage: recoveryRecord.score.spo2_percentage,
-          skin_temp_celsius: recoveryRecord.score.skin_temp_celsius,
-        } as any,
-        transaction,
-      });
+      console.log(
+        `Looking for existing recovery score for recovery_id: ${recovery.id}`,
+      );
+      const [savedScore, created] =
+        await this.whoopRecoveryScoreModel.findOrCreate({
+          where: { recovery_id: recovery.id },
+          defaults: {
+            recovery_id: recovery.id,
+            user_calibrating: recoveryRecord.score.user_calibrating,
+            recovery_score: recoveryRecord.score.recovery_score,
+            resting_heart_rate: recoveryRecord.score.resting_heart_rate,
+            hrv_rmssd_milli: recoveryRecord.score.hrv_rmssd_milli,
+            spo2_percentage: recoveryRecord.score.spo2_percentage,
+            skin_temp_celsius: recoveryRecord.score.skin_temp_celsius,
+          } as WhoopRecoveryScore,
+          transaction,
+        });
 
-      console.log(`Recovery score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`);
+      console.log(
+        `Recovery score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
+      );
 
       // Update if it already existed
       if (!created) {
         console.log(`Updating existing recovery score ID: ${savedScore.id}`);
-        await savedScore.update({
-          user_calibrating: recoveryRecord.score.user_calibrating,
-          recovery_score: recoveryRecord.score.recovery_score,
-          resting_heart_rate: recoveryRecord.score.resting_heart_rate,
-          hrv_rmssd_milli: recoveryRecord.score.hrv_rmssd_milli,
-          spo2_percentage: recoveryRecord.score.spo2_percentage,
-          skin_temp_celsius: recoveryRecord.score.skin_temp_celsius,
-        }, { transaction });
+        await savedScore.update(
+          {
+            user_calibrating: recoveryRecord.score.user_calibrating,
+            recovery_score: recoveryRecord.score.recovery_score,
+            resting_heart_rate: recoveryRecord.score.resting_heart_rate,
+            hrv_rmssd_milli: recoveryRecord.score.hrv_rmssd_milli,
+            spo2_percentage: recoveryRecord.score.spo2_percentage,
+            skin_temp_celsius: recoveryRecord.score.skin_temp_celsius,
+          },
+          { transaction },
+        );
       }
 
       score = savedScore;
@@ -138,67 +152,87 @@ export class WhoopRecoveryService {
     // Build the complete recovery record with score data
     const recoveryWithScore: WhoopRecoveryDatabaseData = {
       ...recovery.toJSON(),
-      score: score ? {
-        id: score.id,
-        recovery_id: score.recovery_id,
-        user_calibrating: score.user_calibrating,
-        recovery_score: score.recovery_score,
-        resting_heart_rate: score.resting_heart_rate,
-        hrv_rmssd_milli: score.hrv_rmssd_milli,
-        spo2_percentage: score.spo2_percentage,
-        skin_temp_celsius: score.skin_temp_celsius,
-      } : null,
+      score: score
+        ? {
+            id: score.id,
+            recovery_id: score.recovery_id,
+            user_calibrating: score.user_calibrating,
+            recovery_score: score.recovery_score,
+            resting_heart_rate: score.resting_heart_rate,
+            hrv_rmssd_milli: score.hrv_rmssd_milli,
+            spo2_percentage: score.spo2_percentage,
+            skin_temp_celsius: score.skin_temp_celsius,
+          }
+        : null,
     };
 
-    console.log(`Successfully processed recovery record ${recoveryRecord.id} in transaction`);
+    console.log(
+      `Successfully processed recovery record ${recoveryRecord.id} in transaction`,
+    );
     return recoveryWithScore;
   }
 
   private async saveRecoveryToDatabase(
     recoveryData: WhoopRecoveryApiData[],
     whoopUserId: number,
-  ): Promise<{ savedRecovery: WhoopRecoveryDatabaseData[], allRecoveriesWorked: boolean }> {
+  ): Promise<{
+    savedRecovery: WhoopRecoveryDatabaseData[];
+    allRecoveriesWorked: boolean;
+  }> {
     const savedRecovery: WhoopRecoveryDatabaseData[] = [];
     let allRecoveriesWorked = true;
     let processedCount = 0;
-    console.log(`Starting to save ${recoveryData.length} recovery records to database`);
+    console.log(
+      `Starting to save ${recoveryData.length} recovery records to database`,
+    );
 
     for (const recoveryRecord of recoveryData) {
       processedCount++;
-      
+
       // Create a transaction for each recovery record
       const transaction = await this.sequelize.transaction();
-      
+
       try {
         const recoveryWithScore = await this.saveSingleRecoveryRecord(
           recoveryRecord,
           whoopUserId,
           transaction,
         );
-        
+
         // Commit the transaction
         await transaction.commit();
         savedRecovery.push(recoveryWithScore);
-        console.log(`Successfully processed recovery record ${recoveryRecord.id}`);
-        
+        console.log(
+          `Successfully processed recovery record ${recoveryRecord.id}`,
+        );
       } catch (error) {
         allRecoveriesWorked = false;
         // Rollback the transaction on error
         await transaction.rollback();
-        console.error(`Error saving recovery record ${recoveryRecord.id}:`, error);
+        console.error(
+          `Error saving recovery record ${recoveryRecord.id}:`,
+          error,
+        );
         // Continue with other recovery records even if one fails
       }
     }
 
-    console.log(`Successfully saved ${savedRecovery.length} recovery records to database`);
-    console.log(`Processed ${processedCount} out of ${recoveryData.length} total records from API`);
+    console.log(
+      `Successfully saved ${savedRecovery.length} recovery records to database`,
+    );
+    console.log(
+      `Processed ${processedCount} out of ${recoveryData.length} total records from API`,
+    );
     return {
       savedRecovery,
       allRecoveriesWorked,
     };
   }
 
-  async createRecovery(whoop_user_id: number, max_pages: number = 10): Promise<WhoopRecoveryServiceResponse> {
+  async createRecovery(
+    whoop_user_id: number,
+    max_pages: number = 10,
+  ): Promise<WhoopRecoveryServiceResponse> {
     // Find Whoop user
     const whoopUser = await this.whoopUserModel.findOne({
       where: { id: whoop_user_id },
@@ -216,13 +250,17 @@ export class WhoopRecoveryService {
     try {
       let next_token: string | null = null;
       for (let i = 0; i < max_pages; i++) {
-        const recoveryResponse = await this.getRecoveryFromWhoopApi(access_token, next_token);
+        const recoveryResponse = await this.getRecoveryFromWhoopApi(
+          access_token,
+          next_token,
+        );
         next_token = recoveryResponse.next_token;
 
-        const { savedRecovery, allRecoveriesWorked } = await this.saveRecoveryToDatabase(
-          recoveryResponse.records,
-          whoop_user_id,
-        );
+        const { savedRecovery, allRecoveriesWorked } =
+          await this.saveRecoveryToDatabase(
+            recoveryResponse.records,
+            whoop_user_id,
+          );
 
         allSavedRecovery = allSavedRecovery.concat(savedRecovery);
 

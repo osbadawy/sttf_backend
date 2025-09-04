@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
-import { WhoopUserService, WhoopCycleService, WhoopSleepService, WhoopRecoveryService } from './services';
+import {
+  WhoopUserService,
+  WhoopCycleService,
+  WhoopSleepService,
+  WhoopRecoveryService,
+} from './services';
 import { WhoopController } from './whoop.controller';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';

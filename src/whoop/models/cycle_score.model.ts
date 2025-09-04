@@ -14,12 +14,15 @@ import { WhoopCycle } from './cycle.model';
   underscored: true,
 })
 export class WhoopCycleScore extends Model<WhoopCycleScore> {
-  @ForeignKey(() => WhoopCycle)
-  @Column({ type: DataType.BIGINT, primaryKey: true })
-  cycle_id: number;
+  @Column({ type: DataType.BIGINT, primaryKey: true, autoIncrement: true })
+  declare id: number;
 
-  @Column(DataType.DOUBLE) strain?: number;
-  @Column(DataType.DOUBLE) kilojoule?: number;
-  @Column(DataType.INTEGER) average_heart_rate?: number;
-  @Column(DataType.INTEGER) max_heart_rate?: number;
+  @ForeignKey(() => WhoopCycle)
+  @Column({ type: DataType.BIGINT })
+  declare cycle_id: number;
+
+  @Column(DataType.DOUBLE) declare strain?: number;
+  @Column(DataType.DOUBLE) declare kilojoule?: number;
+  @Column(DataType.INTEGER) declare average_heart_rate?: number;
+  @Column(DataType.INTEGER) declare max_heart_rate?: number;
 }

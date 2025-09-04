@@ -19,7 +19,9 @@ import { WhoopUser } from './whoop_user.model';
 })
 export class WhoopSleep extends Model<WhoopSleep> {
   @Column({ type: DataType.UUID, primaryKey: true }) declare id: string;
-  @ForeignKey(() => WhoopCycle) @Column(DataType.BIGINT) declare cycle_id: number;
+  @ForeignKey(() => WhoopCycle)
+  @Column(DataType.BIGINT)
+  declare cycle_id: number;
   @ForeignKey(() => WhoopUser) @Column(DataType.BIGINT) declare user_id: number;
 
   // @Column(DataType.BIGINT) v1_id?: number; #v1 not used
@@ -29,7 +31,8 @@ export class WhoopSleep extends Model<WhoopSleep> {
   @Column(DataType.DATE) declare end: Date;
   @Column(DataType.STRING(6)) declare timezone_offset: string;
   @Column(DataType.BOOLEAN) declare nap: boolean;
-  @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE')) declare score_state: string;
+  @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'))
+  declare score_state: string;
 
   @HasOne(() => WhoopSleepScore) declare score?: WhoopSleepScore;
   @BelongsTo(() => WhoopCycle) declare cycle?: WhoopCycle;

@@ -4,7 +4,12 @@ import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
 import type { WhoopCallbackRequest } from './dtos';
-import { WhoopCycleService, WhoopUserService, WhoopSleepService, WhoopRecoveryService } from './services';
+import {
+  WhoopCycleService,
+  WhoopUserService,
+  WhoopSleepService,
+  WhoopRecoveryService,
+} from './services';
 
 @Controller('whoop')
 export class WhoopController {
@@ -36,13 +41,9 @@ export class WhoopController {
         whoopUserProfile: req.whoopUserProfile,
       });
 
-      await this.whoopCycleService.createCycles(
-        req.whoopUserProfile.user_id,
-      );
+      await this.whoopCycleService.createCycles(req.whoopUserProfile.user_id);
 
-      await this.whoopSleepService.createSleep(
-        req.whoopUserProfile.user_id as number,
-      );
+      await this.whoopSleepService.createSleep(req.whoopUserProfile.user_id);
     }
 
     return res.redirect(process.env.APP_WEB_SUCCESS_URL!);

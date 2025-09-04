@@ -13,8 +13,11 @@ import { WhoopSleepScore } from './sleep_score.model';
   underscored: true,
 })
 export class WhoopSleepStageSummary extends Model<WhoopSleepStageSummary> {
-  @Column({ type: DataType.BIGINT, primaryKey: true, autoIncrement: true }) declare id: number;
-  @ForeignKey(() => WhoopSleepScore) @Column(DataType.BIGINT) declare sleep_score_id: number;
+  @Column({ type: DataType.BIGINT, primaryKey: true, autoIncrement: true })
+  declare id: number;
+  @ForeignKey(() => WhoopSleepScore)
+  @Column(DataType.BIGINT)
+  declare sleep_score_id: number;
 
   @Column(DataType.BIGINT) declare total_in_bed_time_milli: number;
   @Column(DataType.BIGINT) declare total_awake_time_milli: number;
