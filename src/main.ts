@@ -5,7 +5,6 @@ import './instrument';
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,18 +23,7 @@ async function bootstrap() {
     credentials: true, // Allow cookies and authorization headers
   });
 
-  // Configure session middleware for OAuth state storage
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60000, // 1 minute
-      },
-    }),
-  );
+  
 
   await app.listen(process.env.APP_PORT ?? 5000);
 }

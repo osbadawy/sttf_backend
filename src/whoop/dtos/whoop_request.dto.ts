@@ -33,8 +33,67 @@ export class WhoopRequest {
   whoopTokens?: WhoopTokens;
 }
 
-export interface WhoopCallbackRequest extends Request {
-  query: { code?: string; state?: string; error?: string };
+export class WhoopCallbackRequest {
+  @ApiProperty({
+    description: 'Query parameters',
+    type: () => WhoopCallbackRequestQuery
+  })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopCallbackRequestQuery)
+  query: WhoopCallbackRequestQuery;
+
+  @ApiPropertyOptional({
+    description: 'WHOOP tokens',
+    type: () => WhoopTokens
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopTokens)
   whoopTokens?: WhoopTokens;
+
+  @ApiPropertyOptional({
+    description: 'WHOOP user profile',
+    type: () => WhoopUserProfile
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopUserProfile)
   whoopUserProfile?: WhoopUserProfile;
+
+  @ApiPropertyOptional({
+    description: 'Platform type for OAuth request',
+    enum: ['web', 'mobile'],
+    example: 'web'
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['web', 'mobile'])
+  platform?: string;
+}
+
+
+class WhoopCallbackRequestQuery {
+  @ApiPropertyOptional({
+    description: 'Authorization code'
+  })
+  @IsOptional()
+  @IsString()
+  code?: string;
+
+  @ApiPropertyOptional({
+    description: 'State'
+  })
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @ApiPropertyOptional({
+    description: 'Error'
+  })
+  @IsOptional()
+  @IsString()
+  error?: string;
 }

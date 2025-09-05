@@ -71,17 +71,11 @@ export class WhoopCycleService {
       { transaction },
     );
 
-    console.log(`Cycle record ${cycleRecord.id} saved successfully`);
-
     // Initialize score data
     let score: WhoopCycleScore | null = null;
 
     // Process score data if available
     if (cycleRecord.score_state === 'SCORED' && cycleRecord.score) {
-      console.log(`Processing score data for cycle record ${cycleRecord.id}`);
-
-      // Find or create cycle score
-      console.log(`Looking for existing cycle score for cycle_id: ${cycle.id}`);
       const [savedScore, created] =
         await this.whoopCycleScoreModel.findOrCreate({
           where: { cycle_id: cycle.id },
@@ -95,13 +89,8 @@ export class WhoopCycleService {
           transaction,
         });
 
-      console.log(
-        `Cycle score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
-      );
-
       // Update if it already existed
       if (!created) {
-        console.log(`Updating existing cycle score ID: ${savedScore.id}`);
         await savedScore.update(
           {
             strain: cycleRecord.score.strain,
@@ -114,8 +103,6 @@ export class WhoopCycleService {
       }
 
       score = savedScore;
-    } else {
-      console.log(`No score data for cycle record ${cycleRecord.id}`);
     }
 
     // Build the complete cycle record with score data
@@ -133,9 +120,6 @@ export class WhoopCycleService {
         : null,
     };
 
-    console.log(
-      `Successfully processed cycle record ${cycleRecord.id} in transaction`,
-    );
     return cycleWithScore;
   }
 
@@ -226,7 +210,7 @@ export class WhoopCycleService {
 
         allSavedCycles = allSavedCycles.concat(savedCycles);
 
-        if (!allCyclesWorked) {
+        if (!allCyclesWorked || !next_token) {
           break;
         }
       }

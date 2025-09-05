@@ -1,5 +1,5 @@
 // whoop.controller.ts
-import { Controller, Get, Req, Res, UseGuards, Post } from '@nestjs/common';
+import { Controller, Get, Req, Res, UseGuards, Post, BadRequestException } from '@nestjs/common';
 import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
@@ -56,6 +56,12 @@ export class WhoopController {
       );
     }
 
-    return res.redirect(process.env.APP_WEB_SUCCESS_URL!);
+    if (req.platform === 'web') {
+      return res.redirect(process.env.WEB_FRONTEND_URL!);
+    } else if (req.platform === 'mobile') {
+      return res.redirect(process.env.MOBILE_FRONTEND_URL!);
+    } else {
+      throw new BadRequestException('Invalid platform', req.platform);
+    }
   }
 }

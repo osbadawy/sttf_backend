@@ -73,22 +73,13 @@ export class WhoopWorkoutService {
       { transaction },
     );
 
-    console.log(`Workout record ${workoutRecord.id} saved successfully`);
-
     // Initialize score data
     let score: WhoopWorkoutScore | null = null;
     let zoneDurations: WhoopWorkoutZoneDurations | null = null;
 
     // Process score data if available
     if (workoutRecord.score_state === 'SCORED' && workoutRecord.score) {
-      console.log(
-        `Processing score data for workout record ${workoutRecord.id}`,
-      );
 
-      // Find or create workout score
-      console.log(
-        `Looking for existing workout score for workout_id: ${workout.id}`,
-      );
       const [savedScore, created] =
         await this.whoopWorkoutScoreModel.findOrCreate({
           where: { workout_id: workout.id },
@@ -106,13 +97,8 @@ export class WhoopWorkoutService {
           transaction,
         });
 
-      console.log(
-        `Workout score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
-      );
-
       // Update if it already existed
       if (!created) {
-        console.log(`Updating existing workout score ID: ${savedScore.id}`);
         await savedScore.update(
           {
             strain: workoutRecord.score.strain,
@@ -132,9 +118,6 @@ export class WhoopWorkoutService {
 
       // Save zone durations if available
       if (workoutRecord.score.zone_durations) {
-        console.log(
-          `Processing zone durations for workout_score_id: ${score.id}`,
-        );
         // Find existing zone durations or create new one
         const existingZoneDurations =
           await this.whoopWorkoutZoneDurationsModel.findOne({
@@ -143,9 +126,6 @@ export class WhoopWorkoutService {
           });
 
         if (existingZoneDurations) {
-          console.log(
-            `Updating existing zone durations for workout_score_id: ${score.id}`,
-          );
           // Update existing zone durations
           await existingZoneDurations.update(
             {
@@ -164,9 +144,6 @@ export class WhoopWorkoutService {
           );
           zoneDurations = existingZoneDurations;
         } else {
-          console.log(
-            `Creating new zone durations for workout_score_id: ${score.id}`,
-          );
           // Create new zone durations
           zoneDurations = await this.whoopWorkoutZoneDurationsModel.create(
             {
@@ -185,10 +162,7 @@ export class WhoopWorkoutService {
             { transaction },
           );
         }
-        console.log(`Zone durations processed successfully`);
       }
-    } else {
-      console.log(`No score data for workout record ${workoutRecord.id}`);
     }
 
     // Build the complete workout record with score data
@@ -220,9 +194,6 @@ export class WhoopWorkoutService {
         : null,
     };
 
-    console.log(
-      `Successfully processed workout record ${workoutRecord.id} in transaction`,
-    );
     return workoutWithScore;
   }
 
@@ -319,7 +290,7 @@ export class WhoopWorkoutService {
 
         allSavedWorkouts = allSavedWorkouts.concat(savedWorkouts);
 
-        if (!allWorkoutsWorked) {
+        if (!allWorkoutsWorked || !next_token) {
           break;
         }
       }

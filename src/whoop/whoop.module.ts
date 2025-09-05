@@ -8,7 +8,7 @@ import {
 } from './services';
 import { WhoopController } from './whoop.controller';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
-import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
+import { WhoopOAuthGuard, WhoopCallbackGuard, OAuthStateService } from './whoop.guard';
 import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { HttpModule } from '@nestjs/axios';
@@ -27,6 +27,7 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
     FirebaseAuthGuard,
     WhoopOAuthGuard,
     WhoopCallbackGuard,
+    OAuthStateService,
   ],
   controllers: [WhoopController],
 })

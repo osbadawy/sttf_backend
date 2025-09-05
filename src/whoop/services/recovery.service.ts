@@ -94,21 +94,12 @@ export class WhoopRecoveryService {
       { transaction },
     );
 
-    console.log(`Recovery record ${recoveryRecord.id} saved successfully`);
-
     // Initialize score data
     let score: WhoopRecoveryScore | null = null;
 
     // Process score data if available
     if (recoveryRecord.score_state === 'SCORED' && recoveryRecord.score) {
-      console.log(
-        `Processing score data for recovery record ${recoveryRecord.id}`,
-      );
 
-      // Find or create recovery score
-      console.log(
-        `Looking for existing recovery score for recovery_id: ${recovery.id}`,
-      );
       const [savedScore, created] =
         await this.whoopRecoveryScoreModel.findOrCreate({
           where: { recovery_id: recovery.id },
@@ -124,13 +115,10 @@ export class WhoopRecoveryService {
           transaction,
         });
 
-      console.log(
-        `Recovery score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
-      );
+
 
       // Update if it already existed
       if (!created) {
-        console.log(`Updating existing recovery score ID: ${savedScore.id}`);
         await savedScore.update(
           {
             user_calibrating: recoveryRecord.score.user_calibrating,
@@ -145,8 +133,6 @@ export class WhoopRecoveryService {
       }
 
       score = savedScore;
-    } else {
-      console.log(`No score data for recovery record ${recoveryRecord.id}`);
     }
 
     // Build the complete recovery record with score data
@@ -166,9 +152,6 @@ export class WhoopRecoveryService {
         : null,
     };
 
-    console.log(
-      `Successfully processed recovery record ${recoveryRecord.id} in transaction`,
-    );
     return recoveryWithScore;
   }
 
@@ -264,7 +247,7 @@ export class WhoopRecoveryService {
 
         allSavedRecovery = allSavedRecovery.concat(savedRecovery);
 
-        if (!allRecoveriesWorked) {
+        if (!allRecoveriesWorked || !next_token) {
           break;
         }
       }
