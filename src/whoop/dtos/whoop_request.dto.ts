@@ -12,9 +12,7 @@ import { Type } from 'class-transformer';
 
 export class WhoopOAuthRequest {
   @ApiProperty({
-    description: 'Platform type for OAuth request',
-    enum: ['web', 'mobile'],
-    example: 'web'
+    enum: ['web', 'mobile']
   })
   @IsString()
   @IsIn(['web', 'mobile'])
@@ -22,10 +20,7 @@ export class WhoopOAuthRequest {
 }
 
 export class WhoopRequest {
-  @ApiPropertyOptional({
-    description: 'WHOOP tokens for authentication',
-    type: () => WhoopTokens
-  })
+  @ApiPropertyOptional({ type: () => WhoopTokens })
   @IsOptional()
   @IsObject()
   @ValidateNested()
@@ -34,29 +29,20 @@ export class WhoopRequest {
 }
 
 export class WhoopCallbackRequest {
-  @ApiProperty({
-    description: 'Query parameters',
-    type: () => WhoopCallbackRequestQuery
-  })
+  @ApiProperty({ type: () => WhoopCallbackRequestQuery })
   @IsObject()
   @ValidateNested()
   @Type(() => WhoopCallbackRequestQuery)
   query: WhoopCallbackRequestQuery;
 
-  @ApiPropertyOptional({
-    description: 'WHOOP tokens',
-    type: () => WhoopTokens
-  })
+  @ApiPropertyOptional({ type: () => WhoopTokens })
   @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => WhoopTokens)
   whoopTokens?: WhoopTokens;
 
-  @ApiPropertyOptional({
-    description: 'WHOOP user profile',
-    type: () => WhoopUserProfile
-  })
+  @ApiPropertyOptional({ type: () => WhoopUserProfile })
   @IsOptional()
   @IsObject()
   @ValidateNested()
@@ -64,9 +50,7 @@ export class WhoopCallbackRequest {
   whoopUserProfile?: WhoopUserProfile;
 
   @ApiPropertyOptional({
-    description: 'Platform type for OAuth request',
-    enum: ['web', 'mobile'],
-    example: 'web'
+    enum: ['web', 'mobile']
   })
   @IsOptional()
   @IsString()
@@ -76,23 +60,17 @@ export class WhoopCallbackRequest {
 
 
 class WhoopCallbackRequestQuery {
-  @ApiPropertyOptional({
-    description: 'Authorization code'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   code?: string;
 
-  @ApiPropertyOptional({
-    description: 'State'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   state?: string;
 
-  @ApiPropertyOptional({
-    description: 'Error'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   error?: string;

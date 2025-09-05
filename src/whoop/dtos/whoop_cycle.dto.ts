@@ -14,92 +14,56 @@ import {
 import { Type } from 'class-transformer';
 
 export class WhoopCycleScore {
-  @ApiProperty({
-    description: 'Strain score for the cycle',
-    example: 12.5
-  })
+  @ApiProperty()
   @IsNumber()
   @Min(0)
   @Max(21)
   strain: number;
 
-  @ApiProperty({
-    description: 'Energy expenditure in kilojoules',
-    example: 2500
-  })
+  @ApiProperty()
   @IsNumber()
   kilojoule: number;
 
-  @ApiProperty({
-    description: 'Average heart rate during the cycle',
-    example: 85
-  })
+  @ApiProperty()
   @IsNumber()
   average_heart_rate: number;
 
-  @ApiProperty({
-    description: 'Maximum heart rate during the cycle',
-    example: 165
-  })
+  @ApiProperty()
   @IsNumber()
   max_heart_rate: number;
 }
 
 export class WhoopCycleApiData {
-  @ApiProperty({
-    description: 'Cycle ID',
-    example: 123
-  })
+  @ApiProperty()
   @IsNumber()
   id: number;
 
-  @ApiProperty({
-    description: 'Creation timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsString()
   created_at: string;
 
-  @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsString()
   updated_at: string;
 
-  @ApiProperty({
-    description: 'Cycle start time',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsString()
   start: string;
 
-  @ApiPropertyOptional({
-    description: 'Cycle end time',
-    example: '2024-01-01T23:59:59Z'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   end?: string;
 
-  @ApiProperty({
-    description: 'Timezone offset',
-    example: '-05:00'
-  })
+  @ApiProperty()
   @IsString()
   timezone_offset: string;
 
-  @ApiProperty({
-    description: 'Score state',
-    example: 'SCORED'
-  })
+  @ApiProperty()
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional({
-    description: 'Cycle score data',
-    type: () => WhoopCycleScore
-  })
+  @ApiPropertyOptional({ type: () => WhoopCycleScore })
   @IsOptional()
   @IsObject()
   @ValidateNested()
@@ -108,89 +72,57 @@ export class WhoopCycleApiData {
 }
 
 export class WhoopCycleApiResponse {
-  @ApiProperty({
-    description: 'Array of cycle records',
-    type: [WhoopCycleApiData]
-  })
+  @ApiProperty({ type: [WhoopCycleApiData] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => WhoopCycleApiData)
   records: WhoopCycleApiData[];
 
-  @ApiPropertyOptional({
-    description: 'Next token for pagination',
-    example: 'next_token_123'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   next_token: string | null;
 }
 
 export class WhoopCycleDatabaseData {
-  @ApiProperty({
-    description: 'Cycle ID',
-    example: 123
-  })
+  @ApiProperty()
   @IsNumber()
   id: number;
 
-  @ApiProperty({
-    description: 'User ID',
-    example: 12345
-  })
+  @ApiProperty()
   @IsNumber()
   user_id: number;
 
-  @ApiProperty({
-    description: 'Creation timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   created_at: Date;
 
-  @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   updated_at: Date;
 
-  @ApiProperty({
-    description: 'Cycle start time',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   start: Date;
 
-  @ApiPropertyOptional({
-    description: 'Cycle end time',
-    example: '2024-01-01T23:59:59Z'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsDate()
   @Type(() => Date)
   end?: Date | null;
 
-  @ApiProperty({
-    description: 'Timezone offset',
-    example: '-05:00'
-  })
+  @ApiProperty()
   @IsString()
   timezone_offset: string;
 
-  @ApiProperty({
-    description: 'Score state',
-    example: 'SCORED'
-  })
+  @ApiProperty()
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional({
-    description: 'Cycle score data'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsObject()
   score?: {
@@ -204,23 +136,15 @@ export class WhoopCycleDatabaseData {
 }
 
 export class WhoopCycleServiceResponse {
-  @ApiProperty({
-    description: 'Success status',
-    example: true
-  })
+  @ApiProperty()
   @IsBoolean()
   ok: boolean;
 
-  @ApiProperty({
-    description: 'Response message',
-    example: 'Cycle records processed successfully'
-  })
+  @ApiProperty()
   @IsString()
   message: string;
 
-  @ApiProperty({
-    description: 'Response data'
-  })
+  @ApiProperty()
   @IsObject()
   data: {
     saved_cycle_records: number;

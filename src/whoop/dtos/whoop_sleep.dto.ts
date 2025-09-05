@@ -12,135 +12,81 @@ import {
 import { Type } from 'class-transformer';
 
 export class WhoopSleepStageSummary {
-  @ApiProperty({
-    description: 'Total time in bed in milliseconds',
-    example: 28800000
-  })
+  @ApiProperty()
   @IsNumber()
   total_in_bed_time_milli: number;
 
-  @ApiProperty({
-    description: 'Total awake time in milliseconds',
-    example: 1800000
-  })
+  @ApiProperty()
   @IsNumber()
   total_awake_time_milli: number;
 
-  @ApiProperty({
-    description: 'Total time with no data in milliseconds',
-    example: 0
-  })
+  @ApiProperty()
   @IsNumber()
   total_no_data_time_milli: number;
 
-  @ApiProperty({
-    description: 'Total light sleep time in milliseconds',
-    example: 14400000
-  })
+  @ApiProperty()
   @IsNumber()
   total_light_sleep_time_milli: number;
 
-  @ApiProperty({
-    description: 'Total slow wave sleep time in milliseconds',
-    example: 7200000
-  })
+  @ApiProperty()
   @IsNumber()
   total_slow_wave_sleep_time_milli: number;
 
-  @ApiProperty({
-    description: 'Total REM sleep time in milliseconds',
-    example: 5400000
-  })
+  @ApiProperty()
   @IsNumber()
   total_rem_sleep_time_milli: number;
 
-  @ApiProperty({
-    description: 'Number of sleep cycles',
-    example: 4
-  })
+  @ApiProperty()
   @IsNumber()
   sleep_cycle_count: number;
 
-  @ApiProperty({
-    description: 'Number of sleep disturbances',
-    example: 2
-  })
+  @ApiProperty()
   @IsNumber()
   disturbance_count: number;
 }
 
 export class WhoopSleepNeeded {
-  @ApiProperty({
-    description: 'Baseline sleep needed in milliseconds',
-    example: 28800000
-  })
+  @ApiProperty()
   @IsNumber()
   baseline_milli: number;
 
-  @ApiProperty({
-    description: 'Additional sleep needed from sleep debt in milliseconds',
-    example: 3600000
-  })
+  @ApiProperty()
   @IsNumber()
   need_from_sleep_debt_milli: number;
 
-  @ApiProperty({
-    description: 'Additional sleep needed from recent strain in milliseconds',
-    example: 1800000
-  })
+  @ApiProperty()
   @IsNumber()
   need_from_recent_strain_milli: number;
 
-  @ApiProperty({
-    description: 'Additional sleep needed from recent nap in milliseconds',
-    example: 0
-  })
+  @ApiProperty()
   @IsNumber()
   need_from_recent_nap_milli: number;
 }
 
 export class WhoopSleepScore {
-  @ApiProperty({
-    description: 'Respiratory rate during sleep',
-    example: 14.5
-  })
+  @ApiProperty()
   @IsNumber()
   respiratory_rate: number;
 
-  @ApiProperty({
-    description: 'Sleep performance percentage',
-    example: 85
-  })
+  @ApiProperty()
   @IsNumber()
   sleep_performance_percentage: number;
 
-  @ApiProperty({
-    description: 'Sleep consistency percentage',
-    example: 78
-  })
+  @ApiProperty()
   @IsNumber()
   sleep_consistency_percentage: number;
 
-  @ApiProperty({
-    description: 'Sleep efficiency percentage',
-    example: 92
-  })
+  @ApiProperty()
   @IsNumber()
   sleep_efficiency_percentage: number;
 
-  @ApiProperty({
-    description: 'Sleep stage summary',
-    type: () => WhoopSleepStageSummary
-  })
+  @ApiProperty({ type: () => WhoopSleepStageSummary })
   @IsObject()
   @ValidateNested()
   @Type(() => WhoopSleepStageSummary)
   stage_summary: WhoopSleepStageSummary;
 
-  @ApiProperty({
-    description: 'Sleep needed analysis',
-    type: () => WhoopSleepNeeded
-  })
+  @ApiProperty({ type: () => WhoopSleepNeeded })
   @IsObject()
   @ValidateNested()
   @Type(() => WhoopSleepNeeded)
@@ -148,88 +94,52 @@ export class WhoopSleepScore {
 }
 
 export class WhoopSleepApiData {
-  @ApiProperty({
-    description: 'Sleep record ID',
-    example: 'sleep_123'
-  })
+  @ApiProperty()
   @IsString()
   id: string;
 
-  @ApiProperty({
-    description: 'Cycle ID',
-    example: 456
-  })
+  @ApiProperty()
   @IsNumber()
   cycle_id: number;
 
-  @ApiPropertyOptional({
-    description: 'V1 ID for backward compatibility',
-    example: 789
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
   v1_id?: number;
 
-  @ApiProperty({
-    description: 'User ID',
-    example: 12345
-  })
+  @ApiProperty()
   @IsNumber()
   user_id: number;
 
-  @ApiProperty({
-    description: 'Creation timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsString()
   created_at: string;
 
-  @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsString()
   updated_at: string;
 
-  @ApiProperty({
-    description: 'Sleep start time',
-    example: '2024-01-01T22:00:00Z'
-  })
+  @ApiProperty()
   @IsString()
   start: string;
 
-  @ApiProperty({
-    description: 'Sleep end time',
-    example: '2024-01-02T06:00:00Z'
-  })
+  @ApiProperty()
   @IsString()
   end: string;
 
-  @ApiProperty({
-    description: 'Timezone offset',
-    example: '-05:00'
-  })
+  @ApiProperty()
   @IsString()
   timezone_offset: string;
 
-  @ApiProperty({
-    description: 'Whether this is a nap',
-    example: false
-  })
+  @ApiProperty()
   @IsBoolean()
   nap: boolean;
 
-  @ApiProperty({
-    description: 'Score state',
-    example: 'SCORED'
-  })
+  @ApiProperty()
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional({
-    description: 'Sleep score data',
-    type: () => WhoopSleepScore
-  })
+  @ApiPropertyOptional({ type: () => WhoopSleepScore })
   @IsOptional()
   @IsObject()
   @ValidateNested()
@@ -238,102 +148,64 @@ export class WhoopSleepApiData {
 }
 
 export class WhoopSleepApiResponse {
-  @ApiProperty({
-    description: 'Array of sleep records',
-    type: [WhoopSleepApiData]
-  })
+  @ApiProperty({ type: [WhoopSleepApiData] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => WhoopSleepApiData)
   records: WhoopSleepApiData[];
 
-  @ApiPropertyOptional({
-    description: 'Next token for pagination',
-    example: 'next_token_123'
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   next_token: string | null;
 }
 
 export class WhoopSleepDatabaseData {
-  @ApiProperty({
-    description: 'Sleep record ID',
-    example: 'sleep_123'
-  })
+  @ApiProperty()
   @IsString()
   id: string;
 
-  @ApiProperty({
-    description: 'Cycle ID',
-    example: 456
-  })
+  @ApiProperty()
   @IsNumber()
   cycle_id: number;
 
-  @ApiProperty({
-    description: 'User ID',
-    example: 12345
-  })
+  @ApiProperty()
   @IsNumber()
   user_id: number;
 
-  @ApiProperty({
-    description: 'Creation timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   created_at: Date;
 
-  @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-01-01T00:00:00Z'
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   updated_at: Date;
 
-  @ApiProperty({
-    description: 'Sleep start time',
-    example: '2024-01-01T22:00:00Z'
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   start: Date;
 
-  @ApiProperty({
-    description: 'Sleep end time',
-    example: '2024-01-02T06:00:00Z'
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   end: Date;
 
-  @ApiProperty({
-    description: 'Timezone offset',
-    example: '-05:00'
-  })
+  @ApiProperty()
   @IsString()
   timezone_offset: string;
 
-  @ApiProperty({
-    description: 'Whether this is a nap',
-    example: false
-  })
+  @ApiProperty()
   @IsBoolean()
   nap: boolean;
 
-  @ApiProperty({
-    description: 'Score state',
-    example: 'SCORED'
-  })
+  @ApiProperty()
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional({
-    description: 'Sleep score data',
-  })
+  @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
   @IsObject()
@@ -350,23 +222,15 @@ export class WhoopSleepDatabaseData {
 }
 
 export class WhoopSleepServiceResponse {
-  @ApiProperty({
-    description: 'Success status',
-    example: true
-  })
+  @ApiProperty()
   @IsBoolean()
   ok: boolean;
 
-  @ApiProperty({
-    description: 'Response message',
-    example: 'Sleep records processed successfully'
-  })
+  @ApiProperty()
   @IsString()
   message: string;
 
-  @ApiProperty({
-    description: 'Response data',
-  })
+  @ApiProperty()
   @IsObject()
   data: {
     saved_sleep_records: number;
