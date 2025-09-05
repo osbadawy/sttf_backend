@@ -6,12 +6,12 @@ import {
   IsObject,
   IsOptional,
   IsArray,
-  IsBoolean,
   ValidateNested,
   Min,
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ServiceResponseData, ServiceResponse } from './base.dto';
 
 export class WhoopCycleScore {
   @ApiProperty()
@@ -135,19 +135,12 @@ export class WhoopCycleDatabaseData {
   } | null;
 }
 
-export class WhoopCycleServiceResponse {
-  @ApiProperty()
-  @IsBoolean()
-  ok: boolean;
-
-  @ApiProperty()
-  @IsString()
-  message: string;
-
-  @ApiProperty()
-  @IsObject()
-  data: {
-    saved_cycle_records: number;
-    cycle_records: WhoopCycleDatabaseData[];
-  };
+export class WhoopCycleServiceResponseData extends ServiceResponseData {
+  @ApiProperty({ type: [WhoopCycleDatabaseData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopCycleDatabaseData)
+  declare records: WhoopCycleDatabaseData[];
 }
+
+export class WhoopCycleServiceResponse extends ServiceResponse<WhoopCycleServiceResponseData> {}

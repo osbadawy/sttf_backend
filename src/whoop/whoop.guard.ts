@@ -10,7 +10,6 @@ import type { Response, Request } from 'express';
 import type { WhoopCallbackRequest, WhoopUserProfile } from './dtos';
 import * as crypto from 'crypto';
 
-
 interface OAuthState {
   user_id: string;
   platform: string;
@@ -34,18 +33,16 @@ export class OAuthStateService {
 
     if (!entry) throw new UnauthorizedException('Invalid state');
 
-
     this.states.delete(state); // one-time use
     return { user_id: entry.user_id, platform: entry.platform };
   }
 }
 
-
 @Injectable()
 export class WhoopOAuthGuard implements CanActivate {
   constructor(private readonly oauthStateService: OAuthStateService) {}
 
-  canActivate( context: ExecutionContext): boolean {
+  canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest<{
       user: { uid: string };
       body: { platform: string };
@@ -85,7 +82,10 @@ export class WhoopOAuthGuard implements CanActivate {
 
 @Injectable()
 export class WhoopCallbackGuard implements CanActivate {
-  constructor(private readonly httpService: HttpService, private readonly oauthStateService: OAuthStateService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly oauthStateService: OAuthStateService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<WhoopCallbackRequest>();

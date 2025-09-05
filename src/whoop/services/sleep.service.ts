@@ -113,7 +113,6 @@ export class WhoopSleepService {
           transaction,
         });
 
-
       // Update if it already existed
       if (!created) {
         await savedScore.update(
@@ -375,8 +374,8 @@ export class WhoopSleepService {
         ok: true,
         message: `Successfully processed ${allSavedSleep.length} sleep records`,
         data: {
-          saved_sleep_records: allSavedSleep.length,
-          sleep_records: allSavedSleep,
+          num_records_saved: allSavedSleep.length,
+          records: allSavedSleep,
         },
       };
     } catch (error) {

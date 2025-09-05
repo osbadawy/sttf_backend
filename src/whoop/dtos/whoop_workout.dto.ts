@@ -6,12 +6,12 @@ import {
   IsObject,
   IsOptional,
   IsArray,
-  IsBoolean,
   ValidateNested,
   Min,
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ServiceResponseData, ServiceResponse } from './base.dto';
 
 export class WhoopWorkoutZoneDurations {
   @ApiProperty()
@@ -202,19 +202,12 @@ export class WhoopWorkoutDatabaseData {
   } | null;
 }
 
-export class WhoopWorkoutServiceResponse {
-  @ApiProperty()
-  @IsBoolean()
-  ok: boolean;
-
-  @ApiProperty()
-  @IsString()
-  message: string;
-
-  @ApiProperty()
-  @IsObject()
-  data: {
-    saved_workout_records: number;
-    workout_records: WhoopWorkoutDatabaseData[];
-  };
+export class WhoopWorkoutServiceResponseData extends ServiceResponseData {
+  @ApiProperty({ type: [WhoopWorkoutDatabaseData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopWorkoutDatabaseData)
+  declare records: WhoopWorkoutDatabaseData[];
 }
+
+export class WhoopWorkoutServiceResponse extends ServiceResponse<WhoopWorkoutServiceResponseData> {}

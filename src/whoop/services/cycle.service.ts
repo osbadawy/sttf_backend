@@ -219,8 +219,8 @@ export class WhoopCycleService {
         ok: true,
         message: `Successfully processed ${allSavedCycles.length} cycle records`,
         data: {
-          saved_cycle_records: allSavedCycles.length,
-          cycle_records: allSavedCycles,
+          num_records_saved: allSavedCycles.length,
+          records: allSavedCycles,
         },
       };
     } catch (error) {

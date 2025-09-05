@@ -10,6 +10,7 @@ import {
   IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ServiceResponseData, ServiceResponse } from './base.dto';
 
 export class WhoopSleepStageSummary {
   @ApiProperty()
@@ -221,19 +222,12 @@ export class WhoopSleepDatabaseData {
   } | null;
 }
 
-export class WhoopSleepServiceResponse {
-  @ApiProperty()
-  @IsBoolean()
-  ok: boolean;
-
-  @ApiProperty()
-  @IsString()
-  message: string;
-
-  @ApiProperty()
-  @IsObject()
-  data: {
-    saved_sleep_records: number;
-    sleep_records: WhoopSleepDatabaseData[];
-  };
+export class WhoopSleepServiceResponseData extends ServiceResponseData {
+  @ApiProperty({ type: [WhoopSleepDatabaseData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopSleepDatabaseData)
+  declare records: WhoopSleepDatabaseData[];
 }
+
+export class WhoopSleepServiceResponse extends ServiceResponse<WhoopSleepServiceResponseData> {}

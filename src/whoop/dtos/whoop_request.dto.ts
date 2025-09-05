@@ -1,5 +1,4 @@
 import { WhoopTokens, WhoopUserProfile } from './whoop_user.dto';
-import type { Request } from 'express';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
@@ -12,7 +11,7 @@ import { Type } from 'class-transformer';
 
 export class WhoopOAuthRequest {
   @ApiProperty({
-    enum: ['web', 'mobile']
+    enum: ['web', 'mobile'],
   })
   @IsString()
   @IsIn(['web', 'mobile'])
@@ -50,14 +49,13 @@ export class WhoopCallbackRequest {
   whoopUserProfile?: WhoopUserProfile;
 
   @ApiPropertyOptional({
-    enum: ['web', 'mobile']
+    enum: ['web', 'mobile'],
   })
   @IsOptional()
   @IsString()
   @IsIn(['web', 'mobile'])
   platform?: string;
 }
-
 
 class WhoopCallbackRequestQuery {
   @ApiPropertyOptional()

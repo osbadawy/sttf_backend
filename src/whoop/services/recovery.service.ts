@@ -99,7 +99,6 @@ export class WhoopRecoveryService {
 
     // Process score data if available
     if (recoveryRecord.score_state === 'SCORED' && recoveryRecord.score) {
-
       const [savedScore, created] =
         await this.whoopRecoveryScoreModel.findOrCreate({
           where: { recovery_id: recovery.id },
@@ -114,8 +113,6 @@ export class WhoopRecoveryService {
           } as WhoopRecoveryScore,
           transaction,
         });
-
-
 
       // Update if it already existed
       if (!created) {
@@ -256,8 +253,8 @@ export class WhoopRecoveryService {
         ok: true,
         message: `Successfully processed ${allSavedRecovery.length} recovery records`,
         data: {
-          saved_recovery_records: allSavedRecovery.length,
-          recovery_records: allSavedRecovery,
+          num_records_saved: allSavedRecovery.length,
+          records: allSavedRecovery,
         },
       };
     } catch (error) {

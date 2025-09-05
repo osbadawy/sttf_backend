@@ -79,7 +79,6 @@ export class WhoopWorkoutService {
 
     // Process score data if available
     if (workoutRecord.score_state === 'SCORED' && workoutRecord.score) {
-
       const [savedScore, created] =
         await this.whoopWorkoutScoreModel.findOrCreate({
           where: { workout_id: workout.id },
@@ -299,8 +298,8 @@ export class WhoopWorkoutService {
         ok: true,
         message: `Successfully processed ${allSavedWorkouts.length} workout records`,
         data: {
-          saved_workout_records: allSavedWorkouts.length,
-          workout_records: allSavedWorkouts,
+          num_records_saved: allSavedWorkouts.length,
+          records: allSavedWorkouts,
         },
       };
     } catch (error) {

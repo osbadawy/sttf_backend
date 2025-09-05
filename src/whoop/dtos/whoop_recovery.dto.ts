@@ -10,6 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ServiceResponseData, ServiceResponse } from './base.dto';
 
 export class WhoopRecoveryScore {
   @ApiProperty()
@@ -131,19 +132,12 @@ export class WhoopRecoveryDatabaseData {
   } | null;
 }
 
-export class WhoopRecoveryServiceResponse {
-  @ApiProperty()
-  @IsBoolean()
-  ok: boolean;
-
-  @ApiProperty()
-  @IsString()
-  message: string;
-
-  @ApiProperty()
-  @IsObject()
-  data: {
-    saved_recovery_records: number;
-    recovery_records: WhoopRecoveryDatabaseData[];
-  };
+export class WhoopRecoveryServiceResponseData extends ServiceResponseData {
+  @ApiProperty({ type: [WhoopRecoveryDatabaseData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopRecoveryDatabaseData)
+  declare records: WhoopRecoveryDatabaseData[];
 }
+
+export class WhoopRecoveryServiceResponse extends ServiceResponse<WhoopRecoveryServiceResponseData> {}
