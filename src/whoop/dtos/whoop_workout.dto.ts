@@ -85,65 +85,17 @@ export class WhoopWorkoutScore {
   zone_durations?: WhoopWorkoutZoneDurations;
 }
 
-export class WhoopWorkoutApiData {
-  @ApiProperty()
-  @IsString()
-  id: string;
-
+export class WhoopWorkoutScoreWithIds extends WhoopWorkoutScore {
   @ApiProperty()
   @IsNumber()
-  user_id: number;
+  id: number;
 
   @ApiProperty()
   @IsString()
-  created_at: string;
-
-  @ApiProperty()
-  @IsString()
-  updated_at: string;
-
-  @ApiProperty()
-  @IsString()
-  start: string;
-
-  @ApiProperty()
-  @IsString()
-  end: string;
-
-  @ApiProperty()
-  @IsString()
-  timezone_offset: string;
-
-  @ApiProperty()
-  @IsString()
-  sport_name: string;
-
-  @ApiProperty()
-  @IsString()
-  score_state: string;
-
-  @ApiPropertyOptional({ type: () => WhoopWorkoutScore })
-  @IsOptional()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopWorkoutScore)
-  score?: WhoopWorkoutScore;
+  workout_id: string;
 }
 
-export class WhoopWorkoutApiResponse {
-  @ApiProperty({ type: [WhoopWorkoutApiData] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WhoopWorkoutApiData)
-  records: WhoopWorkoutApiData[];
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  next_token: string | null;
-}
-
-export class WhoopWorkoutDatabaseData {
+export class WhoopWorkoutData {
   @ApiProperty()
   @IsString()
   id: string;
@@ -184,30 +136,42 @@ export class WhoopWorkoutDatabaseData {
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => WhoopWorkoutScore })
   @IsOptional()
   @IsObject()
-  score?: {
-    id: number;
-    workout_id: string;
-    strain?: number;
-    average_heart_rate?: number;
-    max_heart_rate?: number;
-    kilojoule?: number;
-    percent_recorded?: number;
-    distance_meter?: number | null;
-    altitude_gain_meter?: number | null;
-    altitude_change_meter?: number | null;
-    zone_durations?: WhoopWorkoutZoneDurations;
-  } | null;
+  @ValidateNested()
+  @Type(() => WhoopWorkoutScore)
+  score?: WhoopWorkoutScore;
+}
+
+export class WhoopWorkoutDataWithIds extends WhoopWorkoutData {
+  @ApiPropertyOptional({ type: () => WhoopWorkoutScoreWithIds })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopWorkoutScoreWithIds)
+  declare score?: WhoopWorkoutScoreWithIds;
+}
+
+export class WhoopWorkoutApiResponse {
+  @ApiProperty({ type: [WhoopWorkoutData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopWorkoutData)
+  records: WhoopWorkoutData[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  next_token: string | null;
 }
 
 export class WhoopWorkoutServiceResponseData extends ServiceResponseData {
-  @ApiProperty({ type: [WhoopWorkoutDatabaseData] })
+  @ApiProperty({ type: [WhoopWorkoutDataWithIds] })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => WhoopWorkoutDatabaseData)
-  declare records: WhoopWorkoutDatabaseData[];
+  @Type(() => WhoopWorkoutDataWithIds)
+  declare records: WhoopWorkoutDataWithIds[];
 }
 
 export class WhoopWorkoutServiceResponse extends ServiceResponse<WhoopWorkoutServiceResponseData> {}

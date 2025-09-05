@@ -9,9 +9,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopWorkoutApiData,
+  WhoopWorkoutData,
   WhoopWorkoutApiResponse,
-  WhoopWorkoutDatabaseData,
+  WhoopWorkoutDataWithIds,
   WhoopWorkoutServiceResponse,
 } from '../dtos';
 
@@ -49,10 +49,10 @@ export class WhoopWorkoutService {
   }
 
   private async saveSingleWorkoutRecord(
-    workoutRecord: WhoopWorkoutApiData,
+    workoutRecord: WhoopWorkoutData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopWorkoutDatabaseData> {
+  ): Promise<WhoopWorkoutDataWithIds> {
     console.log(
       `Processing workout record ${workoutRecord.id}, score_state: ${workoutRecord.score_state}`,
     );
@@ -165,7 +165,7 @@ export class WhoopWorkoutService {
     }
 
     // Build the complete workout record with score data
-    const workoutWithScore: WhoopWorkoutDatabaseData = {
+    const workoutWithScore: WhoopWorkoutDataWithIds = {
       ...workout.toJSON(),
       score: score
         ? {
@@ -190,20 +190,20 @@ export class WhoopWorkoutService {
                 }
               : undefined,
           }
-        : null,
+        : undefined,
     };
 
     return workoutWithScore;
   }
 
   private async saveWorkoutsToDatabase(
-    workoutsData: WhoopWorkoutApiData[],
+    workoutsData: WhoopWorkoutData[],
     whoopUserId: number,
   ): Promise<{
-    savedWorkouts: WhoopWorkoutDatabaseData[];
+    savedWorkouts: WhoopWorkoutDataWithIds[];
     allWorkoutsWorked: boolean;
   }> {
-    const savedWorkouts: WhoopWorkoutDatabaseData[] = [];
+    const savedWorkouts: WhoopWorkoutDataWithIds[] = [];
     let allWorkoutsWorked = true;
     let processedCount = 0;
     console.log(
@@ -269,7 +269,7 @@ export class WhoopWorkoutService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedWorkouts: WhoopWorkoutDatabaseData[] = [];
+    let allSavedWorkouts: WhoopWorkoutDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;
