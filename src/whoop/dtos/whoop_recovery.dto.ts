@@ -98,7 +98,6 @@ export class WhoopRecoveryDataWithIds extends WhoopRecoveryData {
   declare score?: WhoopRecoveryScoreWithIds;
 }
 
-
 export class WhoopRecoveryApiResponse {
   @ApiProperty({ type: [WhoopRecoveryData] })
   @IsArray()
