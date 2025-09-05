@@ -3,7 +3,7 @@ import { Controller, Get, Req, Res, UseGuards, Post } from '@nestjs/common';
 import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
-import type { WhoopCallbackRequest } from './dtos';
+import type { WhoopCallbackRequest, WhoopOAuthRequest } from './dtos';
 import {
   WhoopCycleService,
   WhoopUserService,
@@ -25,7 +25,7 @@ export class WhoopController {
   // Step 1: kick off OAuth
   @Post('/auth/start')
   @UseGuards(FirebaseAuthGuard, WhoopOAuthGuard)
-  whoopLogin() {
+  whoopOAuthStart(@Req() req: WhoopOAuthRequest) {
     // Guard redirects to WHOOP automatically
     return { ok: true };
   }
