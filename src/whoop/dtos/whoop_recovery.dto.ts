@@ -40,53 +40,17 @@ export class WhoopRecoveryScore {
   skin_temp_celsius?: number | null;
 }
 
-export class WhoopRecoveryApiData {
+export class WhoopRecoveryScoreWithIds extends WhoopRecoveryScore {
   @ApiProperty()
   @IsNumber()
   id: number;
 
   @ApiProperty()
   @IsNumber()
-  cycle_id: number;
-
-  @ApiProperty()
-  @IsString()
-  sleep_id: string;
-
-  @ApiProperty()
-  @IsString()
-  created_at: string;
-
-  @ApiProperty()
-  @IsString()
-  updated_at: string;
-
-  @ApiProperty()
-  @IsString()
-  score_state: string;
-
-  @ApiPropertyOptional({ type: () => WhoopRecoveryScore })
-  @IsOptional()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopRecoveryScore)
-  score?: WhoopRecoveryScore;
+  recovery_id: number;
 }
 
-export class WhoopRecoveryApiResponse {
-  @ApiProperty({ type: [WhoopRecoveryApiData] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WhoopRecoveryApiData)
-  records: WhoopRecoveryApiData[];
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  next_token: string | null;
-}
-
-export class WhoopRecoveryDatabaseData {
+export class WhoopRecoveryData {
   @ApiProperty()
   @IsNumber()
   id: number;
@@ -117,27 +81,43 @@ export class WhoopRecoveryDatabaseData {
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => WhoopRecoveryScore })
   @IsOptional()
   @IsObject()
-  score?: {
-    id: number;
-    recovery_id: number;
-    user_calibrating?: boolean;
-    recovery_score?: number;
-    resting_heart_rate?: number;
-    hrv_rmssd_milli?: number;
-    spo2_percentage?: number | null;
-    skin_temp_celsius?: number | null;
-  } | null;
+  @ValidateNested()
+  @Type(() => WhoopRecoveryScore)
+  score?: WhoopRecoveryScore;
+}
+
+export class WhoopRecoveryDataWithIds extends WhoopRecoveryData {
+  @ApiPropertyOptional({ type: () => WhoopRecoveryScoreWithIds })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopRecoveryScoreWithIds)
+  declare score?: WhoopRecoveryScoreWithIds;
+}
+
+
+export class WhoopRecoveryApiResponse {
+  @ApiProperty({ type: [WhoopRecoveryData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopRecoveryData)
+  records: WhoopRecoveryData[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  next_token: string | null;
 }
 
 export class WhoopRecoveryServiceResponseData extends ServiceResponseData {
-  @ApiProperty({ type: [WhoopRecoveryDatabaseData] })
+  @ApiProperty({ type: [WhoopRecoveryDataWithIds] })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => WhoopRecoveryDatabaseData)
-  declare records: WhoopRecoveryDatabaseData[];
+  @Type(() => WhoopRecoveryDataWithIds)
+  declare records: WhoopRecoveryDataWithIds[];
 }
 
 export class WhoopRecoveryServiceResponse extends ServiceResponse<WhoopRecoveryServiceResponseData> {}

@@ -10,9 +10,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopRecoveryApiData,
+  WhoopRecoveryData,
   WhoopRecoveryApiResponse,
-  WhoopRecoveryDatabaseData,
+  WhoopRecoveryDataWithIds,
   WhoopRecoveryServiceResponse,
 } from '../dtos';
 
@@ -52,10 +52,10 @@ export class WhoopRecoveryService {
   }
 
   private async saveSingleRecoveryRecord(
-    recoveryRecord: WhoopRecoveryApiData,
+    recoveryRecord: WhoopRecoveryData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopRecoveryDatabaseData> {
+  ): Promise<WhoopRecoveryDataWithIds> {
     console.log(
       `Processing recovery record ${recoveryRecord.id}, score_state: ${recoveryRecord.score_state}`,
     );
@@ -133,7 +133,7 @@ export class WhoopRecoveryService {
     }
 
     // Build the complete recovery record with score data
-    const recoveryWithScore: WhoopRecoveryDatabaseData = {
+    const recoveryWithScore: WhoopRecoveryDataWithIds = {
       ...recovery.toJSON(),
       score: score
         ? {
@@ -146,20 +146,20 @@ export class WhoopRecoveryService {
             spo2_percentage: score.spo2_percentage,
             skin_temp_celsius: score.skin_temp_celsius,
           }
-        : null,
+        : undefined,
     };
 
     return recoveryWithScore;
   }
 
   private async saveRecoveryToDatabase(
-    recoveryData: WhoopRecoveryApiData[],
+    recoveryData: WhoopRecoveryData[],
     whoopUserId: number,
   ): Promise<{
-    savedRecovery: WhoopRecoveryDatabaseData[];
+    savedRecovery: WhoopRecoveryDataWithIds[];
     allRecoveriesWorked: boolean;
   }> {
-    const savedRecovery: WhoopRecoveryDatabaseData[] = [];
+    const savedRecovery: WhoopRecoveryDataWithIds[] = [];
     let allRecoveriesWorked = true;
     let processedCount = 0;
     console.log(
@@ -225,7 +225,7 @@ export class WhoopRecoveryService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedRecovery: WhoopRecoveryDatabaseData[] = [];
+    let allSavedRecovery: WhoopRecoveryDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;
