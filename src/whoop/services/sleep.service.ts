@@ -11,9 +11,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopSleepApiData,
+  WhoopSleepData,
   WhoopSleepApiResponse,
-  WhoopSleepDatabaseData,
+  WhoopSleepDataWithIds,
   WhoopSleepServiceResponse,
 } from '../dtos';
 
@@ -55,10 +55,10 @@ export class WhoopSleepService {
   }
 
   private async saveSingleSleepRecord(
-    sleepRecord: WhoopSleepApiData,
+    sleepRecord: WhoopSleepData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopSleepDatabaseData> {
+  ): Promise<WhoopSleepDataWithIds> {
     console.log(
       `Processing sleep record ${sleepRecord.id}, score_state: ${sleepRecord.score_state}`,
     );
@@ -236,7 +236,7 @@ export class WhoopSleepService {
     }
 
     // Build the complete sleep record with all related data
-    const sleepWithScore: WhoopSleepDatabaseData = {
+    const sleepWithScore: WhoopSleepDataWithIds = {
       ...sleep.toJSON(),
       score: score
         ? {
@@ -274,19 +274,19 @@ export class WhoopSleepService {
                 }
               : undefined,
           }
-        : null,
+        : undefined,
     };
     return sleepWithScore;
   }
 
   private async saveSleepToDatabase(
-    sleepData: WhoopSleepApiData[],
+    sleepData: WhoopSleepData[],
     whoopUserId: number,
   ): Promise<{
-    savedSleep: WhoopSleepDatabaseData[];
+    savedSleep: WhoopSleepDataWithIds[];
     allSleepsWorked: boolean;
   }> {
-    const savedSleep: WhoopSleepDatabaseData[] = [];
+    const savedSleep: WhoopSleepDataWithIds[] = [];
     let allSleepsWorked = true;
     let processedCount = 0;
     console.log(
@@ -347,7 +347,7 @@ export class WhoopSleepService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedSleep: WhoopSleepDatabaseData[] = [];
+    let allSavedSleep: WhoopSleepDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;

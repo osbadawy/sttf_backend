@@ -4,8 +4,11 @@ import {
   Model,
   DataType,
   ForeignKey,
+  HasOne,
 } from 'sequelize-typescript';
 import { WhoopSleep } from './sleep.model';
+import { WhoopSleepStageSummary } from './sleep_stage_summary.model';
+import { WhoopSleepNeeded } from './sleep_needed.model';
 
 @Table({
   tableName: 'whoop_sleep_score',
@@ -27,4 +30,8 @@ export class WhoopSleepScore extends Model<WhoopSleepScore> {
   declare sleep_consistency_percentage?: number;
   @Column({ type: DataType.DOUBLE, allowNull: true })
   declare sleep_efficiency_percentage?: number;
+
+  @HasOne(() => WhoopSleepStageSummary)
+  declare stage_summary: WhoopSleepStageSummary;
+  @HasOne(() => WhoopSleepNeeded) declare sleep_needed: WhoopSleepNeeded;
 }

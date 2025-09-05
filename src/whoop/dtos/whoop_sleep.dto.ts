@@ -66,102 +66,51 @@ export class WhoopSleepNeeded {
 
 export class WhoopSleepScore {
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  respiratory_rate: number;
+  respiratory_rate?: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  sleep_performance_percentage: number;
+  sleep_performance_percentage?: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  sleep_consistency_percentage: number;
+  sleep_consistency_percentage?: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  sleep_efficiency_percentage: number;
+  sleep_efficiency_percentage?: number;
 
-  @ApiProperty({ type: () => WhoopSleepStageSummary })
+  @ApiPropertyOptional({ type: () => WhoopSleepStageSummary })
+  @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => WhoopSleepStageSummary)
-  stage_summary: WhoopSleepStageSummary;
+  stage_summary?: WhoopSleepStageSummary;
 
-  @ApiProperty({ type: () => WhoopSleepNeeded })
+  @ApiPropertyOptional({ type: () => WhoopSleepNeeded })
+  @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => WhoopSleepNeeded)
-  sleep_needed: WhoopSleepNeeded;
+  sleep_needed?: WhoopSleepNeeded;
 }
 
-export class WhoopSleepApiData {
-  @ApiProperty()
-  @IsString()
-  id: string;
-
+export class WhoopSleepScoreWithIds extends WhoopSleepScore {
   @ApiProperty()
   @IsNumber()
-  cycle_id: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsNumber()
-  v1_id?: number;
-
-  @ApiProperty()
-  @IsNumber()
-  user_id: number;
+  id: number;
 
   @ApiProperty()
   @IsString()
-  created_at: string;
-
-  @ApiProperty()
-  @IsString()
-  updated_at: string;
-
-  @ApiProperty()
-  @IsString()
-  start: string;
-
-  @ApiProperty()
-  @IsString()
-  end: string;
-
-  @ApiProperty()
-  @IsString()
-  timezone_offset: string;
-
-  @ApiProperty()
-  @IsBoolean()
-  nap: boolean;
-
-  @ApiProperty()
-  @IsString()
-  score_state: string;
-
-  @ApiPropertyOptional({ type: () => WhoopSleepScore })
-  @IsOptional()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopSleepScore)
-  score?: WhoopSleepScore;
+  sleep_id: string;
 }
 
-export class WhoopSleepApiResponse {
-  @ApiProperty({ type: [WhoopSleepApiData] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WhoopSleepApiData)
-  records: WhoopSleepApiData[];
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  next_token: string | null;
-}
-
-export class WhoopSleepDatabaseData {
+export class WhoopSleepData {
   @ApiProperty()
   @IsString()
   id: string;
@@ -206,28 +155,42 @@ export class WhoopSleepDatabaseData {
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional()
-  @IsObject()
+  @ApiPropertyOptional({ type: () => WhoopSleepScore })
   @IsOptional()
   @IsObject()
-  score?: {
-    id: number;
-    sleep_id: string;
-    respiratory_rate?: number;
-    sleep_performance_percentage?: number;
-    sleep_consistency_percentage?: number;
-    sleep_efficiency_percentage?: number;
-    stage_summary?: WhoopSleepStageSummary;
-    sleep_needed?: WhoopSleepNeeded;
-  } | null;
+  @ValidateNested()
+  @Type(() => WhoopSleepScore)
+  score?: WhoopSleepScore;
+}
+
+export class WhoopSleepDataWithIds extends WhoopSleepData {
+  @ApiPropertyOptional({ type: () => WhoopSleepScoreWithIds })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopSleepScoreWithIds)
+  declare score?: WhoopSleepScoreWithIds;
+}
+
+export class WhoopSleepApiResponse {
+  @ApiProperty({ type: [WhoopSleepData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopSleepData)
+  records: WhoopSleepData[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  next_token: string | null;
 }
 
 export class WhoopSleepServiceResponseData extends ServiceResponseData {
-  @ApiProperty({ type: [WhoopSleepDatabaseData] })
+  @ApiProperty({ type: [WhoopSleepDataWithIds] })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => WhoopSleepDatabaseData)
-  declare records: WhoopSleepDatabaseData[];
+  @Type(() => WhoopSleepDataWithIds)
+  declare records: WhoopSleepDataWithIds[];
 }
 
 export class WhoopSleepServiceResponse extends ServiceResponse<WhoopSleepServiceResponseData> {}
