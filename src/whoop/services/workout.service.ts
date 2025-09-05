@@ -9,9 +9,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopWorkoutApiData,
+  WhoopWorkoutData,
   WhoopWorkoutApiResponse,
-  WhoopWorkoutDatabaseData,
+  WhoopWorkoutDataWithIds,
   WhoopWorkoutServiceResponse,
 } from '../dtos';
 
@@ -49,10 +49,10 @@ export class WhoopWorkoutService {
   }
 
   private async saveSingleWorkoutRecord(
-    workoutRecord: WhoopWorkoutApiData,
+    workoutRecord: WhoopWorkoutData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopWorkoutDatabaseData> {
+  ): Promise<WhoopWorkoutDataWithIds> {
     console.log(
       `Processing workout record ${workoutRecord.id}, score_state: ${workoutRecord.score_state}`,
     );
@@ -73,22 +73,12 @@ export class WhoopWorkoutService {
       { transaction },
     );
 
-    console.log(`Workout record ${workoutRecord.id} saved successfully`);
-
     // Initialize score data
     let score: WhoopWorkoutScore | null = null;
     let zoneDurations: WhoopWorkoutZoneDurations | null = null;
 
     // Process score data if available
     if (workoutRecord.score_state === 'SCORED' && workoutRecord.score) {
-      console.log(
-        `Processing score data for workout record ${workoutRecord.id}`,
-      );
-
-      // Find or create workout score
-      console.log(
-        `Looking for existing workout score for workout_id: ${workout.id}`,
-      );
       const [savedScore, created] =
         await this.whoopWorkoutScoreModel.findOrCreate({
           where: { workout_id: workout.id },
@@ -106,13 +96,8 @@ export class WhoopWorkoutService {
           transaction,
         });
 
-      console.log(
-        `Workout score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
-      );
-
       // Update if it already existed
       if (!created) {
-        console.log(`Updating existing workout score ID: ${savedScore.id}`);
         await savedScore.update(
           {
             strain: workoutRecord.score.strain,
@@ -132,9 +117,6 @@ export class WhoopWorkoutService {
 
       // Save zone durations if available
       if (workoutRecord.score.zone_durations) {
-        console.log(
-          `Processing zone durations for workout_score_id: ${score.id}`,
-        );
         // Find existing zone durations or create new one
         const existingZoneDurations =
           await this.whoopWorkoutZoneDurationsModel.findOne({
@@ -143,9 +125,6 @@ export class WhoopWorkoutService {
           });
 
         if (existingZoneDurations) {
-          console.log(
-            `Updating existing zone durations for workout_score_id: ${score.id}`,
-          );
           // Update existing zone durations
           await existingZoneDurations.update(
             {
@@ -164,9 +143,6 @@ export class WhoopWorkoutService {
           );
           zoneDurations = existingZoneDurations;
         } else {
-          console.log(
-            `Creating new zone durations for workout_score_id: ${score.id}`,
-          );
           // Create new zone durations
           zoneDurations = await this.whoopWorkoutZoneDurationsModel.create(
             {
@@ -185,14 +161,11 @@ export class WhoopWorkoutService {
             { transaction },
           );
         }
-        console.log(`Zone durations processed successfully`);
       }
-    } else {
-      console.log(`No score data for workout record ${workoutRecord.id}`);
     }
 
     // Build the complete workout record with score data
-    const workoutWithScore: WhoopWorkoutDatabaseData = {
+    const workoutWithScore: WhoopWorkoutDataWithIds = {
       ...workout.toJSON(),
       score: score
         ? {
@@ -217,23 +190,20 @@ export class WhoopWorkoutService {
                 }
               : undefined,
           }
-        : null,
+        : undefined,
     };
 
-    console.log(
-      `Successfully processed workout record ${workoutRecord.id} in transaction`,
-    );
     return workoutWithScore;
   }
 
   private async saveWorkoutsToDatabase(
-    workoutsData: WhoopWorkoutApiData[],
+    workoutsData: WhoopWorkoutData[],
     whoopUserId: number,
   ): Promise<{
-    savedWorkouts: WhoopWorkoutDatabaseData[];
+    savedWorkouts: WhoopWorkoutDataWithIds[];
     allWorkoutsWorked: boolean;
   }> {
-    const savedWorkouts: WhoopWorkoutDatabaseData[] = [];
+    const savedWorkouts: WhoopWorkoutDataWithIds[] = [];
     let allWorkoutsWorked = true;
     let processedCount = 0;
     console.log(
@@ -299,7 +269,7 @@ export class WhoopWorkoutService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedWorkouts: WhoopWorkoutDatabaseData[] = [];
+    let allSavedWorkouts: WhoopWorkoutDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;
@@ -319,7 +289,7 @@ export class WhoopWorkoutService {
 
         allSavedWorkouts = allSavedWorkouts.concat(savedWorkouts);
 
-        if (!allWorkoutsWorked) {
+        if (!allWorkoutsWorked || !next_token) {
           break;
         }
       }
@@ -328,8 +298,8 @@ export class WhoopWorkoutService {
         ok: true,
         message: `Successfully processed ${allSavedWorkouts.length} workout records`,
         data: {
-          saved_workout_records: allSavedWorkouts.length,
-          workout_records: allSavedWorkouts,
+          num_records_saved: allSavedWorkouts.length,
+          records: allSavedWorkouts,
         },
       };
     } catch (error) {

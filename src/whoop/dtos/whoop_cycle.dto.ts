@@ -1,50 +1,122 @@
-export interface WhoopCycleScore {
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsNumber,
+  IsString,
+  IsDate,
+  IsObject,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  Min,
+  Max,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ServiceResponseData, ServiceResponse } from './base.dto';
+
+export class WhoopCycleScore {
+  @ApiProperty()
+  @IsNumber()
+  @Min(0)
+  @Max(21)
   strain: number;
+
+  @ApiProperty()
+  @IsNumber()
   kilojoule: number;
+
+  @ApiProperty()
+  @IsNumber()
   average_heart_rate: number;
+
+  @ApiProperty()
+  @IsNumber()
   max_heart_rate: number;
 }
 
-export interface WhoopCycleApiData {
+export class WhoopCycleScoreWithIds extends WhoopCycleScore {
+  @ApiProperty()
+  @IsNumber()
   id: number;
-  created_at: string;
-  updated_at: string;
-  start: string;
-  end?: string;
+
+  @ApiProperty()
+  @IsNumber()
+  cycle_id: number;
+}
+
+export class WhoopCycleData {
+  @ApiProperty()
+  @IsNumber()
+  id: number;
+
+  @ApiProperty()
+  @IsNumber()
+  user_id: number;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  created_at: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  updated_at: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  start: Date;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  end?: Date | null;
+
+  @ApiProperty()
+  @IsString()
   timezone_offset: string;
+
+  @ApiProperty()
+  @IsString()
   score_state: string;
+
+  @ApiPropertyOptional({ type: () => WhoopCycleScore })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopCycleScore)
   score?: WhoopCycleScore;
 }
 
-export interface WhoopCycleApiResponse {
-  records: WhoopCycleApiData[];
+export class WhoopCycleDataWithIds extends WhoopCycleData {
+  @ApiPropertyOptional({ type: () => WhoopCycleScoreWithIds })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopCycleScoreWithIds)
+  declare score?: WhoopCycleScoreWithIds;
+}
+
+export class WhoopCycleApiResponse {
+  @ApiProperty({ type: [WhoopCycleData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopCycleData)
+  records: WhoopCycleData[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   next_token: string | null;
 }
 
-export interface WhoopCycleDatabaseData {
-  id: number;
-  user_id: number;
-  created_at: Date;
-  updated_at: Date;
-  start: Date;
-  end?: Date | null;
-  timezone_offset: string;
-  score_state: string;
-  score?: {
-    id: number;
-    cycle_id: number;
-    strain?: number;
-    kilojoule?: number;
-    average_heart_rate?: number;
-    max_heart_rate?: number;
-  } | null;
+export class WhoopCycleServiceResponseData extends ServiceResponseData {
+  @ApiProperty({ type: [WhoopCycleDataWithIds] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopCycleDataWithIds)
+  declare records: WhoopCycleDataWithIds[];
 }
 
-export interface WhoopCycleServiceResponse {
-  ok: boolean;
-  message: string;
-  data: {
-    saved_cycle_records: number;
-    cycle_records: WhoopCycleDatabaseData[];
-  };
-}
+export class WhoopCycleServiceResponse extends ServiceResponse<WhoopCycleServiceResponseData> {}

@@ -1,78 +1,196 @@
-export interface WhoopSleepStageSummary {
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsNumber,
+  IsString,
+  IsBoolean,
+  IsDate,
+  IsObject,
+  ValidateNested,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ServiceResponseData, ServiceResponse } from './base.dto';
+
+export class WhoopSleepStageSummary {
+  @ApiProperty()
+  @IsNumber()
   total_in_bed_time_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   total_awake_time_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   total_no_data_time_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   total_light_sleep_time_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   total_slow_wave_sleep_time_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   total_rem_sleep_time_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   sleep_cycle_count: number;
+
+  @ApiProperty()
+  @IsNumber()
   disturbance_count: number;
 }
 
-export interface WhoopSleepNeeded {
+export class WhoopSleepNeeded {
+  @ApiProperty()
+  @IsNumber()
   baseline_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   need_from_sleep_debt_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   need_from_recent_strain_milli: number;
+
+  @ApiProperty()
+  @IsNumber()
   need_from_recent_nap_milli: number;
 }
 
-export interface WhoopSleepScore {
-  respiratory_rate: number;
-  sleep_performance_percentage: number;
-  sleep_consistency_percentage: number;
-  sleep_efficiency_percentage: number;
-  stage_summary: WhoopSleepStageSummary;
-  sleep_needed: WhoopSleepNeeded;
+export class WhoopSleepScore {
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  respiratory_rate?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  sleep_performance_percentage?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  sleep_consistency_percentage?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  sleep_efficiency_percentage?: number;
+
+  @ApiPropertyOptional({ type: () => WhoopSleepStageSummary })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopSleepStageSummary)
+  stage_summary?: WhoopSleepStageSummary;
+
+  @ApiPropertyOptional({ type: () => WhoopSleepNeeded })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopSleepNeeded)
+  sleep_needed?: WhoopSleepNeeded;
 }
 
-export interface WhoopSleepApiData {
+export class WhoopSleepScoreWithIds extends WhoopSleepScore {
+  @ApiProperty()
+  @IsNumber()
+  id: number;
+
+  @ApiProperty()
+  @IsString()
+  sleep_id: string;
+}
+
+export class WhoopSleepData {
+  @ApiProperty()
+  @IsString()
   id: string;
+
+  @ApiProperty()
+  @IsNumber()
   cycle_id: number;
-  v1_id?: number;
+
+  @ApiProperty()
+  @IsNumber()
   user_id: number;
-  created_at: string;
-  updated_at: string;
-  start: string;
-  end: string;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  created_at: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  updated_at: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  start: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  end: Date;
+
+  @ApiProperty()
+  @IsString()
   timezone_offset: string;
+
+  @ApiProperty()
+  @IsBoolean()
   nap: boolean;
+
+  @ApiProperty()
+  @IsString()
   score_state: string;
+
+  @ApiPropertyOptional({ type: () => WhoopSleepScore })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopSleepScore)
   score?: WhoopSleepScore;
 }
 
-export interface WhoopSleepApiResponse {
-  records: WhoopSleepApiData[];
+export class WhoopSleepDataWithIds extends WhoopSleepData {
+  @ApiPropertyOptional({ type: () => WhoopSleepScoreWithIds })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopSleepScoreWithIds)
+  declare score?: WhoopSleepScoreWithIds;
+}
+
+export class WhoopSleepApiResponse {
+  @ApiProperty({ type: [WhoopSleepData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopSleepData)
+  records: WhoopSleepData[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   next_token: string | null;
 }
 
-export interface WhoopSleepDatabaseData {
-  id: string;
-  cycle_id: number;
-  user_id: number;
-  created_at: Date;
-  updated_at: Date;
-  start: Date;
-  end: Date;
-  timezone_offset: string;
-  nap: boolean;
-  score_state: string;
-  score?: {
-    id: number;
-    sleep_id: string;
-    respiratory_rate?: number;
-    sleep_performance_percentage?: number;
-    sleep_consistency_percentage?: number;
-    sleep_efficiency_percentage?: number;
-    stage_summary?: WhoopSleepStageSummary;
-    sleep_needed?: WhoopSleepNeeded;
-  } | null;
+export class WhoopSleepServiceResponseData extends ServiceResponseData {
+  @ApiProperty({ type: [WhoopSleepDataWithIds] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopSleepDataWithIds)
+  declare records: WhoopSleepDataWithIds[];
 }
 
-export interface WhoopSleepServiceResponse {
-  ok: boolean;
-  message: string;
-  data: {
-    saved_sleep_records: number;
-    sleep_records: WhoopSleepDatabaseData[];
-  };
-}
+export class WhoopSleepServiceResponse extends ServiceResponse<WhoopSleepServiceResponseData> {}

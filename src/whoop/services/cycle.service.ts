@@ -9,9 +9,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopCycleApiData,
+  WhoopCycleData,
   WhoopCycleApiResponse,
-  WhoopCycleDatabaseData,
+  WhoopCycleDataWithIds,
   WhoopCycleServiceResponse,
 } from '../dtos';
 
@@ -48,10 +48,10 @@ export class WhoopCycleService {
   }
 
   private async saveSingleCycleRecord(
-    cycleRecord: WhoopCycleApiData,
+    cycleRecord: WhoopCycleData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopCycleDatabaseData> {
+  ): Promise<WhoopCycleDataWithIds> {
     console.log(
       `Processing cycle record ${cycleRecord.id}, score_state: ${cycleRecord.score_state}`,
     );
@@ -71,17 +71,11 @@ export class WhoopCycleService {
       { transaction },
     );
 
-    console.log(`Cycle record ${cycleRecord.id} saved successfully`);
-
     // Initialize score data
     let score: WhoopCycleScore | null = null;
 
     // Process score data if available
     if (cycleRecord.score_state === 'SCORED' && cycleRecord.score) {
-      console.log(`Processing score data for cycle record ${cycleRecord.id}`);
-
-      // Find or create cycle score
-      console.log(`Looking for existing cycle score for cycle_id: ${cycle.id}`);
       const [savedScore, created] =
         await this.whoopCycleScoreModel.findOrCreate({
           where: { cycle_id: cycle.id },
@@ -95,13 +89,8 @@ export class WhoopCycleService {
           transaction,
         });
 
-      console.log(
-        `Cycle score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
-      );
-
       // Update if it already existed
       if (!created) {
-        console.log(`Updating existing cycle score ID: ${savedScore.id}`);
         await savedScore.update(
           {
             strain: cycleRecord.score.strain,
@@ -114,12 +103,10 @@ export class WhoopCycleService {
       }
 
       score = savedScore;
-    } else {
-      console.log(`No score data for cycle record ${cycleRecord.id}`);
     }
 
     // Build the complete cycle record with score data
-    const cycleWithScore: WhoopCycleDatabaseData = {
+    const cycleWithScore: WhoopCycleDataWithIds = {
       ...cycle.toJSON(),
       score: score
         ? {
@@ -130,23 +117,20 @@ export class WhoopCycleService {
             average_heart_rate: score.average_heart_rate,
             max_heart_rate: score.max_heart_rate,
           }
-        : null,
+        : undefined,
     };
 
-    console.log(
-      `Successfully processed cycle record ${cycleRecord.id} in transaction`,
-    );
     return cycleWithScore;
   }
 
   private async saveCyclesToDatabase(
-    cyclesData: WhoopCycleApiData[],
+    cyclesData: WhoopCycleData[],
     whoopUserId: number,
   ): Promise<{
-    savedCycles: WhoopCycleDatabaseData[];
+    savedCycles: WhoopCycleDataWithIds[];
     allCyclesWorked: boolean;
   }> {
-    const savedCycles: WhoopCycleDatabaseData[] = [];
+    const savedCycles: WhoopCycleDataWithIds[] = [];
     let allCyclesWorked = true;
     let processedCount = 0;
     console.log(
@@ -207,7 +191,7 @@ export class WhoopCycleService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedCycles: WhoopCycleDatabaseData[] = [];
+    let allSavedCycles: WhoopCycleDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;
@@ -226,7 +210,7 @@ export class WhoopCycleService {
 
         allSavedCycles = allSavedCycles.concat(savedCycles);
 
-        if (!allCyclesWorked) {
+        if (!allCyclesWorked || !next_token) {
           break;
         }
       }
@@ -235,8 +219,8 @@ export class WhoopCycleService {
         ok: true,
         message: `Successfully processed ${allSavedCycles.length} cycle records`,
         data: {
-          saved_cycle_records: allSavedCycles.length,
-          cycle_records: allSavedCycles,
+          num_records_saved: allSavedCycles.length,
+          records: allSavedCycles,
         },
       };
     } catch (error) {

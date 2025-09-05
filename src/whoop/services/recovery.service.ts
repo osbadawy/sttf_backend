@@ -10,9 +10,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopRecoveryApiData,
+  WhoopRecoveryData,
   WhoopRecoveryApiResponse,
-  WhoopRecoveryDatabaseData,
+  WhoopRecoveryDataWithIds,
   WhoopRecoveryServiceResponse,
 } from '../dtos';
 
@@ -52,10 +52,10 @@ export class WhoopRecoveryService {
   }
 
   private async saveSingleRecoveryRecord(
-    recoveryRecord: WhoopRecoveryApiData,
+    recoveryRecord: WhoopRecoveryData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopRecoveryDatabaseData> {
+  ): Promise<WhoopRecoveryDataWithIds> {
     console.log(
       `Processing recovery record ${recoveryRecord.id}, score_state: ${recoveryRecord.score_state}`,
     );
@@ -94,21 +94,11 @@ export class WhoopRecoveryService {
       { transaction },
     );
 
-    console.log(`Recovery record ${recoveryRecord.id} saved successfully`);
-
     // Initialize score data
     let score: WhoopRecoveryScore | null = null;
 
     // Process score data if available
     if (recoveryRecord.score_state === 'SCORED' && recoveryRecord.score) {
-      console.log(
-        `Processing score data for recovery record ${recoveryRecord.id}`,
-      );
-
-      // Find or create recovery score
-      console.log(
-        `Looking for existing recovery score for recovery_id: ${recovery.id}`,
-      );
       const [savedScore, created] =
         await this.whoopRecoveryScoreModel.findOrCreate({
           where: { recovery_id: recovery.id },
@@ -124,13 +114,8 @@ export class WhoopRecoveryService {
           transaction,
         });
 
-      console.log(
-        `Recovery score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
-      );
-
       // Update if it already existed
       if (!created) {
-        console.log(`Updating existing recovery score ID: ${savedScore.id}`);
         await savedScore.update(
           {
             user_calibrating: recoveryRecord.score.user_calibrating,
@@ -145,12 +130,10 @@ export class WhoopRecoveryService {
       }
 
       score = savedScore;
-    } else {
-      console.log(`No score data for recovery record ${recoveryRecord.id}`);
     }
 
     // Build the complete recovery record with score data
-    const recoveryWithScore: WhoopRecoveryDatabaseData = {
+    const recoveryWithScore: WhoopRecoveryDataWithIds = {
       ...recovery.toJSON(),
       score: score
         ? {
@@ -163,23 +146,20 @@ export class WhoopRecoveryService {
             spo2_percentage: score.spo2_percentage,
             skin_temp_celsius: score.skin_temp_celsius,
           }
-        : null,
+        : undefined,
     };
 
-    console.log(
-      `Successfully processed recovery record ${recoveryRecord.id} in transaction`,
-    );
     return recoveryWithScore;
   }
 
   private async saveRecoveryToDatabase(
-    recoveryData: WhoopRecoveryApiData[],
+    recoveryData: WhoopRecoveryData[],
     whoopUserId: number,
   ): Promise<{
-    savedRecovery: WhoopRecoveryDatabaseData[];
+    savedRecovery: WhoopRecoveryDataWithIds[];
     allRecoveriesWorked: boolean;
   }> {
-    const savedRecovery: WhoopRecoveryDatabaseData[] = [];
+    const savedRecovery: WhoopRecoveryDataWithIds[] = [];
     let allRecoveriesWorked = true;
     let processedCount = 0;
     console.log(
@@ -245,7 +225,7 @@ export class WhoopRecoveryService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedRecovery: WhoopRecoveryDatabaseData[] = [];
+    let allSavedRecovery: WhoopRecoveryDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;
@@ -264,7 +244,7 @@ export class WhoopRecoveryService {
 
         allSavedRecovery = allSavedRecovery.concat(savedRecovery);
 
-        if (!allRecoveriesWorked) {
+        if (!allRecoveriesWorked || !next_token) {
           break;
         }
       }
@@ -273,8 +253,8 @@ export class WhoopRecoveryService {
         ok: true,
         message: `Successfully processed ${allSavedRecovery.length} recovery records`,
         data: {
-          saved_recovery_records: allSavedRecovery.length,
-          recovery_records: allSavedRecovery,
+          num_records_saved: allSavedRecovery.length,
+          records: allSavedRecovery,
         },
       };
     } catch (error) {

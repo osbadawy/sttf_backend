@@ -11,9 +11,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopSleepApiData,
+  WhoopSleepData,
   WhoopSleepApiResponse,
-  WhoopSleepDatabaseData,
+  WhoopSleepDataWithIds,
   WhoopSleepServiceResponse,
 } from '../dtos';
 
@@ -55,10 +55,10 @@ export class WhoopSleepService {
   }
 
   private async saveSingleSleepRecord(
-    sleepRecord: WhoopSleepApiData,
+    sleepRecord: WhoopSleepData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopSleepDatabaseData> {
+  ): Promise<WhoopSleepDataWithIds> {
     console.log(
       `Processing sleep record ${sleepRecord.id}, score_state: ${sleepRecord.score_state}`,
     );
@@ -90,8 +90,6 @@ export class WhoopSleepService {
       { transaction },
     );
 
-    console.log(`Sleep record ${sleepRecord.id} saved successfully`);
-
     // Initialize related data
     let score: WhoopSleepScore | null = null;
     let stageSummary: WhoopSleepStageSummary | null = null;
@@ -99,10 +97,6 @@ export class WhoopSleepService {
 
     // Process score data if available
     if (sleepRecord.score_state === 'SCORED' && sleepRecord.score) {
-      console.log(`Processing score data for sleep record ${sleepRecord.id}`);
-
-      // Find or create sleep score
-      console.log(`Looking for existing sleep score for sleep_id: ${sleep.id}`);
       const [savedScore, created] =
         await this.whoopSleepScoreModel.findOrCreate({
           where: { sleep_id: sleep.id },
@@ -119,13 +113,8 @@ export class WhoopSleepService {
           transaction,
         });
 
-      console.log(
-        `Sleep score ${created ? 'created' : 'found'}, ID: ${savedScore.id}`,
-      );
-
       // Update if it already existed
       if (!created) {
-        console.log(`Updating existing sleep score ID: ${savedScore.id}`);
         await savedScore.update(
           {
             respiratory_rate: sleepRecord.score.respiratory_rate,
@@ -144,7 +133,6 @@ export class WhoopSleepService {
 
       // Save stage summary if available
       if (sleepRecord.score.stage_summary) {
-        console.log(`Processing stage summary for sleep_score_id: ${score.id}`);
         // Find existing stage summary or create new one
         const existingStageSummary =
           await this.whoopSleepStageSummaryModel.findOne({
@@ -153,9 +141,6 @@ export class WhoopSleepService {
           });
 
         if (existingStageSummary) {
-          console.log(
-            `Updating existing stage summary for sleep_score_id: ${score.id}`,
-          );
           // Update existing stage summary
           await existingStageSummary.update(
             {
@@ -181,9 +166,6 @@ export class WhoopSleepService {
           );
           stageSummary = existingStageSummary;
         } else {
-          console.log(
-            `Creating new stage summary for sleep_score_id: ${score.id}`,
-          );
           // Create new stage summary
           stageSummary = await this.whoopSleepStageSummaryModel.create(
             {
@@ -209,12 +191,10 @@ export class WhoopSleepService {
             { transaction },
           );
         }
-        console.log(`Stage summary processed successfully`);
       }
 
       // Save sleep needed if available
       if (sleepRecord.score.sleep_needed) {
-        console.log(`Processing sleep needed for sleep_score_id: ${score.id}`);
         // Find existing sleep needed or create new one
         const existingSleepNeeded = await this.whoopSleepNeededModel.findOne({
           where: { sleep_score_id: score.id },
@@ -222,9 +202,6 @@ export class WhoopSleepService {
         });
 
         if (existingSleepNeeded) {
-          console.log(
-            `Updating existing sleep needed for sleep_score_id: ${score.id}`,
-          );
           // Update existing sleep needed
           await existingSleepNeeded.update(
             {
@@ -240,9 +217,6 @@ export class WhoopSleepService {
           );
           sleepNeeded = existingSleepNeeded;
         } else {
-          console.log(
-            `Creating new sleep needed for sleep_score_id: ${score.id}`,
-          );
           // Create new sleep needed
           sleepNeeded = await this.whoopSleepNeededModel.create(
             {
@@ -258,14 +232,11 @@ export class WhoopSleepService {
             { transaction },
           );
         }
-        console.log(`Sleep needed processed successfully`);
       }
-    } else {
-      console.log(`No score data for sleep record ${sleepRecord.id}`);
     }
 
     // Build the complete sleep record with all related data
-    const sleepWithScore: WhoopSleepDatabaseData = {
+    const sleepWithScore: WhoopSleepDataWithIds = {
       ...sleep.toJSON(),
       score: score
         ? {
@@ -303,23 +274,19 @@ export class WhoopSleepService {
                 }
               : undefined,
           }
-        : null,
+        : undefined,
     };
-
-    console.log(
-      `Successfully processed sleep record ${sleepRecord.id} in transaction`,
-    );
     return sleepWithScore;
   }
 
   private async saveSleepToDatabase(
-    sleepData: WhoopSleepApiData[],
+    sleepData: WhoopSleepData[],
     whoopUserId: number,
   ): Promise<{
-    savedSleep: WhoopSleepDatabaseData[];
+    savedSleep: WhoopSleepDataWithIds[];
     allSleepsWorked: boolean;
   }> {
-    const savedSleep: WhoopSleepDatabaseData[] = [];
+    const savedSleep: WhoopSleepDataWithIds[] = [];
     let allSleepsWorked = true;
     let processedCount = 0;
     console.log(
@@ -380,7 +347,7 @@ export class WhoopSleepService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedSleep: WhoopSleepDatabaseData[] = [];
+    let allSavedSleep: WhoopSleepDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;
@@ -398,7 +365,7 @@ export class WhoopSleepService {
 
         allSavedSleep = allSavedSleep.concat(savedSleep);
 
-        if (!allSleepsWorked) {
+        if (!allSleepsWorked || !next_token) {
           break;
         }
       }
@@ -407,8 +374,8 @@ export class WhoopSleepService {
         ok: true,
         message: `Successfully processed ${allSavedSleep.length} sleep records`,
         data: {
-          saved_sleep_records: allSavedSleep.length,
-          sleep_records: allSavedSleep,
+          num_records_saved: allSavedSleep.length,
+          records: allSavedSleep,
         },
       };
     } catch (error) {
