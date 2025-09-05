@@ -10,18 +10,11 @@ import type { Response, Request } from 'express';
 import type { WhoopCallbackRequest, WhoopUserProfile } from './dtos';
 import * as crypto from 'crypto';
 
-// Extend the Express SessionData interface
-declare module 'express-session' {
-  interface SessionData {
-    oauthState?: Record<string, { user_id: string, platform: string }>;
-  }
-}
-
 @Injectable()
 export class WhoopOAuthGuard implements CanActivate {
   constructor(private readonly httpService: HttpService) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  canActivate( context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest<{
       user: { uid: string };
     }>();
