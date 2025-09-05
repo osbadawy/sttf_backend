@@ -33,58 +33,17 @@ export class WhoopCycleScore {
   max_heart_rate: number;
 }
 
-export class WhoopCycleApiData {
+export class WhoopCycleScoreWithIds extends WhoopCycleScore {
   @ApiProperty()
   @IsNumber()
   id: number;
 
   @ApiProperty()
-  @IsString()
-  created_at: string;
-
-  @ApiProperty()
-  @IsString()
-  updated_at: string;
-
-  @ApiProperty()
-  @IsString()
-  start: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  end?: string;
-
-  @ApiProperty()
-  @IsString()
-  timezone_offset: string;
-
-  @ApiProperty()
-  @IsString()
-  score_state: string;
-
-  @ApiPropertyOptional({ type: () => WhoopCycleScore })
-  @IsOptional()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopCycleScore)
-  score?: WhoopCycleScore;
+  @IsNumber()
+  cycle_id: number;
 }
 
-export class WhoopCycleApiResponse {
-  @ApiProperty({ type: [WhoopCycleApiData] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WhoopCycleApiData)
-  records: WhoopCycleApiData[];
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  next_token: string | null;
-}
-
-export class WhoopCycleDatabaseData {
+export class WhoopCycleData {
   @ApiProperty()
   @IsNumber()
   id: number;
@@ -122,25 +81,42 @@ export class WhoopCycleDatabaseData {
   @IsString()
   score_state: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => WhoopCycleScore })
   @IsOptional()
   @IsObject()
-  score?: {
-    id: number;
-    cycle_id: number;
-    strain?: number;
-    kilojoule?: number;
-    average_heart_rate?: number;
-    max_heart_rate?: number;
-  } | null;
+  @ValidateNested()
+  @Type(() => WhoopCycleScore)
+  score?: WhoopCycleScore;
+}
+
+export class WhoopCycleDataWithIds extends WhoopCycleData {
+  @ApiPropertyOptional({ type: () => WhoopCycleScoreWithIds })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WhoopCycleScoreWithIds)
+  declare score?: WhoopCycleScoreWithIds;
+}
+
+export class WhoopCycleApiResponse {
+  @ApiProperty({ type: [WhoopCycleData] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => WhoopCycleData)
+  records: WhoopCycleData[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  next_token: string | null;
 }
 
 export class WhoopCycleServiceResponseData extends ServiceResponseData {
-  @ApiProperty({ type: [WhoopCycleDatabaseData] })
+  @ApiProperty({ type: [WhoopCycleDataWithIds] })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => WhoopCycleDatabaseData)
-  declare records: WhoopCycleDatabaseData[];
+  @Type(() => WhoopCycleDataWithIds)
+  declare records: WhoopCycleDataWithIds[];
 }
 
 export class WhoopCycleServiceResponse extends ServiceResponse<WhoopCycleServiceResponseData> {}

@@ -9,9 +9,9 @@ import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  WhoopCycleApiData,
+  WhoopCycleData,
   WhoopCycleApiResponse,
-  WhoopCycleDatabaseData,
+  WhoopCycleDataWithIds,
   WhoopCycleServiceResponse,
 } from '../dtos';
 
@@ -48,10 +48,10 @@ export class WhoopCycleService {
   }
 
   private async saveSingleCycleRecord(
-    cycleRecord: WhoopCycleApiData,
+    cycleRecord: WhoopCycleData,
     whoopUserId: number,
     transaction: Transaction,
-  ): Promise<WhoopCycleDatabaseData> {
+  ): Promise<WhoopCycleDataWithIds> {
     console.log(
       `Processing cycle record ${cycleRecord.id}, score_state: ${cycleRecord.score_state}`,
     );
@@ -106,7 +106,7 @@ export class WhoopCycleService {
     }
 
     // Build the complete cycle record with score data
-    const cycleWithScore: WhoopCycleDatabaseData = {
+    const cycleWithScore: WhoopCycleDataWithIds = {
       ...cycle.toJSON(),
       score: score
         ? {
@@ -117,20 +117,20 @@ export class WhoopCycleService {
             average_heart_rate: score.average_heart_rate,
             max_heart_rate: score.max_heart_rate,
           }
-        : null,
+        : undefined,
     };
 
     return cycleWithScore;
   }
 
   private async saveCyclesToDatabase(
-    cyclesData: WhoopCycleApiData[],
+    cyclesData: WhoopCycleData[],
     whoopUserId: number,
   ): Promise<{
-    savedCycles: WhoopCycleDatabaseData[];
+    savedCycles: WhoopCycleDataWithIds[];
     allCyclesWorked: boolean;
   }> {
-    const savedCycles: WhoopCycleDatabaseData[] = [];
+    const savedCycles: WhoopCycleDataWithIds[] = [];
     let allCyclesWorked = true;
     let processedCount = 0;
     console.log(
@@ -191,7 +191,7 @@ export class WhoopCycleService {
       whoopUser.access_token_encrypted,
     );
 
-    let allSavedCycles: WhoopCycleDatabaseData[] = [];
+    let allSavedCycles: WhoopCycleDataWithIds[] = [];
 
     try {
       let next_token: string | null = null;

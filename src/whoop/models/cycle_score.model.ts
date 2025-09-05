@@ -21,8 +21,8 @@ export class WhoopCycleScore extends Model<WhoopCycleScore> {
   @Column({ type: DataType.BIGINT })
   declare cycle_id: number;
 
-  @Column(DataType.DOUBLE) declare strain?: number;
-  @Column(DataType.DOUBLE) declare kilojoule?: number;
-  @Column(DataType.INTEGER) declare average_heart_rate?: number;
-  @Column(DataType.INTEGER) declare max_heart_rate?: number;
+  @Column(DataType.DOUBLE) declare strain: number;
+  @Column(DataType.DOUBLE) declare kilojoule: number;
+  @Column(DataType.INTEGER) declare average_heart_rate: number;
+  @Column(DataType.INTEGER) declare max_heart_rate: number;
 }
