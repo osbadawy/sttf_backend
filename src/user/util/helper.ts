@@ -1,0 +1,9 @@
+export type AttrMeta = {
+  type: unknown;
+  fieldName?: string;
+  field?: string;
+};
+
+export function isRecord(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object';
+}
