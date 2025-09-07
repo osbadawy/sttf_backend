@@ -16,6 +16,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UniqueConstraintError, type CreationAttributes } from 'sequelize';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { PlayerStats } from '../models/player_stats.model';
+import { isRecord } from '../util/helper';
 
 import type {
   GetByIdRequest,
@@ -24,10 +25,6 @@ import type {
   PatchFields,
 } from '../dtos/player_stats.request.dtos';
 import type { PlayerStatsResponse } from '../dtos/player_stats.response.dtos';
-
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return v !== null && typeof v === 'object';
-}
 
 @Controller('player-stats')
 @UseGuards(FirebaseAuthGuard)
