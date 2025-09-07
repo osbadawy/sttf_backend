@@ -5,5 +5,5 @@ export type CreatePlayerStatsRequest = {
   [key: string]: any; // allow optional fields to future-proof
 };
 
-export  type PatchFields = { [key: string]: any };
-export  type PatchBodyRequest = { id: string; data?: PatchFields } & PatchFields;
+export type PatchFields = { [key: string]: any };
+export type PatchBodyRequest = { id: string; data?: PatchFields } & PatchFields;
