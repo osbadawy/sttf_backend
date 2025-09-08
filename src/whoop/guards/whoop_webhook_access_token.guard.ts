@@ -11,6 +11,7 @@ import { WhoopUser } from '../models/whoop_user.model';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { firstValueFrom } from 'rxjs';
+import { Request } from 'express';
 
 import { WhoopAccessTokens, WhoopTokenResponse } from '../dtos/whoop_user.dto';
 
@@ -31,10 +32,10 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest();
-    await this.verifySignature(req);
+    const req = context.switchToHttp().getRequest<Request>();
+    this.verifySignature(req);
 
-    const { user_id: whoop_user_id } = req.body;
+    const { user_id: whoop_user_id } = req.body as { user_id: string };
 
     const access = await this.getAccessFromDatabase(whoop_user_id);
 
@@ -46,7 +47,8 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
 
     // access = await this.refreshAccessToken(access!, access!.user_id);
 
-    req.whoop_access = access;
+    (req as Request & { whoop_access: WhoopAccessTokens }).whoop_access =
+      access;
 
     return true;
   }
@@ -137,7 +139,7 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
     }
   }
 
-  async verifySignature(req: Request) {
+  verifySignature(req: Request) {
     if (
       !req.headers['x-whoop-signature'] ||
       !req.headers['x-whoop-signature-timestamp']
@@ -147,8 +149,10 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
       );
     }
 
-    const signature = req.headers['x-whoop-signature'];
-    const signatureTimestamp = req.headers['x-whoop-signature-timestamp'];
+    const signature = req.headers['x-whoop-signature'] as string;
+    const signatureTimestamp = req.headers[
+      'x-whoop-signature-timestamp'
+    ] as string;
 
     // calculated_signature_string = base64Encode(HMACSHA256(timestamp_header + raw_http_request_body, client_secret))
     const payload = signatureTimestamp + JSON.stringify(req.body);

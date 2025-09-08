@@ -1,12 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectModel, InjectConnection } from '@nestjs/sequelize';
-import { Sequelize } from 'sequelize';
-import { WhoopUser } from 'src/whoop/models/whoop_user.model';
-import { WhoopWorkout } from 'src/whoop/models/workout.model';
-import { WhoopWorkoutScore } from 'src/whoop/models/workout_score.model';
-import { WhoopWorkoutZoneDurations } from 'src/whoop/models/workout_zone_durations.model';
-import { CryptoUtil } from 'src/utils';
-import { HttpService } from '@nestjs/axios';
 import { WhoopCycleService } from './cycle.service';
 import { WhoopSleepService } from './sleep.service';
 import { WhoopWorkoutService } from './workout.service';
@@ -25,11 +17,6 @@ enum WebhookDomain {
   RECOVERY = 'recovery',
 }
 
-enum WebhookProcess {
-  CREATE = 'create',
-  UPDATE = 'update',
-}
-
 @Injectable()
 export class WhoopWebhookService {
   constructor(
@@ -44,16 +31,11 @@ export class WhoopWebhookService {
   ) {}
 
   async handleWebhook(webhook: Webhook, access_token: string) {
-    const [domain, process] = webhook.type.split('.') as [
-      WebhookDomain,
-      WebhookProcess,
-    ];
-    console.log('Domain:', domain);
-    console.log('Access Token:', access_token);
+    const domain = webhook.type.split('.')[0] as WebhookDomain;
 
     try {
       switch (domain) {
-        case WebhookDomain.WORKOUT:
+        case WebhookDomain.WORKOUT: {
           const _w =
             await this.whoopWorkoutService.getSingleWorkoutFromWhoopApi(
               access_token,
@@ -64,7 +46,8 @@ export class WhoopWebhookService {
             webhook.user_id,
           );
           break;
-        case WebhookDomain.SLEEP:
+        }
+        case WebhookDomain.SLEEP: {
           const _s = await this.whoopSleepService.getSingleSleepFromWhoopApi(
             access_token,
             webhook.id,
@@ -82,7 +65,8 @@ export class WhoopWebhookService {
             webhook.user_id,
           );
           break;
-        case WebhookDomain.RECOVERY:
+        }
+        case WebhookDomain.RECOVERY: {
           const _rs = await this.whoopSleepService.getSingleSleepFromWhoopApi(
             access_token,
             webhook.id,
@@ -109,6 +93,7 @@ export class WhoopWebhookService {
             webhook.user_id,
           );
           break;
+        }
       }
     } catch (error) {
       console.error('Error handling webhook:', error);
