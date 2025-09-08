@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, IsDate, IsOptional } from 'class-validator';
+import {
+  IsNumber,
+  IsString,
+  IsDate,
+  IsOptional,
+  IsObject,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class WhoopUserProfile {
@@ -57,8 +63,8 @@ export class CreateWhoopUserParams {
   id: number;
 
   @ApiProperty()
-  @IsString()
-  firebase_user_id: string;
+  @IsObject()
+  user_filter: Record<string, unknown>;
 
   @ApiProperty()
   @IsString()
@@ -109,6 +115,10 @@ export class WhoopAccessSession {
   @ApiProperty()
   @IsString()
   scope: string;
+
+  @ApiProperty()
+  @IsString()
+  user_id: string;
 }
 
 export class WhoopTokenResponse {

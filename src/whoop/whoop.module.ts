@@ -5,14 +5,15 @@ import {
   WhoopSleepService,
   WhoopRecoveryService,
   WhoopWorkoutService,
+  WhoopWebhookService,
 } from './services';
-import { WhoopController } from './whoop.controller';
+import { WhoopAuthController, WhoopWebhookController } from './controllers';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 import {
   WhoopOAuthGuard,
   WhoopCallbackGuard,
   OAuthStateService,
-  WhoopAccessTokenGuard,
+  WhoopWebhookAccessTokenGuard,
 } from './guards';
 import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
@@ -30,13 +31,14 @@ import { CryptoUtil } from 'src/utils';
     WhoopSleepService,
     WhoopRecoveryService,
     WhoopWorkoutService,
+    WhoopWebhookService,
     FirebaseAuthGuard,
     WhoopOAuthGuard,
     WhoopCallbackGuard,
     OAuthStateService,
-    WhoopAccessTokenGuard,
+    WhoopWebhookAccessTokenGuard,
     CryptoUtil,
   ],
-  controllers: [WhoopController],
+  controllers: [WhoopAuthController, WhoopWebhookController],
 })
 export class WhoopModule {}

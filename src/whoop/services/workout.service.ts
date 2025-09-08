@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
 import { Transaction, Sequelize } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
@@ -17,9 +17,8 @@ import {
 
 @Injectable()
 export class WhoopWorkoutService {
-  private readonly cryptoUtil = new CryptoUtil();
-
   constructor(
+    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopWorkout)
     private readonly whoopWorkoutModel: typeof WhoopWorkout,

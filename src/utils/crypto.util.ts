@@ -134,10 +134,16 @@ export class CryptoUtil {
    * @param text The text to hash
    * @param secret The secret key for HMAC
    * @param algorithm The hash algorithm (default: sha256)
+   * @param encoding The output encoding (default: hex)
    * @returns The HMAC hash
    */
-  hmac(text: string, secret: string, algorithm: string = 'sha256'): string {
-    return crypto.createHmac(algorithm, secret).update(text).digest('hex');
+  hmac(
+    text: string,
+    secret: string,
+    algorithm: string = 'sha256',
+    encoding: 'hex' | 'base64' = 'hex',
+  ): string {
+    return crypto.createHmac(algorithm, secret).update(text).digest(encoding);
   }
 
   /**

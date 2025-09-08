@@ -280,6 +280,32 @@ describe('CryptoUtil', () => {
       expect(hmac1).not.toBe(hmac2);
     });
 
+    it('should create an HMAC hash with base64 encoding', () => {
+      const text = testRandomString;
+      const hmac = cryptoUtil.hmac(text, secret, 'sha256', 'base64');
+
+      expect(hmac).toBeDefined();
+      expect(hmac).toMatch(/^[A-Za-z0-9+/]+=*$/); // Base64 pattern
+    });
+
+    it('should create an HMAC hash with hex encoding (default)', () => {
+      const text = testRandomString;
+      const hmac = cryptoUtil.hmac(text, secret, 'sha256', 'hex');
+
+      expect(hmac).toBeDefined();
+      expect(hmac).toMatch(/^[a-f0-9]{64}$/); // SHA256 HMAC produces 64 hex characters
+    });
+
+    it('should produce the same HMAC content with different encodings', () => {
+      const text = testRandomString;
+      const hexHmac = cryptoUtil.hmac(text, secret, 'sha256', 'hex');
+      const base64Hmac = cryptoUtil.hmac(text, secret, 'sha256', 'base64');
+
+      // Convert hex to base64 to compare content
+      const hexToBase64 = Buffer.from(hexHmac, 'hex').toString('base64');
+      expect(base64Hmac).toBe(hexToBase64);
+    });
+
     it('should handle empty string', () => {
       const hmac = cryptoUtil.hmac('', secret);
 
