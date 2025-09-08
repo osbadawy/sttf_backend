@@ -6,6 +6,7 @@ import { TeamController } from './controllers/team.controller';
 import { PlayerStatsController } from './controllers/player_stats.controller';
 import { BodyCompositionController } from './controllers/body_composition.controller';
 import { MealsController } from './controllers/meal.controller';
+import {PlayerSelfAssessmentController} from './controllers/player_self_assessment.controller'
 
 const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
 
@@ -18,6 +19,7 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
     PlayerStatsController,
     BodyCompositionController,
     MealsController,
+    PlayerSelfAssessmentController,
   ],
 })
 export class UserModule {}

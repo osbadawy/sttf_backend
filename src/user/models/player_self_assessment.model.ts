@@ -1,4 +1,3 @@
-// models/player-self-assessment.model.ts
 import {
   Table,
   Model,

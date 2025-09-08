@@ -103,3 +103,25 @@ export type patchMealRequest = {
   consumed_at?: string | Date;
   calories?: number | string | null;
 };
+
+////////////////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ////////////////////////////////////////////////////////
+
+export type PlayerSelfAssessmentRequest ={
+    player_stats_id: string;
+    tiredness_level: number | string;
+    emotional_level: number | string;
+    progress_achieved_level: number | string;
+  }
+
+export type patchPlayerSelfAssessmentRequest = {
+    id: string;
+    data?: {
+      tiredness_level?: number | string;
+      emotional_level?: number | string;
+      progress_achieved_level?: number | string;
+    };
+  } & {
+    tiredness_level?: number | string;
+    emotional_level?: number | string;
+    progress_achieved_level?: number | string;
+  }
