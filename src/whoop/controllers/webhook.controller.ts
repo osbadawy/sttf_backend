@@ -16,7 +16,10 @@ export class WhoopWebhookController {
   @UseGuards(WhoopWebhookAccessTokenGuard)
   @Post('/')
   async whoopWebhook(@Body() body: any, @Req() req: RequestWithWhoopAccess) {
-    await this.whoopWebhookService.handleWebhook(body, req.whoop_access.access_token);
+    await this.whoopWebhookService.handleWebhook(
+      body,
+      req.whoop_access.access_token,
+    );
     return { ok: true };
   }
 }

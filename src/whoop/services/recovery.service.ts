@@ -35,9 +35,9 @@ export class WhoopRecoveryService {
 
   async getSingleRecoveryFromWhoopApi(
     access_token: string,
-    recovery_id: string,
+    cycleId: number,
   ): Promise<WhoopRecoveryData> {
-    let url = `https://api.prod.whoop.com/developer/v2/recovery/${recovery_id}`;
+    const url = `https://api.prod.whoop.com/developer/v2/cycle/${cycleId}/recovery`;
     const response = await firstValueFrom(
       this.httpService.get<WhoopRecoveryData>(url, {
         headers: { Authorization: `Bearer ${access_token}` },

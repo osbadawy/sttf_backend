@@ -40,7 +40,7 @@ export class WhoopSleepService {
     access_token: string,
     sleep_id: string,
   ): Promise<WhoopSleepData> {
-    let url = `https://api.prod.whoop.com/developer/v2/activity/sleep/${sleep_id}`;
+    const url = `https://api.prod.whoop.com/developer/v2/activity/sleep/${sleep_id}`;
     const response = await firstValueFrom(
       this.httpService.get<WhoopSleepData>(url, {
         headers: { Authorization: `Bearer ${access_token}` },

@@ -34,7 +34,7 @@ export class WhoopWorkoutService {
     access_token: string,
     workout_id: string,
   ): Promise<WhoopWorkoutData> {
-    let url = `https://api.prod.whoop.com/developer/v2/activity/workout/${workout_id}`;
+    const url = `https://api.prod.whoop.com/developer/v2/activity/workout/${workout_id}`;
     const response = await firstValueFrom(
       this.httpService.get<WhoopWorkoutData>(url, {
         headers: { Authorization: `Bearer ${access_token}` },

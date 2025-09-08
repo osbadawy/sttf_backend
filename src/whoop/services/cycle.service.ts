@@ -32,9 +32,9 @@ export class WhoopCycleService {
 
   async getSingleCycleFromWhoopApi(
     access_token: string,
-    cycle_id: string,
+    cycle_id: number,
   ): Promise<WhoopCycleData> {
-    let url = `https://api.prod.whoop.com/developer/v2/cycle/${cycle_id}`;
+    const url = `https://api.prod.whoop.com/developer/v2/cycle/${cycle_id}`;
     const response = await firstValueFrom(
       this.httpService.get<WhoopCycleData>(url, {
         headers: { Authorization: `Bearer ${access_token}` },
