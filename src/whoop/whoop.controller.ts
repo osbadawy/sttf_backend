@@ -13,7 +13,6 @@ import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
 import {
   WhoopOAuthGuard,
   WhoopCallbackGuard,
-  WhoopAccessTokenGuard,
 } from './guards';
 import type { WhoopCallbackRequest } from './dtos';
 import {
