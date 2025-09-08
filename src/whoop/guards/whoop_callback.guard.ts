@@ -1,84 +1,12 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, ExecutionContext, CanActivate } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { OAuthStateService } from './oauth_state_service.guard';
+import { WhoopCallbackRequest } from '../dtos/whoop_request.dto';
+import { WhoopTokenResponse } from '../dtos/whoop_user.dto';
+import { WhoopUserResponse } from '../dtos/whoop_user.dto';
+import { WhoopUserProfile } from '../dtos/whoop_user.dto';
 import { firstValueFrom } from 'rxjs';
-import type { Response, Request } from 'express';
-import type { WhoopCallbackRequest, WhoopUserProfile } from './dtos';
-import * as crypto from 'crypto';
-
-interface OAuthState {
-  user_id: string;
-  platform: string;
-}
-
-@Injectable()
-export class OAuthStateService {
-  private states = new Map<string, OAuthState>();
-
-  // Save state
-  setState(state: string, user_id: string, platform: string) {
-    this.states.set(state, {
-      user_id,
-      platform,
-    });
-  }
-
-  // Retrieve & remove state
-  consumeState(state: string): { user_id: string; platform: string } {
-    const entry = this.states.get(state);
-
-    if (!entry) throw new UnauthorizedException('Invalid state');
-
-    this.states.delete(state); // one-time use
-    return { user_id: entry.user_id, platform: entry.platform };
-  }
-}
-
-@Injectable()
-export class WhoopOAuthGuard implements CanActivate {
-  constructor(private readonly oauthStateService: OAuthStateService) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<{
-      user: { uid: string };
-      body: { platform: string };
-    }>();
-
-    const state = crypto.randomBytes(8).toString('hex');
-    this.oauthStateService.setState(state, req.user.uid, req.body.platform);
-
-    // Redirect to WHOOP authorization URL
-    const authUrl = this.buildAuthorizationUrl(state);
-    const res = context.switchToHttp().getResponse<Response>();
-    res.redirect(authUrl);
-    return false;
-  }
-
-  private buildAuthorizationUrl(state: string): string {
-    const client_id = process.env.WHOOP_CLIENT_ID;
-    const scope = [
-      'read:profile',
-      'read:body_measurement',
-      'read:cycles',
-      'read:workout',
-      'read:sleep',
-      'read:recovery',
-      'offline',
-    ].join(' ');
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id: client_id!,
-      scope: scope,
-      state: state,
-    });
-
-    return `${process.env.WHOOP_AUTHORIZE_URL}?${params.toString()}`;
-  }
-}
+import { UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class WhoopCallbackGuard implements CanActivate {
@@ -120,7 +48,7 @@ export class WhoopCallbackGuard implements CanActivate {
 
       // Make request to WHOOP token endpoint
       const tokenResponse = await firstValueFrom(
-        this.httpService.post(
+        this.httpService.post<WhoopTokenResponse>(
           process.env.WHOOP_TOKEN_URL!,
           {
             grant_type: 'authorization_code',
@@ -136,12 +64,7 @@ export class WhoopCallbackGuard implements CanActivate {
         ),
       );
 
-      const { access_token, refresh_token, expires_in } =
-        tokenResponse.data as {
-          access_token: string;
-          refresh_token: string;
-          expires_in: number;
-        };
+      const { access_token, refresh_token, expires_in } = tokenResponse.data;
 
       // Store tokens in request for use in the controller
       req.whoopTokens = {
@@ -186,7 +109,7 @@ export class WhoopCallbackGuard implements CanActivate {
 
     const { access_token } = req.whoopTokens;
     const userResponse = await firstValueFrom(
-      this.httpService.get(
+      this.httpService.get<WhoopUserResponse>(
         'https://api.prod.whoop.com/developer/v2/user/profile/basic',
         {
           headers: { Authorization: `Bearer ${access_token}` },

@@ -12,7 +12,7 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectModel  } from '@nestjs/sequelize';
 import type { CreationAttributes } from 'sequelize';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { BodyComposition } from '../models/body_composition.model';
@@ -22,10 +22,8 @@ import { PlayerStats } from '../models/player_stats.model';
 @UseGuards(FirebaseAuthGuard)
 export class BodyCompositionController {
   constructor(
-    @InjectModel(BodyComposition)
-    private readonly bodyCompModel: typeof BodyComposition,
-    @InjectModel(PlayerStats)
-    private readonly playerStatsModel: typeof PlayerStats,
+    @InjectModel(BodyComposition) private readonly bodyCompModel: typeof BodyComposition,
+    @InjectModel(PlayerStats) private readonly playerStatsModel: typeof PlayerStats,
   ) {}
 
   // POST: ensure one-by-player_stats_id (create if missing)
@@ -52,8 +50,7 @@ export class BodyCompositionController {
   }> {
     const raw = body?.player_stats_id;
     const player_stats_id = String(raw ?? '').trim();
-    if (!player_stats_id)
-      throw new BadRequestException('player_stats_id is required');
+    if (!player_stats_id) throw new BadRequestException('player_stats_id is required');
 
     try {
       // (optional) ensure the PlayerStats row exists
@@ -69,18 +66,12 @@ export class BodyCompositionController {
           player_stats_id,
           weight: body.weight != null ? String(body.weight) : null,
           bmi: body.bmi != null ? String(body.bmi) : null,
-          body_fat_percentage:
-            body.body_fat_percentage != null
-              ? String(body.body_fat_percentage)
-              : null,
-          muscle_mass_percentage:
-            body.muscle_mass_percentage != null
-              ? String(body.muscle_mass_percentage)
-              : null,
+          body_fat_percentage: body.body_fat_percentage != null ? String(body.body_fat_percentage) : null,
+          muscle_mass_percentage: body.muscle_mass_percentage != null ? String(body.muscle_mass_percentage) : null,
         };
-
+        
         bc = await this.bodyCompModel.create(
-          payload as unknown as CreationAttributes<BodyComposition>,
+          payload as unknown as CreationAttributes<BodyComposition>
         );
       }
 
@@ -104,7 +95,9 @@ export class BodyCompositionController {
 
   // GET: by id (from body)
   @Get()
-  async getByPk(@Body() body: { id: string }): Promise<{
+  async getByPk(
+    @Body() body: { id: string },
+  ): Promise<{
     ok: boolean;
     data: {
       id: string;
@@ -172,7 +165,8 @@ export class BodyCompositionController {
     const id = String(body?.id ?? '').trim();
     if (!id) throw new BadRequestException('id is required');
 
-    const src = body && typeof body.data === 'object' ? body.data : body;
+    const src =
+      body && typeof body.data === 'object' ? body.data : body;
 
     const updates: Record<string, any> = {};
 

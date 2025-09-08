@@ -15,39 +15,44 @@ export class WhoopUserService {
   ) {}
 
   async createWhoopUser({
-    whoopTokens,
-    whoopUserProfile,
+    id,
+    firebase_user_id,
+    email,
+    first_name,
+    last_name,
+    access_token,
+    refresh_token,
+    scope,
+    expires_at,
   }: CreateWhoopUserParams) {
     const user = await this.userModel.findOne({
-      where: { firebase_id: whoopTokens.firebase_id },
+      where: { firebase_id: firebase_user_id },
     });
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Encrypt the tokens before storing
-    const encryptedAuthorizationToken = this.cryptoUtil.simpleEncrypt(
-      whoopTokens.authorization_token,
-    );
-    const encryptedAccessToken = this.cryptoUtil.simpleEncrypt(
-      whoopTokens.access_token,
-    );
-    const encryptedRefreshToken = this.cryptoUtil.simpleEncrypt(
-      whoopTokens.refresh_token,
-    );
+    const encryptedAccessToken = this.cryptoUtil.simpleEncrypt(access_token);
+    const encryptedRefreshToken = this.cryptoUtil.simpleEncrypt(refresh_token);
 
     const whoopUserData = {
-      id: whoopUserProfile.user_id,
+      id: id,
       user_id: user.id as string,
-      email: whoopUserProfile.email,
-      first_name: whoopUserProfile.first_name,
-      last_name: whoopUserProfile.last_name,
-      authorization_token_encrypted: encryptedAuthorizationToken,
       access_token_encrypted: encryptedAccessToken,
       refresh_token_encrypted: encryptedRefreshToken,
-      scope: whoopTokens.scope,
-      expires_at: whoopTokens.expires_at,
-    };
+      scope: scope,
+      expires_at: expires_at,
+    } as WhoopUser;
+
+    if (email) {
+      whoopUserData.email = email;
+    }
+    if (first_name) {
+      whoopUserData.first_name = first_name;
+    }
+    if (last_name) {
+      whoopUserData.last_name = last_name;
+    }
 
     // Check if WhoopUser record exists for this user
     const existingWhoopUser = await this.whoopUserModel.findOne({
