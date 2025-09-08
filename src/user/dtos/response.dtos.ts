@@ -79,3 +79,15 @@ export type playerSelfAssessmentResponse = {
     progress_achieved_level: number;
   };
 };
+
+////////////////////////////////////////////////////////// COACH ASSESSMENT ///////////////////////////////////////////////////////////
+export type coachAssessmentResponse = {
+  ok: boolean;
+  data: {
+    id: string;
+    player_stats_id: string;
+    satisfaction_of_training_level: number;
+    progress_made_level: number;
+    improvements_needed_level: number;
+  };
+};

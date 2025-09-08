@@ -125,3 +125,24 @@ export type patchPlayerSelfAssessmentRequest = {
   emotional_level?: number | string;
   progress_achieved_level?: number | string;
 };
+
+///////////////////////////////////////////////////////////// COACH ASSESSMENT /////////////////////////////////////////////////////////////////////
+export type coachAssessmentRequest = {
+  player_stats_id: string;
+  satisfaction_of_training_level: number | string;
+  progress_made_level: number | string;
+  improvements_needed_level: number | string;
+};
+
+export type patchCoachAssessmentRequest = {
+  id: string;
+  data?: {
+    satisfaction_of_training_level?: number | string;
+    progress_made_level?: number | string;
+    improvements_needed_level?: number | string;
+  };
+} & {
+  satisfaction_of_training_level?: number | string;
+  progress_made_level?: number | string;
+  improvements_needed_level?: number | string;
+};
