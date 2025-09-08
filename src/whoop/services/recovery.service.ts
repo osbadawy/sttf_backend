@@ -33,6 +33,19 @@ export class WhoopRecoveryService {
     private readonly httpService: HttpService,
   ) {}
 
+  async getSingleRecoveryFromWhoopApi(
+    access_token: string,
+    recovery_id: string,
+  ): Promise<WhoopRecoveryData> {
+    let url = `https://api.prod.whoop.com/developer/v2/recovery/${recovery_id}`;
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopRecoveryData>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
+  }
+
   private async getRecoveryFromWhoopApi(
     access_token: string,
     next_token: string | null,
@@ -151,7 +164,7 @@ export class WhoopRecoveryService {
     return recoveryWithScore;
   }
 
-  private async saveRecoveryToDatabase(
+  async saveRecoveryToDatabase(
     recoveryData: WhoopRecoveryData[],
     whoopUserId: number,
   ): Promise<{

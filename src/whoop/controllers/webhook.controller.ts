@@ -1,8 +1,13 @@
 // whoop.controller.ts
-import { Controller, Req, Res, UseGuards, Post } from '@nestjs/common';
-import type { Response } from 'express';
+import { Controller, UseGuards, Post, Body, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { WhoopWebhookService } from 'src/whoop/services';
 import { WhoopWebhookAccessTokenGuard } from 'src/whoop/guards';
+import { WhoopAccessTokens } from 'src/whoop/dtos/whoop_user.dto';
+
+interface RequestWithWhoopAccess extends Request {
+  whoop_access: WhoopAccessTokens;
+}
 
 @Controller('whoop/webhook')
 export class WhoopWebhookController {
@@ -10,10 +15,8 @@ export class WhoopWebhookController {
 
   @UseGuards(WhoopWebhookAccessTokenGuard)
   @Post('/')
-  async whoopWebhook(@Req() req: Request, @Res() res: Response) {
-    // await this.whoopWebhookService.handleWebhook(req.body);
-    // return res.json({ ok: true });
-    console.log('Made it to main controller');
-    return res.json(req.body);
+  async whoopWebhook(@Body() body: any, @Req() req: RequestWithWhoopAccess) {
+    await this.whoopWebhookService.handleWebhook(body, req.whoop_access.access_token);
+    return { ok: true };
   }
 }

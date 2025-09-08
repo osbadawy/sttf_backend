@@ -12,7 +12,7 @@ import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { firstValueFrom } from 'rxjs';
 
-import { WhoopAccessSession, WhoopTokenResponse } from '../dtos/whoop_user.dto';
+import { WhoopAccessTokens, WhoopTokenResponse } from '../dtos/whoop_user.dto';
 
 /**
 #1 if session.whoop_access_token exists, use session to get access token information
@@ -46,14 +46,14 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
 
     // access = await this.refreshAccessToken(access!, access!.user_id);
 
-    req.access = access;
+    req.whoop_access = access;
 
     return true;
   }
 
   async getAccessFromDatabase(
     whoop_user_id: string,
-  ): Promise<WhoopAccessSession> {
+  ): Promise<WhoopAccessTokens> {
     const whoopUser = await this.whoopUserModel.findOne({
       where: { id: whoop_user_id },
     });
@@ -71,7 +71,7 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
     const expires_at = whoopUser.expires_at;
     const scope = whoopUser.scope;
 
-    const whoopAccess: WhoopAccessSession = {
+    const whoopAccess: WhoopAccessTokens = {
       access_token,
       refresh_token,
       expires_at,
@@ -83,9 +83,9 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
   }
 
   async refreshAccessToken(
-    access: WhoopAccessSession,
+    access: WhoopAccessTokens,
     user_id: string,
-  ): Promise<WhoopAccessSession> {
+  ): Promise<WhoopAccessTokens> {
     const { refresh_token } = access;
     try {
       const response = await firstValueFrom(
@@ -120,7 +120,7 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
 
       console.log('Two');
 
-      const whoopAccess: WhoopAccessSession = {
+      const whoopAccess: WhoopAccessTokens = {
         access_token: response.data.access_token,
         refresh_token: response.data.refresh_token,
         expires_at: new Date(Date.now() + response.data.expires_in * 1000),

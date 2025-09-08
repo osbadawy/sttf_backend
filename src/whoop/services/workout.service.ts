@@ -30,6 +30,19 @@ export class WhoopWorkoutService {
     private readonly httpService: HttpService,
   ) {}
 
+  async getSingleWorkoutFromWhoopApi(
+    access_token: string,
+    workout_id: string,
+  ): Promise<WhoopWorkoutData> {
+    let url = `https://api.prod.whoop.com/developer/v2/activity/workout/${workout_id}`;
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopWorkoutData>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
+  }
+
   private async getWorkoutsFromWhoopApi(
     access_token: string,
     next_token: string | null,
@@ -195,7 +208,7 @@ export class WhoopWorkoutService {
     return workoutWithScore;
   }
 
-  private async saveWorkoutsToDatabase(
+  async saveWorkoutsToDatabase(
     workoutsData: WhoopWorkoutData[],
     whoopUserId: number,
   ): Promise<{

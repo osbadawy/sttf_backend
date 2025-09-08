@@ -98,7 +98,7 @@ export class CreateWhoopUserParams {
   expires_at: Date;
 }
 
-export class WhoopAccessSession {
+export class WhoopAccessTokens {
   @ApiProperty()
   @IsString()
   access_token: string;

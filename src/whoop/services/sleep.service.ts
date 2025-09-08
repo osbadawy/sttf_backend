@@ -36,6 +36,19 @@ export class WhoopSleepService {
     private readonly httpService: HttpService,
   ) {}
 
+  async getSingleSleepFromWhoopApi(
+    access_token: string,
+    sleep_id: string,
+  ): Promise<WhoopSleepData> {
+    let url = `https://api.prod.whoop.com/developer/v2/activity/sleep/${sleep_id}`;
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopSleepData>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
+  }
+
   private async getSleepFromWhoopApi(
     access_token: string,
     next_token: string | null,
@@ -278,7 +291,7 @@ export class WhoopSleepService {
     return sleepWithScore;
   }
 
-  private async saveSleepToDatabase(
+  async saveSleepToDatabase(
     sleepData: WhoopSleepData[],
     whoopUserId: number,
   ): Promise<{
