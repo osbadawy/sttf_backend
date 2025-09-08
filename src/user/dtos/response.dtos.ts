@@ -67,3 +67,15 @@ export type mealResponse = {
     calories: number | null;
   };
 };
+
+///////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ///////////////////////////////////////////////////
+export type playerSelfAssessmentResponse ={
+    ok: boolean;
+    data: {
+      id: string;
+      player_stats_id: string;
+      tiredness_level: number;
+      emotional_level: number;
+      progress_achieved_level: number;
+    };
+  }
