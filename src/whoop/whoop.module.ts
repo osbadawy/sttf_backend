@@ -36,7 +36,7 @@ import { CryptoUtil } from 'src/utils';
     OAuthStateService,
     WhoopAccessTokenGuard,
     CryptoUtil,
-    ],
+  ],
   controllers: [WhoopController],
 })
 export class WhoopModule {}

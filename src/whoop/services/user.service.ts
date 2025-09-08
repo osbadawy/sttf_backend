@@ -32,12 +32,8 @@ export class WhoopUserService {
       throw new Error('User not found');
     }
 
-    const encryptedAccessToken = this.cryptoUtil.simpleEncrypt(
-      access_token,
-    );
-    const encryptedRefreshToken = this.cryptoUtil.simpleEncrypt(
-      refresh_token,
-    );
+    const encryptedAccessToken = this.cryptoUtil.simpleEncrypt(access_token);
+    const encryptedRefreshToken = this.cryptoUtil.simpleEncrypt(refresh_token);
 
     const whoopUserData = {
       id: id,
@@ -70,7 +66,7 @@ export class WhoopUserService {
       });
     } else {
       // Create new record
-      await this.whoopUserModel.create(whoopUserData as WhoopUser);
+      await this.whoopUserModel.create(whoopUserData);
     }
 
     return { ok: true };

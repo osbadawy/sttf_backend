@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
-import { WhoopOAuthGuard, WhoopCallbackGuard, WhoopAccessTokenGuard } from './whoop.guard';
+import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
 import type { WhoopCallbackRequest } from './dtos';
 import {
   WhoopCycleService,
@@ -78,11 +78,5 @@ export class WhoopController {
     } else {
       throw new BadRequestException('Invalid platform', req.platform);
     }
-  }
-
-  @Get('/test')
-  @UseGuards(FirebaseAuthGuard, WhoopAccessTokenGuard)
-  whoopTest(@Req() req: Request & { session: Record<string, any> }) {
-    return req.session.whoop_access;
   }
 }
