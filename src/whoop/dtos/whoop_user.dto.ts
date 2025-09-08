@@ -3,8 +3,7 @@ import {
   IsNumber,
   IsString,
   IsDate,
-  IsObject,
-  ValidateNested,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -90,22 +89,43 @@ export class WhoopTokens {
   scope: string;
 }
 
-export class CreateWhoopUserParams {
-  @ApiProperty({
-    description: 'WHOOP authentication tokens',
-    type: () => WhoopTokens,
-  })
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopTokens)
-  whoopTokens: WhoopTokens;
+export class CreateWhoopUserParams{
+  @ApiProperty()
+  @IsNumber()
+  id: number;
+  
+  @ApiProperty()
+  @IsString()
+  firebase_user_id: string;
+  
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  email?: string;
 
-  @ApiProperty({
-    description: 'WHOOP user profile information',
-    type: () => WhoopUserProfile,
-  })
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopUserProfile)
-  whoopUserProfile: WhoopUserProfile;
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  first_name?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  last_name?: string;
+
+  @ApiProperty()
+  @IsString()
+  access_token: string;
+
+  @ApiProperty()
+  @IsString()
+  refresh_token: string;
+
+  @ApiProperty()
+  @IsString()
+  scope: string;
+
+  @ApiProperty()
+  @IsString()
+  expires_at: Date;
 }

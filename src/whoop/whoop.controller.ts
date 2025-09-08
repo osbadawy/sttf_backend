@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
-import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
+import { WhoopOAuthGuard, WhoopCallbackGuard, WhoopAccessTokenGuard } from './whoop.guard';
 import type { WhoopCallbackRequest } from './dtos';
 import {
   WhoopCycleService,
@@ -47,8 +47,15 @@ export class WhoopController {
 
     if (req.whoopTokens && req.whoopUserProfile) {
       await this.whoopUserService.createWhoopUser({
-        whoopTokens: req.whoopTokens,
-        whoopUserProfile: req.whoopUserProfile,
+        id: req.whoopUserProfile.user_id,
+        access_token: req.whoopTokens.access_token,
+        refresh_token: req.whoopTokens.refresh_token,
+        scope: req.whoopTokens.scope,
+        expires_at: req.whoopTokens.expires_at,
+        firebase_user_id: req.whoopTokens.firebase_id,
+        email: req.whoopUserProfile.email,
+        first_name: req.whoopUserProfile.first_name,
+        last_name: req.whoopUserProfile.last_name,
       });
 
       await this.whoopCycleService.createCycles(req.whoopUserProfile.user_id);
@@ -71,5 +78,11 @@ export class WhoopController {
     } else {
       throw new BadRequestException('Invalid platform', req.platform);
     }
+  }
+
+  @Get('/test')
+  @UseGuards(FirebaseAuthGuard, WhoopAccessTokenGuard)
+  whoopTest(@Req() req: Request & { session: Record<string, any> }) {
+    return req.session.whoop_access;
   }
 }

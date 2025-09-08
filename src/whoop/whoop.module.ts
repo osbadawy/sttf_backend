@@ -12,12 +12,14 @@ import {
   WhoopOAuthGuard,
   WhoopCallbackGuard,
   OAuthStateService,
+  WhoopAccessTokenGuard,
 } from './whoop.guard';
 import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { HttpModule } from '@nestjs/axios';
 import { UserModule } from 'src/user/user.module';
 const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
+import { CryptoUtil } from 'src/utils';
 
 @Module({
   imports: [SequelizeModule.forFeature(ALL_MODELS), HttpModule, UserModule],
@@ -32,7 +34,9 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
     WhoopOAuthGuard,
     WhoopCallbackGuard,
     OAuthStateService,
-  ],
+    WhoopAccessTokenGuard,
+    CryptoUtil,
+    ],
   controllers: [WhoopController],
 })
 export class WhoopModule {}

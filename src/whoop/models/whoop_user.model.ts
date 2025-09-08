@@ -27,8 +27,6 @@ export class WhoopUser extends Model<
   @Column({ type: DataType.STRING }) declare first_name: string;
   @Column({ type: DataType.STRING }) declare last_name: string;
 
-  @Column({ type: DataType.STRING })
-  declare authorization_token_encrypted: string;
   @Column({ type: DataType.STRING }) declare access_token_encrypted: string;
   @Column({ type: DataType.STRING }) declare refresh_token_encrypted: string;
   @Column({ type: DataType.STRING }) declare scope: string;
