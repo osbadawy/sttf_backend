@@ -10,7 +10,11 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
-import { WhoopOAuthGuard, WhoopCallbackGuard } from './whoop.guard';
+import {
+  WhoopOAuthGuard,
+  WhoopCallbackGuard,
+  WhoopAccessTokenGuard,
+} from './guards';
 import type { WhoopCallbackRequest } from './dtos';
 import {
   WhoopCycleService,

@@ -13,7 +13,7 @@ import {
   WhoopCallbackGuard,
   OAuthStateService,
   WhoopAccessTokenGuard,
-} from './whoop.guard';
+} from './guards';
 import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { HttpModule } from '@nestjs/axios';
