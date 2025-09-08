@@ -20,11 +20,11 @@ import { PlayerStats } from '../models/player_stats.model';
 import type {
   bodyCompositionResponse,
   deleteBodyCompositionResponse,
-} from '../dtos/body_composition.response.dtos';
+} from '../dtos/response.dtos';
 import type {
   postBodyCompositionRequest,
   patchBodyCompositionRequest,
-} from '../dtos/body_composition.request.dots';
+} from '../dtos/request.dtos';
 
 @Controller('body-composition')
 @UseGuards(FirebaseAuthGuard)

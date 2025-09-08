@@ -5,6 +5,7 @@ import { UserController } from './controllers/user.controller';
 import { TeamController } from './controllers/team.controller';
 import { PlayerStatsController } from './controllers/player_stats.controller';
 import { BodyCompositionController } from './controllers/body_composition.controller';
+import { MealsController } from './controllers/meal.controller';
 
 const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
 
@@ -16,6 +17,7 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
     TeamController,
     PlayerStatsController,
     BodyCompositionController,
+    MealsController,
   ],
 })
 export class UserModule {}

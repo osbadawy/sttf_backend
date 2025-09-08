@@ -23,8 +23,8 @@ import type {
   CreatePlayerStatsRequest,
   PatchBodyRequest,
   PatchFields,
-} from '../dtos/player_stats.request.dtos';
-import type { PlayerStatsResponse } from '../dtos/player_stats.response.dtos';
+} from '../dtos/request.dtos';
+import type { PlayerStatsResponse } from '../dtos/response.dtos';
 
 @Controller('player-stats')
 @UseGuards(FirebaseAuthGuard)

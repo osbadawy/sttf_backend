@@ -14,14 +14,14 @@ import { UniqueConstraintError } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models/user.model';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
-import { SignUpResponse, getUserResponse } from '../dtos/user.interfaces.dtos';
+import { SignUpResponse, getUserResponse } from '../dtos/response.dtos';
 
 import type {
   SignUpBodyRequest,
   getUserPkRequest,
   PatchUserFieldsRequest,
   PatchUserBodyRequest,
-} from '../dtos/user.request.dtos';
+} from '../dtos/request.dtos';
 
 @Controller('user')
 @UseGuards(FirebaseAuthGuard)

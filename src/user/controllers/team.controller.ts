@@ -22,8 +22,8 @@ import type {
   postTeamPkRequest,
   PatchTeamFieldsRequest,
   PatchTeamBodyRequest,
-} from '../dtos/team.request.dtos';
-import type { getAndPostTeamResponse } from '../dtos/team.response.dtos';
+} from '../dtos/request.dtos';
+import type { getAndPostTeamResponse } from '../dtos/response.dtos';
 
 @Controller('team')
 @UseGuards(FirebaseAuthGuard)
