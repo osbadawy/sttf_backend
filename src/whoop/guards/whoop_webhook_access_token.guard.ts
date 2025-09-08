@@ -11,8 +11,9 @@ import { WhoopUser } from '../models/whoop_user.model';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { firstValueFrom } from 'rxjs';
+import { Request } from 'express';
 
-import { WhoopAccessSession, WhoopTokenResponse } from '../dtos/whoop_user.dto';
+import { WhoopAccessTokens, WhoopTokenResponse } from '../dtos/whoop_user.dto';
 
 /**
 #1 if session.whoop_access_token exists, use session to get access token information
@@ -20,7 +21,7 @@ import { WhoopAccessSession, WhoopTokenResponse } from '../dtos/whoop_user.dto';
 #3 if session is invalid, get new access token from OAuth Endpoint
 */
 @Injectable()
-export class WhoopAccessTokenGuard implements CanActivate {
+export class WhoopWebhookAccessTokenGuard implements CanActivate {
   constructor(
     private readonly httpService: HttpService,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
@@ -31,98 +32,62 @@ export class WhoopAccessTokenGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest<{
-      user: { uid: string };
-      session: Record<string, unknown>;
-    }>();
+    const req = context.switchToHttp().getRequest<Request>();
+    this.verifySignature(req);
 
-    const session = req.session;
-    delete session.whoop_access;
-    const access = await this.getAccessFromSession(session, req.user.uid);
+    const { user_id: whoop_user_id } = req.body as { user_id: string };
+
+    const access = await this.getAccessFromDatabase(whoop_user_id);
 
     const now = new Date();
-
     // If access token expires less than 5 minuts from now
     if (access && access.expires_at < new Date(now.getTime() + 5 * 60 * 1000)) {
-      await this.refreshAccessToken(access, session, req.user.uid);
+      await this.refreshAccessToken(access, access.user_id);
     }
+
+    // access = await this.refreshAccessToken(access!, access!.user_id);
+
+    (req as Request & { whoop_access: WhoopAccessTokens }).whoop_access =
+      access;
 
     return true;
   }
 
-  async getAccessFromSession(
-    session: Record<string, unknown>,
-    firebase_user_id: string,
-  ): Promise<WhoopAccessSession | null> {
-    if (session.whoop_access && _isWhoopAccessSession(session.whoop_access)) {
-      return session.whoop_access;
-    } else {
-      return await this.getAccessFromDatabase(firebase_user_id, session);
-    }
-
-    function _isWhoopAccessSession(obj: unknown): obj is WhoopAccessSession {
-      if (typeof obj !== 'object' || obj === null) {
-        return false;
-      }
-
-      const candidate = obj as Record<string, unknown>;
-
-      return (
-        'access_token' in candidate &&
-        'refresh_token' in candidate &&
-        'expires_at' in candidate &&
-        'scope' in candidate &&
-        typeof candidate.access_token === 'string' &&
-        typeof candidate.refresh_token === 'string' &&
-        candidate.expires_at instanceof Date &&
-        typeof candidate.scope === 'string'
-      );
-    }
-  }
-
   async getAccessFromDatabase(
-    firebase_id: string,
-    session: Record<string, unknown>,
-  ): Promise<WhoopAccessSession | null> {
-    const user = await this.userModel.findOne({
-      where: { firebase_id },
-      include: [
-        {
-          model: this.whoopUserModel,
-          as: 'whoop_user',
-        },
-      ],
+    whoop_user_id: string,
+  ): Promise<WhoopAccessTokens> {
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { id: whoop_user_id },
     });
 
-    if (!user || !user.whoop_user) {
+    if (!whoopUser) {
       throw new Error('Whoop user not found');
     }
 
     const access_token = this.cryptoUtil.simpleDecrypt(
-      user.whoop_user.access_token_encrypted,
+      whoopUser.access_token_encrypted,
     );
     const refresh_token = this.cryptoUtil.simpleDecrypt(
-      user.whoop_user.refresh_token_encrypted,
+      whoopUser.refresh_token_encrypted,
     );
-    const expires_at = user.whoop_user.expires_at;
-    const scope = user.whoop_user.scope;
+    const expires_at = whoopUser.expires_at;
+    const scope = whoopUser.scope;
 
-    const whoopAccess: WhoopAccessSession = {
+    const whoopAccess: WhoopAccessTokens = {
       access_token,
       refresh_token,
       expires_at,
       scope,
+      user_id: whoopUser.user_id,
     };
 
-    session.whoop_access = whoopAccess;
     return whoopAccess;
   }
 
   async refreshAccessToken(
-    access: WhoopAccessSession,
-    session: Record<string, unknown>,
-    firebase_id: string,
-  ): Promise<void> {
+    access: WhoopAccessTokens,
+    user_id: string,
+  ): Promise<WhoopAccessTokens> {
     const { refresh_token } = access;
     try {
       const response = await firstValueFrom(
@@ -144,26 +109,62 @@ export class WhoopAccessTokenGuard implements CanActivate {
         ),
       );
 
-      const whoopAccess: WhoopAccessSession = {
-        access_token: response.data.access_token,
-        refresh_token: response.data.refresh_token,
-        expires_at: new Date(Date.now() + response.data.expires_in * 1000),
-        scope: response.data.scope,
-      };
-
-      session.whoop_access = whoopAccess;
+      console.log('One');
 
       await this.whoopUserService.createWhoopUser({
         id: response.data.user_id,
-        firebase_user_id: firebase_id,
+        user_filter: { id: user_id },
         access_token: response.data.access_token,
         refresh_token: response.data.refresh_token,
         scope: response.data.scope,
         expires_at: new Date(Date.now() + response.data.expires_in * 1000),
       });
+
+      console.log('Two');
+
+      const whoopAccess: WhoopAccessTokens = {
+        access_token: response.data.access_token,
+        refresh_token: response.data.refresh_token,
+        expires_at: new Date(Date.now() + response.data.expires_in * 1000),
+        scope: response.data.scope,
+        user_id: user_id,
+      };
+
+      console.log('Three');
+
+      return whoopAccess;
     } catch (error) {
       console.error('Error refreshing access token:', error);
       throw new Error('Failed to refresh access token');
+    }
+  }
+
+  verifySignature(req: Request) {
+    if (
+      !req.headers['x-whoop-signature'] ||
+      !req.headers['x-whoop-signature-timestamp']
+    ) {
+      throw new Error(
+        'Missing X-WHOOP-Signature or X-WHOOP-Signature-Timestamp',
+      );
+    }
+
+    const signature = req.headers['x-whoop-signature'] as string;
+    const signatureTimestamp = req.headers[
+      'x-whoop-signature-timestamp'
+    ] as string;
+
+    // calculated_signature_string = base64Encode(HMACSHA256(timestamp_header + raw_http_request_body, client_secret))
+    const payload = signatureTimestamp + JSON.stringify(req.body);
+    const calculatedSignatureString = this.cryptoUtil.hmac(
+      payload,
+      process.env.WHOOP_CLIENT_SECRET!,
+      'sha256',
+      'base64',
+    );
+
+    if (signature !== calculatedSignatureString) {
+      throw new Error('Invalid X-WHOOP-Signature');
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { WhoopUser } from 'src/whoop/models';
 import { User } from 'src/user/models/user.model';
@@ -7,16 +7,15 @@ import { CreateWhoopUserParams } from 'src/whoop/dtos';
 
 @Injectable()
 export class WhoopUserService {
-  private readonly cryptoUtil = new CryptoUtil();
-
   constructor(
+    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(User) private readonly userModel: typeof User,
   ) {}
 
   async createWhoopUser({
     id,
-    firebase_user_id,
+    user_filter,
     email,
     first_name,
     last_name,
@@ -26,7 +25,7 @@ export class WhoopUserService {
     expires_at,
   }: CreateWhoopUserParams) {
     const user = await this.userModel.findOne({
-      where: { firebase_id: firebase_user_id },
+      where: user_filter,
     });
     if (!user) {
       throw new Error('User not found');

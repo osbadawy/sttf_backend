@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
 import { Transaction, Sequelize } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
@@ -18,9 +18,8 @@ import {
 
 @Injectable()
 export class WhoopRecoveryService {
-  private readonly cryptoUtil = new CryptoUtil();
-
   constructor(
+    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopRecovery)
     private readonly whoopRecoveryModel: typeof WhoopRecovery,
@@ -33,6 +32,19 @@ export class WhoopRecoveryService {
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
   ) {}
+
+  async getSingleRecoveryFromWhoopApi(
+    access_token: string,
+    cycleId: number,
+  ): Promise<WhoopRecoveryData> {
+    const url = `https://api.prod.whoop.com/developer/v2/cycle/${cycleId}/recovery`;
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopRecoveryData>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
+  }
 
   private async getRecoveryFromWhoopApi(
     access_token: string,
@@ -152,7 +164,7 @@ export class WhoopRecoveryService {
     return recoveryWithScore;
   }
 
-  private async saveRecoveryToDatabase(
+  async saveRecoveryToDatabase(
     recoveryData: WhoopRecoveryData[],
     whoopUserId: number,
   ): Promise<{

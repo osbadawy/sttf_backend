@@ -30,6 +30,19 @@ export class WhoopCycleService {
     private readonly httpService: HttpService,
   ) {}
 
+  async getSingleCycleFromWhoopApi(
+    access_token: string,
+    cycle_id: number,
+  ): Promise<WhoopCycleData> {
+    const url = `https://api.prod.whoop.com/developer/v2/cycle/${cycle_id}`;
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopCycleData>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
+  }
+
   private async getCyclesFromWhoopApi(
     access_token: string,
     next_token: string | null,
@@ -123,7 +136,7 @@ export class WhoopCycleService {
     return cycleWithScore;
   }
 
-  private async saveCyclesToDatabase(
+  async saveCyclesToDatabase(
     cyclesData: WhoopCycleData[],
     whoopUserId: number,
   ): Promise<{

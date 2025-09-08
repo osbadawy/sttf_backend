@@ -9,19 +9,19 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { FirebaseAuthGuard } from '../auth/firebase-auth.guard';
-import { WhoopOAuthGuard, WhoopCallbackGuard } from './guards';
-import type { WhoopCallbackRequest } from './dtos';
+import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
+import { WhoopOAuthGuard, WhoopCallbackGuard } from 'src/whoop/guards';
+import type { WhoopCallbackRequest } from 'src/whoop/dtos';
 import {
   WhoopCycleService,
   WhoopUserService,
   WhoopSleepService,
   WhoopRecoveryService,
   WhoopWorkoutService,
-} from './services';
+} from 'src/whoop/services';
 
-@Controller('whoop')
-export class WhoopController {
+@Controller('whoop/auth')
+export class WhoopAuthController {
   constructor(
     private readonly whoopUserService: WhoopUserService,
     private readonly whoopCycleService: WhoopCycleService,
@@ -31,7 +31,7 @@ export class WhoopController {
   ) {}
 
   // Step 1: kick off OAuth
-  @Post('/auth/start')
+  @Post('/start')
   @UseGuards(FirebaseAuthGuard, WhoopOAuthGuard)
   whoopOAuthStart() {
     // Guard redirects to WHOOP automatically
@@ -39,7 +39,7 @@ export class WhoopController {
   }
 
   // Step 2: WHOOP redirects back here with authorization code
-  @Get('/auth/callback')
+  @Get('/callback')
   @UseGuards(WhoopCallbackGuard)
   async whoopCallback(@Req() req: WhoopCallbackRequest, @Res() res: Response) {
     // The WhoopGuard has already exchanged the code for tokens
@@ -52,7 +52,7 @@ export class WhoopController {
         refresh_token: req.whoopTokens.refresh_token,
         scope: req.whoopTokens.scope,
         expires_at: req.whoopTokens.expires_at,
-        firebase_user_id: req.whoopTokens.firebase_id,
+        user_filter: { firebase_id: req.whoopTokens.firebase_id },
         email: req.whoopUserProfile.email,
         first_name: req.whoopUserProfile.first_name,
         last_name: req.whoopUserProfile.last_name,

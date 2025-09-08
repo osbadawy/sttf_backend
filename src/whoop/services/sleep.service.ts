@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
 import { Transaction, Sequelize } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
@@ -19,9 +19,8 @@ import {
 
 @Injectable()
 export class WhoopSleepService {
-  private readonly cryptoUtil = new CryptoUtil();
-
   constructor(
+    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopCycle)
     private readonly whoopCycleModel: typeof WhoopCycle,
@@ -36,6 +35,19 @@ export class WhoopSleepService {
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
   ) {}
+
+  async getSingleSleepFromWhoopApi(
+    access_token: string,
+    sleep_id: string,
+  ): Promise<WhoopSleepData> {
+    const url = `https://api.prod.whoop.com/developer/v2/activity/sleep/${sleep_id}`;
+    const response = await firstValueFrom(
+      this.httpService.get<WhoopSleepData>(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }),
+    );
+    return response.data;
+  }
 
   private async getSleepFromWhoopApi(
     access_token: string,
@@ -279,7 +291,7 @@ export class WhoopSleepService {
     return sleepWithScore;
   }
 
-  private async saveSleepToDatabase(
+  async saveSleepToDatabase(
     sleepData: WhoopSleepData[],
     whoopUserId: number,
   ): Promise<{
