@@ -1,111 +1,157 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNumber,
-  IsString,
-  IsDate,
-  IsObject,
-  ValidateNested,
-} from 'class-validator';
+import { IsNumber, IsString, IsDate, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class WhoopUserProfile {
-  @ApiProperty({
-    description: 'WHOOP user ID',
-    example: 12345,
-  })
+  @ApiProperty()
   @IsNumber()
   user_id: number;
 
-  @ApiProperty({
-    description: 'User email address',
-    example: 'user@example.com',
-  })
+  @ApiProperty()
   @IsString()
   email: string;
 
-  @ApiProperty({
-    description: 'User first name',
-    example: 'John',
-  })
+  @ApiProperty()
   @IsString()
   first_name: string;
 
-  @ApiProperty({
-    description: 'User last name',
-    example: 'Doe',
-  })
+  @ApiProperty()
   @IsString()
   last_name: string;
 }
 
 export class WhoopTokens {
-  @ApiProperty({
-    description: 'Authorization token from OAuth flow',
-    example: 'auth_token_123',
-  })
+  @ApiProperty()
   @IsString()
   authorization_token: string;
 
-  @ApiProperty({
-    description: 'Access token for API authentication',
-    example: 'access_token_123',
-  })
+  @ApiProperty()
   @IsString()
   access_token: string;
 
-  @ApiProperty({
-    description: 'Refresh token for token renewal',
-    example: 'refresh_token_123',
-  })
+  @ApiProperty()
   @IsString()
   refresh_token: string;
 
-  @ApiProperty({
-    description: 'Token expiration time in seconds',
-    example: 3600,
-  })
+  @ApiProperty()
   @IsNumber()
   expires_in: number;
 
-  @ApiProperty({
-    description: 'Token expiration date',
-    example: '2024-01-01T12:00:00Z',
-  })
+  @ApiProperty()
   @IsDate()
   @Type(() => Date)
   expires_at: Date;
 
-  @ApiProperty({
-    description: 'Firebase user ID',
-    example: 'firebase_uid_123',
-  })
+  @ApiProperty()
   @IsString()
   firebase_id: string;
 
-  @ApiProperty({
-    description: 'OAuth scope permissions',
-    example: 'read:profile read:cycles',
-  })
+  @ApiProperty()
   @IsString()
   scope: string;
 }
 
 export class CreateWhoopUserParams {
-  @ApiProperty({
-    description: 'WHOOP authentication tokens',
-    type: () => WhoopTokens,
-  })
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopTokens)
-  whoopTokens: WhoopTokens;
+  @ApiProperty()
+  @IsNumber()
+  id: number;
 
-  @ApiProperty({
-    description: 'WHOOP user profile information',
-    type: () => WhoopUserProfile,
-  })
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WhoopUserProfile)
-  whoopUserProfile: WhoopUserProfile;
+  @ApiProperty()
+  @IsString()
+  firebase_user_id: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  email?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  first_name?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  last_name?: string;
+
+  @ApiProperty()
+  @IsString()
+  access_token: string;
+
+  @ApiProperty()
+  @IsString()
+  refresh_token: string;
+
+  @ApiProperty()
+  @IsString()
+  scope: string;
+
+  @ApiProperty()
+  @IsString()
+  expires_at: Date;
+}
+
+export class WhoopAccessSession {
+  @ApiProperty()
+  @IsString()
+  access_token: string;
+
+  @ApiProperty()
+  @IsString()
+  refresh_token: string;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  expires_at: Date;
+
+  @ApiProperty()
+  @IsString()
+  scope: string;
+}
+
+export class WhoopTokenResponse {
+  @ApiProperty()
+  @IsString()
+  access_token: string;
+
+  @ApiProperty()
+  @IsString()
+  refresh_token: string;
+
+  @ApiProperty()
+  @IsNumber()
+  expires_in: number;
+
+  @ApiProperty()
+  @IsString()
+  scope: string;
+
+  @ApiProperty()
+  @IsNumber()
+  user_id: number;
+}
+
+export class WhoopUserResponse {
+  @ApiProperty()
+  @IsNumber()
+  user_id: number;
+
+  @ApiProperty()
+  @IsString()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  first_name: string;
+
+  @ApiProperty()
+  @IsString()
+  last_name: string;
+}
+
+export interface OAuthState {
+  user_id: string;
+  platform: string;
 }
