@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   NotFoundException,
-  ConflictException,
   Body,
   Controller,
   Post,
@@ -12,45 +11,41 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel  } from '@nestjs/sequelize';
+import { InjectModel } from '@nestjs/sequelize';
 import type { CreationAttributes } from 'sequelize';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { BodyComposition } from '../models/body_composition.model';
 import { PlayerStats } from '../models/player_stats.model';
 
+import type {
+  bodyCompositionResponse,
+  deleteBodyCompositionResponse,
+} from '../dtos/body_composition.response.dtos';
+import type {
+  postBodyCompositionRequest,
+  patchBodyCompositionRequest,
+} from '../dtos/body_composition.request.dots';
+
 @Controller('body-composition')
 @UseGuards(FirebaseAuthGuard)
 export class BodyCompositionController {
   constructor(
-    @InjectModel(BodyComposition) private readonly bodyCompModel: typeof BodyComposition,
-    @InjectModel(PlayerStats) private readonly playerStatsModel: typeof PlayerStats,
+    @InjectModel(BodyComposition)
+    private readonly bodyCompModel: typeof BodyComposition,
+    @InjectModel(PlayerStats)
+    private readonly playerStatsModel: typeof PlayerStats,
   ) {}
 
   // POST: ensure one-by-player_stats_id (create if missing)
   @Post()
   async create(
     @Body()
-    body: {
-      player_stats_id: string;
-      weight?: string | number;
-      bmi?: string | number;
-      body_fat_percentage?: string | number;
-      muscle_mass_percentage?: string | number;
-    },
-  ): Promise<{
-    ok: boolean;
-    data: {
-      id: string;
-      player_stats_id: string;
-      weight: string;
-      bmi: string;
-      body_fat_percentage: string;
-      muscle_mass_percentage: string;
-    };
-  }> {
+    body: postBodyCompositionRequest,
+  ): Promise<bodyCompositionResponse> {
     const raw = body?.player_stats_id;
     const player_stats_id = String(raw ?? '').trim();
-    if (!player_stats_id) throw new BadRequestException('player_stats_id is required');
+    if (!player_stats_id)
+      throw new BadRequestException('player_stats_id is required');
 
     try {
       // (optional) ensure the PlayerStats row exists
@@ -66,12 +61,18 @@ export class BodyCompositionController {
           player_stats_id,
           weight: body.weight != null ? String(body.weight) : null,
           bmi: body.bmi != null ? String(body.bmi) : null,
-          body_fat_percentage: body.body_fat_percentage != null ? String(body.body_fat_percentage) : null,
-          muscle_mass_percentage: body.muscle_mass_percentage != null ? String(body.muscle_mass_percentage) : null,
+          body_fat_percentage:
+            body.body_fat_percentage != null
+              ? String(body.body_fat_percentage)
+              : null,
+          muscle_mass_percentage:
+            body.muscle_mass_percentage != null
+              ? String(body.muscle_mass_percentage)
+              : null,
         };
-        
+
         bc = await this.bodyCompModel.create(
-          payload as unknown as CreationAttributes<BodyComposition>
+          payload as unknown as CreationAttributes<BodyComposition>,
         );
       }
 
@@ -97,17 +98,7 @@ export class BodyCompositionController {
   @Get()
   async getByPk(
     @Body() body: { id: string },
-  ): Promise<{
-    ok: boolean;
-    data: {
-      id: string;
-      player_stats_id: string;
-      weight: string;
-      bmi: string;
-      body_fat_percentage: string;
-      muscle_mass_percentage: string;
-    };
-  }> {
+  ): Promise<bodyCompositionResponse> {
     const id = body?.id;
     if (!id) throw new BadRequestException('id is required');
 
@@ -137,36 +128,12 @@ export class BodyCompositionController {
   @Patch()
   async patch(
     @Body()
-    body: {
-      id: string;
-      data?: {
-        weight?: string | number;
-        bmi?: string | number;
-        body_fat_percentage?: string | number;
-        muscle_mass_percentage?: string | number;
-      };
-    } & {
-      weight?: string | number;
-      bmi?: string | number;
-      body_fat_percentage?: string | number;
-      muscle_mass_percentage?: string | number;
-    },
-  ): Promise<{
-    ok: boolean;
-    data: {
-      id: string;
-      player_stats_id: string;
-      weight: string;
-      bmi: string;
-      body_fat_percentage: string;
-      muscle_mass_percentage: string;
-    };
-  }> {
+    body: patchBodyCompositionRequest,
+  ): Promise<bodyCompositionResponse> {
     const id = String(body?.id ?? '').trim();
     if (!id) throw new BadRequestException('id is required');
 
-    const src =
-      body && typeof body.data === 'object' ? body.data : body;
+    const src = body && typeof body.data === 'object' ? body.data : body;
 
     const updates: Record<string, any> = {};
 
@@ -221,7 +188,7 @@ export class BodyCompositionController {
   @Delete(':id')
   async delete(
     @Param('id') id: string,
-  ): Promise<{ ok: boolean; data: { id: string } }> {
+  ): Promise<deleteBodyCompositionResponse> {
     try {
       const bc = await this.bodyCompModel.findByPk(id);
       if (!bc) throw new NotFoundException('body composition not found');
