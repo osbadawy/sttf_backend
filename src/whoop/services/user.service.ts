@@ -70,4 +70,18 @@ export class WhoopUserService {
 
     return { ok: true };
   }
+
+
+  async getDaySummary(user_id: string, day: Date) {
+    const user = await this.userModel.findOne(
+      { 
+        where: { id: user_id }
+      }
+    )
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+  }
 }

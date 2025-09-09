@@ -4,7 +4,9 @@ import {
   ForeignKey,
   Model,
   Table,
+  HasOne,
 } from 'sequelize-typescript';
+import { WhoopWorkoutZoneDurations } from './workout_zone_durations.model';
 import { WhoopWorkout } from './workout.model';
 
 // workout_score.model.ts
@@ -32,4 +34,6 @@ export class WhoopWorkoutScore extends Model<WhoopWorkoutScore> {
   declare altitude_gain_meter?: number | null;
   @Column({ type: DataType.DOUBLE, allowNull: true })
   declare altitude_change_meter?: number | null;
+
+  @HasOne(() => WhoopWorkoutZoneDurations) declare zoneDurations?: WhoopWorkoutZoneDurations[];
 }
