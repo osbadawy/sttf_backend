@@ -16,7 +16,7 @@ import { User } from '../models/user.model';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { SignUpResponse, getUserResponse } from '../dtos/response.dtos';
 // import session, { Session } from 'express-session';
-import {Session} from '@nestjs/common'
+import { Session } from '@nestjs/common';
 
 import type {
   SignUpBodyRequest,
@@ -43,6 +43,7 @@ export class UserController {
       const data: getUserResponse['data'] = {
         email: user.email,
         avatar_url: user.avatar_url ?? '',
+        access: user.access ?? 'player',
         age: user.age ?? 0,
         phone: user.phone ?? 0,
         nationality: user.nationality ?? '',
@@ -110,6 +111,7 @@ export class UserController {
         email: user.email,
         avatar_url: user.avatar_url ?? '',
         age: user.age ?? 0,
+        access: user.access ?? 'player',
         phone: user.phone ?? 0,
         nationality: user.nationality ?? '',
         display_name: user.display_name ?? '',
@@ -127,23 +129,32 @@ export class UserController {
   async signUp(@Body() body: SignUpBodyRequest): Promise<SignUpResponse> {
     const firebase_id = (body?.firebase_id ?? '').trim();
     const email = (body?.email ?? '').trim().toLowerCase();
+    const access = (body?.access ?? 'player').trim().toLowerCase();
 
     if (!firebase_id) throw new BadRequestException('firebase_id is required');
     if (!email) throw new BadRequestException('email is required');
+    if (!access) throw new BadRequestException('access is required');
 
     try {
       let user = await this.userModel.findOne({ where: { firebase_id } });
 
       if (!user) {
-        user = await this.userModel.create({ firebase_id, email });
-        return { created: true, user: { firebase_id, email: user.email } };
+        user = await this.userModel.create({ firebase_id, email, access });
+        return { created: true, user: { firebase_id, email: user.email, access } };
       }
 
       if (user.email !== email) {
         await user.update({ email });
       }
 
-      return { created: false, user: user };
+      return { 
+        created: false, 
+        user: { 
+          firebase_id: user.firebase_id, 
+          email: user.email, 
+          access: user.access ?? 'player' 
+        } 
+      };
     } catch (e: any) {
       const errorMessage =
         e instanceof Error ? e.message : 'Failed to save user.';
@@ -152,20 +163,39 @@ export class UserController {
   }
 
   @Post('/login')
-  async logIn(@Body() body:SignUpBodyRequest, @Session() session: Record<string, any>) : Promise<SignUpResponse>{
+  async logIn(
+    @Body() body: SignUpBodyRequest,
+    @Session() session: Record<string, any>,
+  ): Promise<getUserResponse> {
     const email = (body?.email ?? '').trim().toLowerCase();
 
     if (!email) throw new BadRequestException('email is required');
     try {
-      let user = await this.userModel.findOne({ where: { email } });
+      const user = await this.userModel.findOne({ where: { email } });
 
       if (!user) {
         throw new BadRequestException('user not found');
       }
+      if (!user.access) {
+        throw new BadRequestException('access not found');
+      }
 
-      session.user.access = user.access
+      // avoid .access on an `any` by using a typed local
+      const sessUser: { access?: unknown } = session.user ?? {};
+      sessUser.access = user.access;
+      session.user = sessUser;
 
-      return { created: false, user: user };
+
+      const data: getUserResponse['data'] = {
+        email: user.email,
+        avatar_url: user.avatar_url ?? '',
+        access: user.access ?? 'player',
+        age: user.age ?? 0,
+        phone: user.phone ?? 0,
+        nationality: user.nationality ?? '',
+        display_name: user.display_name ?? '',
+      };
+      return { ok: false, data };
     } catch (e: any) {
       const errorMessage =
         e instanceof Error ? e.message : 'Failed to save user.';
