@@ -242,14 +242,19 @@ export class WhoopCycleService {
     }
   }
 
-  cycleFilter(sleep_filter: object, recovery_filter: object, startDay: Date, endDay: Date): object {
+  cycleFilter(
+    sleep_filter: object,
+    recovery_filter: object,
+    startDay: Date,
+    endDay: Date,
+  ): object {
     return {
       model: this.whoopCycleModel,
       as: 'cycles',
       required: false,
       where: {
         start: {
-          [Op.between]: [startDay, endDay]
+          [Op.between]: [startDay, endDay],
         },
       },
       include: [
@@ -259,8 +264,8 @@ export class WhoopCycleService {
           required: false,
         },
         sleep_filter,
-        recovery_filter
-      ]
-    }
+        recovery_filter,
+      ],
+    };
   }
 }

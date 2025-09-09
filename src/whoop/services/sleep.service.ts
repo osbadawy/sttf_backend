@@ -396,7 +396,6 @@ export class WhoopSleepService {
     }
   }
 
-
   sleepFilter(): object {
     return {
       model: this.whoopSleepModel,
@@ -417,10 +416,10 @@ export class WhoopSleepService {
               model: this.whoopSleepNeededModel,
               as: 'sleep_needed',
               required: false,
-            }
+            },
           ],
-        }
-      ]
-    }
+        },
+      ],
+    };
   }
 }

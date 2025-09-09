@@ -35,5 +35,6 @@ export class WhoopWorkoutScore extends Model<WhoopWorkoutScore> {
   @Column({ type: DataType.DOUBLE, allowNull: true })
   declare altitude_change_meter?: number | null;
 
-  @HasOne(() => WhoopWorkoutZoneDurations) declare zoneDurations?: WhoopWorkoutZoneDurations[];
+  @HasOne(() => WhoopWorkoutZoneDurations)
+  declare zoneDurations?: WhoopWorkoutZoneDurations[];
 }

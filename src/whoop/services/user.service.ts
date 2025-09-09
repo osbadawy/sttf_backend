@@ -4,17 +4,26 @@ import { WhoopUser } from 'src/whoop/models';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { CreateWhoopUserParams } from 'src/whoop/dtos';
-import { WhoopWorkoutService, WhoopCycleService, WhoopSleepService, WhoopRecoveryService } from './';
+import {
+  WhoopWorkoutService,
+  WhoopCycleService,
+  WhoopSleepService,
+  WhoopRecoveryService,
+} from './';
 
 @Injectable()
 export class WhoopUserService {
   constructor(
     private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
-    @Inject(forwardRef(() => WhoopWorkoutService)) private readonly whoopWorkoutService: WhoopWorkoutService,
-    @Inject(forwardRef(() => WhoopSleepService)) private readonly whoopSleepService: WhoopSleepService,
-    @Inject(forwardRef(() => WhoopRecoveryService)) private readonly whoopRecoveryService: WhoopRecoveryService,
-    @Inject(forwardRef(() => WhoopCycleService)) private readonly whoopCycleService: WhoopCycleService,
+    @Inject(forwardRef(() => WhoopWorkoutService))
+    private readonly whoopWorkoutService: WhoopWorkoutService,
+    @Inject(forwardRef(() => WhoopSleepService))
+    private readonly whoopSleepService: WhoopSleepService,
+    @Inject(forwardRef(() => WhoopRecoveryService))
+    private readonly whoopRecoveryService: WhoopRecoveryService,
+    @Inject(forwardRef(() => WhoopCycleService))
+    private readonly whoopCycleService: WhoopCycleService,
     @InjectModel(User) private readonly userModel: typeof User,
   ) {}
 
@@ -76,7 +85,6 @@ export class WhoopUserService {
     return { ok: true };
   }
 
-
   async getDaySummary(user_id: string, day: Date) {
     day = new Date(day);
     const startDay = new Date(day.setHours(0, 0, 0, 0));
@@ -84,33 +92,34 @@ export class WhoopUserService {
 
     const sleepFilter = this.whoopSleepService.sleepFilter();
     const recoveryFilter = this.whoopRecoveryService.recoveryFilter();
-    const cycleFilter = this.whoopCycleService.cycleFilter(sleepFilter, recoveryFilter, startDay, endDay);
+    const cycleFilter = this.whoopCycleService.cycleFilter(
+      sleepFilter,
+      recoveryFilter,
+      startDay,
+      endDay,
+    );
 
-
-    const workoutFilter = this.whoopWorkoutService.workoutFilter(startDay, endDay);
-    const user = await this.userModel.findOne(
-      { 
-        where: { id: user_id },
-        include: [
-          {
-            model: this.whoopUserModel,
-            as: 'whoop_user',
-            required: true,
-            include: [
-              workoutFilter,
-              cycleFilter
-            ],
-            attributes: ['email', 'first_name', 'last_name', 'user_id'],
-          }
-        ],
-      }
-    )
+    const workoutFilter = this.whoopWorkoutService.workoutFilter(
+      startDay,
+      endDay,
+    );
+    const user = await this.userModel.findOne({
+      where: { id: user_id },
+      include: [
+        {
+          model: this.whoopUserModel,
+          as: 'whoop_user',
+          required: true,
+          include: [workoutFilter, cycleFilter],
+          attributes: ['email', 'first_name', 'last_name', 'user_id'],
+        },
+      ],
+    });
 
     if (!user) {
       throw new Error('User not found');
     }
 
     return user;
-    
   }
 }

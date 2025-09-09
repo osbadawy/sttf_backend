@@ -275,7 +275,7 @@ export class WhoopRecoveryService {
     }
   }
 
-  recoveryFilter(){
+  recoveryFilter() {
     return {
       model: this.whoopRecoveryModel,
       as: 'recoveries',
@@ -285,8 +285,8 @@ export class WhoopRecoveryService {
           model: this.whoopRecoveryScoreModel,
           as: 'score',
           required: false,
-        }
-      ]
-    }
+        },
+      ],
+    };
   }
 }

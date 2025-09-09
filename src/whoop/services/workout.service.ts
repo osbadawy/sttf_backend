@@ -322,54 +322,55 @@ export class WhoopWorkoutService {
     }
   }
 
-  async getWorkouts(
-    firebase_id: string,
-    days: number = 14
-  ) {
-    const user = await this.userModel.findOne({
-      where: { firebase_id },
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
+  async getWorkouts(user_id: string, days: number = 14) {
     const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
-    const min_date = new Date(today_midnight.getTime() - (days * 24 * 60 * 60 * 1000));
+    const min_date = new Date(
+      today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
+    );
 
-    const whoopUser = await this.whoopUserModel.findOne({
-      where: { user_id: user.id },
-    });
-
-    if (!whoopUser) {
-      throw new Error('Whoop user not found');
-    }
-
-    const workouts = await this.whoopWorkoutModel.findAll({
-      where: {
-        user_id: whoopUser.id,
-        start: {
-          [Op.gte]: min_date,
-        },
-      },
+    const user = await this.userModel.findOne({
+      where: { id: user_id },
       include: [
         {
-          model: this.whoopWorkoutScoreModel,
-          as: 'score',
-          required: false,
+          model: this.whoopUserModel,
+          as: 'whoop_user',
+          required: true,
           include: [
             {
-              model: this.whoopWorkoutZoneDurationsModel,
-              as: 'zoneDurations',
+              model: this.whoopWorkoutModel,
+              as: 'workouts',
               required: false,
-            }
+              where: {
+                start: {
+                  [Op.gte]: min_date,
+                },
+              },
+              order: [['start', 'DESC']],
+              include: [
+                {
+                  model: this.whoopWorkoutScoreModel,
+                  as: 'score',
+                  required: false,
+                  include: [
+                    {
+                      model: this.whoopWorkoutZoneDurationsModel,
+                      as: 'zoneDurations',
+                      required: false,
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         },
       ],
-      order: [['start', 'DESC']],
     });
 
-    return workouts;
+    if (!user || !user.whoop_user ) {
+      throw new Error('User or Whoop user not found');
+    }
+
+    return user.whoop_user.workouts;
   }
 
   workoutFilter(startDay: Date, endDay: Date): any {
@@ -381,9 +382,9 @@ export class WhoopWorkoutService {
         start: {
           [Op.lte]: endDay,
         },
-        end:{
+        end: {
           [Op.gte]: startDay,
-        }
+        },
       },
       include: [
         {
@@ -395,11 +396,11 @@ export class WhoopWorkoutService {
               model: this.whoopWorkoutZoneDurationsModel,
               as: 'zoneDurations',
               required: false,
-            }
+            },
           ],
-        }
+        },
       ],
-      order: [['start', 'DESC']]
-    }
+      order: [['start', 'DESC']],
+    };
   }
 }

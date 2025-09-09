@@ -79,16 +79,15 @@ export class WhoopCallbackRequest {
   platform?: string;
 }
 
-export class WhoopAppSingleDayRequest{
+export class WhoopAppSingleDayRequest {
   @ApiProperty()
   @IsUUID()
   user_id: string;
 
   @ApiProperty()
   @IsDate()
-  day: Date
+  day: Date;
 }
-
 
 export class WhoopAppMultiDayRequest {
   @ApiProperty()
