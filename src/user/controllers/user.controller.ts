@@ -15,6 +15,8 @@ import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models/user.model';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { SignUpResponse, getUserResponse } from '../dtos/response.dtos';
+// import session, { Session } from 'express-session';
+import {Session} from '@nestjs/common'
 
 import type {
   SignUpBodyRequest,
@@ -140,6 +142,28 @@ export class UserController {
       if (user.email !== email) {
         await user.update({ email });
       }
+
+      return { created: false, user: user };
+    } catch (e: any) {
+      const errorMessage =
+        e instanceof Error ? e.message : 'Failed to save user.';
+      throw new UnauthorizedException(errorMessage);
+    }
+  }
+
+  @Post('/login')
+  async logIn(@Body() body:SignUpBodyRequest, @Session() session: Record<string, any>) : Promise<SignUpResponse>{
+    const email = (body?.email ?? '').trim().toLowerCase();
+
+    if (!email) throw new BadRequestException('email is required');
+    try {
+      let user = await this.userModel.findOne({ where: { email } });
+
+      if (!user) {
+        throw new BadRequestException('user not found');
+      }
+
+      session.user.access = user.access
 
       return { created: false, user: user };
     } catch (e: any) {
