@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
-import { Transaction, Sequelize } from 'sequelize';
+import { Transaction, Sequelize, Op } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
 import { WhoopRecovery } from 'src/whoop/models/recovery.model';
 import { WhoopRecoveryScore } from 'src/whoop/models/recovery_score.model';
@@ -19,7 +19,7 @@ import {
 @Injectable()
 export class WhoopRecoveryService {
   constructor(
-    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
+    private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopRecovery)
     private readonly whoopRecoveryModel: typeof WhoopRecovery,
@@ -273,5 +273,73 @@ export class WhoopRecoveryService {
       console.error('Error fetching or saving recovery data:', error);
       throw new Error('Failed to fetch or save recovery data from Whoop API');
     }
+  }
+
+  async getMultiDayData(
+    user_id: string,
+    days: number = 14,
+  ): Promise<WhoopRecoveryDataWithIds[]> {
+    const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
+    const min_date = new Date(
+      today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
+    );
+
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { user_id },
+      include: [
+        {
+          model: this.whoopCycleModel,
+          as: 'cycles',
+          required: false,
+          where: {
+            start: {
+              [Op.gte]: min_date,
+            },
+          },
+          order: [['start', 'DESC']],
+          include: [
+            {
+              model: this.whoopRecoveryModel,
+              as: 'recoveries',
+              required: false,
+              include: [
+                {
+                  model: this.whoopRecoveryScoreModel,
+                  as: 'score',
+                  required: false,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!whoopUser || !whoopUser.cycles) {
+      throw new Error('Whoop user not found');
+    }
+
+    const recoveries: WhoopRecoveryDataWithIds[] = [];
+
+    for (const cycle of whoopUser.cycles) {
+      if (cycle.recoveries) recoveries.push(...cycle.recoveries);
+    }
+
+    return recoveries || [];
+  }
+
+  recoveryFilter() {
+    return {
+      model: this.whoopRecoveryModel,
+      as: 'recoveries',
+      required: false,
+      include: [
+        {
+          model: this.whoopRecoveryScoreModel,
+          as: 'score',
+          required: false,
+        },
+      ],
+    };
   }
 }

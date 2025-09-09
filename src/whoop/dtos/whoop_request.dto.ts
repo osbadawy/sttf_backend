@@ -6,6 +6,11 @@ import {
   IsOptional,
   IsObject,
   ValidateNested,
+  IsNumber,
+  Min,
+  Max,
+  IsUUID,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -25,6 +30,23 @@ export class WhoopRequest {
   @ValidateNested()
   @Type(() => WhoopTokens)
   whoopTokens?: WhoopTokens;
+}
+
+class WhoopCallbackRequestQuery {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  code?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  error?: string;
 }
 
 export class WhoopCallbackRequest {
@@ -57,19 +79,24 @@ export class WhoopCallbackRequest {
   platform?: string;
 }
 
-class WhoopCallbackRequestQuery {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  code?: string;
+export class WhoopAppSingleDayRequest {
+  @ApiProperty()
+  @IsUUID()
+  user_id: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  state?: string;
+  @ApiProperty()
+  @IsDate()
+  day: Date;
+}
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  error?: string;
+export class WhoopAppMultiDayRequest {
+  @ApiProperty()
+  @IsUUID()
+  user_id: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(1)
+  @Max(30)
+  days: number;
 }

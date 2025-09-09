@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
-import { Transaction, Sequelize } from 'sequelize';
+import { Transaction, Sequelize, Op } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
 import { WhoopWorkout } from 'src/whoop/models/workout.model';
 import { WhoopWorkoutScore } from 'src/whoop/models/workout_score.model';
@@ -14,11 +14,12 @@ import {
   WhoopWorkoutDataWithIds,
   WhoopWorkoutServiceResponse,
 } from '../dtos';
+import { User } from 'src/user/models/user.model';
 
 @Injectable()
 export class WhoopWorkoutService {
   constructor(
-    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
+    private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopWorkout)
     private readonly whoopWorkoutModel: typeof WhoopWorkout,
@@ -26,6 +27,7 @@ export class WhoopWorkoutService {
     private readonly whoopWorkoutScoreModel: typeof WhoopWorkoutScore,
     @InjectModel(WhoopWorkoutZoneDurations)
     private readonly whoopWorkoutZoneDurationsModel: typeof WhoopWorkoutZoneDurations,
+    @InjectModel(User) private readonly userModel: typeof User,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
   ) {}
@@ -318,5 +320,83 @@ export class WhoopWorkoutService {
       console.error('Error fetching or saving workout data:', error);
       throw new Error('Failed to fetch or save workout data from Whoop API');
     }
+  }
+
+  async getMultiDayData(
+    user_id: string,
+    days: number = 14,
+  ): Promise<WhoopWorkoutDataWithIds[]> {
+    const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
+    const min_date = new Date(
+      today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
+    );
+
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { user_id },
+      include: [
+        {
+          model: this.whoopWorkoutModel,
+          as: 'workouts',
+          required: false,
+          where: {
+            start: {
+              [Op.gte]: min_date,
+            },
+          },
+          order: [['start', 'DESC']],
+          include: [
+            {
+              model: this.whoopWorkoutScoreModel,
+              as: 'score',
+              required: false,
+              include: [
+                {
+                  model: this.whoopWorkoutZoneDurationsModel,
+                  as: 'zoneDurations',
+                  required: false,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!whoopUser) {
+      throw new Error('User or Whoop user not found');
+    }
+
+    return whoopUser.workouts || [];
+  }
+
+  workoutFilter(startDay: Date, endDay: Date): object {
+    return {
+      model: this.whoopWorkoutModel,
+      as: 'workouts',
+      required: false,
+      where: {
+        start: {
+          [Op.lte]: endDay,
+        },
+        end: {
+          [Op.gte]: startDay,
+        },
+      },
+      include: [
+        {
+          model: this.whoopWorkoutScoreModel,
+          as: 'score',
+          required: false,
+          include: [
+            {
+              model: this.whoopWorkoutZoneDurationsModel,
+              as: 'zoneDurations',
+              required: false,
+            },
+          ],
+        },
+      ],
+      order: [['start', 'DESC']],
+    };
   }
 }
