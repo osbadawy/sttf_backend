@@ -32,6 +32,23 @@ export class WhoopRequest {
   whoopTokens?: WhoopTokens;
 }
 
+class WhoopCallbackRequestQuery {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  code?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  error?: string;
+}
+
 export class WhoopCallbackRequest {
   @ApiProperty({ type: () => WhoopCallbackRequestQuery })
   @IsObject()
@@ -60,23 +77,6 @@ export class WhoopCallbackRequest {
   @IsString()
   @IsIn(['web', 'mobile'])
   platform?: string;
-}
-
-class WhoopCallbackRequestQuery {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  code?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  error?: string;
 }
 
 export class WhoopAppSingleDayRequest{

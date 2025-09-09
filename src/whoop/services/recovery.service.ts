@@ -19,7 +19,7 @@ import {
 @Injectable()
 export class WhoopRecoveryService {
   constructor(
-    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
+    private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopRecovery)
     private readonly whoopRecoveryModel: typeof WhoopRecovery,
@@ -272,6 +272,21 @@ export class WhoopRecoveryService {
     } catch (error) {
       console.error('Error fetching or saving recovery data:', error);
       throw new Error('Failed to fetch or save recovery data from Whoop API');
+    }
+  }
+
+  recoveryFilter(){
+    return {
+      model: this.whoopRecoveryModel,
+      as: 'recoveries',
+      required: false,
+      include: [
+        {
+          model: this.whoopRecoveryScoreModel,
+          as: 'score',
+          required: false,
+        }
+      ]
     }
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
-import { Transaction, Sequelize } from 'sequelize';
+import { Transaction, Sequelize, Op } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
 import { User } from 'src/user/models/user.model';
 import { WhoopCycle } from 'src/whoop/models/cycle.model';
@@ -239,6 +239,28 @@ export class WhoopCycleService {
     } catch (error) {
       console.error('Error fetching or saving cycle data:', error);
       throw new Error('Failed to fetch or save cycle data from Whoop API');
+    }
+  }
+
+  cycleFilter(sleep_filter: object, recovery_filter: object, startDay: Date, endDay: Date): object {
+    return {
+      model: this.whoopCycleModel,
+      as: 'cycles',
+      required: false,
+      where: {
+        start: {
+          [Op.between]: [startDay, endDay]
+        },
+      },
+      include: [
+        {
+          model: this.whoopCycleScoreModel,
+          as: 'score',
+          required: false,
+        },
+        sleep_filter,
+        recovery_filter
+      ]
     }
   }
 }

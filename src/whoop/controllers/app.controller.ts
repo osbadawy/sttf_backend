@@ -13,9 +13,9 @@ export class WhoopAppController {
     private readonly whoopUserService: WhoopUserService,
   ) {}
 
-  @UseGuards(FirebaseAuthGuard)
+  // @UseGuards(FirebaseAuthGuard)
   @Get("/day")
-  async day(@Req() req: Request & { user: { uid: string } }, @Body() body: WhoopAppSingleDayRequest) {
+  async day(@Req() req: Request, @Body() body: WhoopAppSingleDayRequest) {
     return await this.whoopUserService.getDaySummary(body.user_id, body.day);
   }
 

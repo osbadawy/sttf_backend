@@ -19,7 +19,7 @@ import { User } from 'src/user/models/user.model';
 @Injectable()
 export class WhoopWorkoutService {
   constructor(
-    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
+    private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopWorkout)
     private readonly whoopWorkoutModel: typeof WhoopWorkout,
@@ -348,7 +348,7 @@ export class WhoopWorkoutService {
     const workouts = await this.whoopWorkoutModel.findAll({
       where: {
         user_id: whoopUser.id,
-        end: {
+        start: {
           [Op.gte]: min_date,
         },
       },
@@ -366,9 +366,40 @@ export class WhoopWorkoutService {
           ],
         },
       ],
-      order: [['end', 'DESC']],
+      order: [['start', 'DESC']],
     });
 
     return workouts;
+  }
+
+  workoutFilter(startDay: Date, endDay: Date): any {
+    return {
+      model: this.whoopWorkoutModel,
+      as: 'workouts',
+      required: false,
+      where: {
+        start: {
+          [Op.lte]: endDay,
+        },
+        end:{
+          [Op.gte]: startDay,
+        }
+      },
+      include: [
+        {
+          model: this.whoopWorkoutScoreModel,
+          as: 'score',
+          required: false,
+          include: [
+            {
+              model: this.whoopWorkoutZoneDurationsModel,
+              as: 'zoneDurations',
+              required: false,
+            }
+          ],
+        }
+      ],
+      order: [['start', 'DESC']]
+    }
   }
 }

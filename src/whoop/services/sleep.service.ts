@@ -20,7 +20,7 @@ import {
 @Injectable()
 export class WhoopSleepService {
   constructor(
-    @Inject(CryptoUtil) private readonly cryptoUtil: CryptoUtil,
+    private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @InjectModel(WhoopCycle)
     private readonly whoopCycleModel: typeof WhoopCycle,
@@ -393,6 +393,34 @@ export class WhoopSleepService {
     } catch (error) {
       console.error('Error fetching or saving sleep data:', error);
       throw new Error('Failed to fetch or save sleep data from Whoop API');
+    }
+  }
+
+
+  sleepFilter(): object {
+    return {
+      model: this.whoopSleepModel,
+      as: 'sleeps',
+      required: false,
+      include: [
+        {
+          model: this.whoopSleepScoreModel,
+          as: 'score',
+          required: false,
+          include: [
+            {
+              model: this.whoopSleepStageSummaryModel,
+              as: 'stage_summary',
+              required: false,
+            },
+            {
+              model: this.whoopSleepNeededModel,
+              as: 'sleep_needed',
+              required: false,
+            }
+          ],
+        }
+      ]
     }
   }
 }
