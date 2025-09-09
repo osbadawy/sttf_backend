@@ -56,6 +56,7 @@ export class User extends Model<
   @Column(DataType.INTEGER) declare age: CreationOptional<number | null>;
   @Column(DataType.INTEGER) declare phone: CreationOptional<number | null>;
   @Column(DataType.STRING) declare nationality: CreationOptional<string | null>;
+  @Column(DataType.STRING) declare access: CreationOptional<string | null>;
   @Column(DataType.STRING) declare avatar_url: CreationOptional<string | null>;
   @Column(DataType.STRING) declare timezone: CreationOptional<string | null>;
   @Column(DataType.DATE) declare last_login_at: CreationOptional<Date | null>;
