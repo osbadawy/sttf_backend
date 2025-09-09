@@ -322,42 +322,38 @@ export class WhoopWorkoutService {
     }
   }
 
-  async getWorkouts(user_id: string, days: number = 14) {
+  async getMultiDayData(
+    user_id: string,
+    days: number = 14,
+  ): Promise<WhoopWorkoutDataWithIds[]> {
     const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
     const min_date = new Date(
       today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
     );
 
-    const user = await this.userModel.findOne({
-      where: { id: user_id },
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { user_id },
       include: [
         {
-          model: this.whoopUserModel,
-          as: 'whoop_user',
-          required: true,
+          model: this.whoopWorkoutModel,
+          as: 'workouts',
+          required: false,
+          where: {
+            start: {
+              [Op.gte]: min_date,
+            },
+          },
+          order: [['start', 'DESC']],
           include: [
             {
-              model: this.whoopWorkoutModel,
-              as: 'workouts',
+              model: this.whoopWorkoutScoreModel,
+              as: 'score',
               required: false,
-              where: {
-                start: {
-                  [Op.gte]: min_date,
-                },
-              },
-              order: [['start', 'DESC']],
               include: [
                 {
-                  model: this.whoopWorkoutScoreModel,
-                  as: 'score',
+                  model: this.whoopWorkoutZoneDurationsModel,
+                  as: 'zoneDurations',
                   required: false,
-                  include: [
-                    {
-                      model: this.whoopWorkoutZoneDurationsModel,
-                      as: 'zoneDurations',
-                      required: false,
-                    },
-                  ],
                 },
               ],
             },
@@ -366,11 +362,11 @@ export class WhoopWorkoutService {
       ],
     });
 
-    if (!user || !user.whoop_user) {
+    if (!whoopUser) {
       throw new Error('User or Whoop user not found');
     }
 
-    return user.whoop_user.workouts;
+    return whoopUser.workouts || [];
   }
 
   workoutFilter(startDay: Date, endDay: Date): object {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
-import { Transaction, Sequelize } from 'sequelize';
+import { Transaction, Sequelize, Op } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
 import { WhoopSleep } from 'src/whoop/models/sleep.model';
 import { WhoopSleepScore } from 'src/whoop/models/sleep_score.model';
@@ -394,6 +394,58 @@ export class WhoopSleepService {
       console.error('Error fetching or saving sleep data:', error);
       throw new Error('Failed to fetch or save sleep data from Whoop API');
     }
+  }
+
+  async getMultiDayData(
+    user_id: string,
+    days: number = 14,
+  ): Promise<WhoopSleepDataWithIds[]> {
+    const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
+    const min_date = new Date(
+      today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
+    );
+
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { user_id },
+      include: [
+        {
+          model: this.whoopSleepModel,
+          as: 'sleeps',
+          required: false,
+          where: {
+            start: {
+              [Op.gte]: min_date,
+            },
+          },
+          order: [['start', 'DESC']],
+          include: [
+            {
+              model: this.whoopSleepScoreModel,
+              as: 'score',
+              required: false,
+              include: [
+                {
+                  model: this.whoopSleepStageSummaryModel,
+                  as: 'stage_summary',
+                  required: false,
+                },
+                {
+                  model: this.whoopSleepNeededModel,
+                  as: 'sleep_needed',
+                  required: false,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!whoopUser) {
+      throw new Error('Whoop user not found');
+    }
+
+    return whoopUser.sleeps || [];
   }
 
   sleepFilter(): object {

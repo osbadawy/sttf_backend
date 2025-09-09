@@ -242,6 +242,46 @@ export class WhoopCycleService {
     }
   }
 
+  async getMultiDayData(
+    user_id: string,
+    days: number = 14,
+  ): Promise<WhoopCycleDataWithIds[]> {
+    const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
+    const min_date = new Date(
+      today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
+    );
+
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { user_id },
+      include: [
+        {
+          model: this.whoopCycleModel,
+          as: 'cycles',
+          required: false,
+          where: {
+            start: {
+              [Op.gte]: min_date,
+            },
+          },
+          order: [['start', 'DESC']],
+          include: [
+            {
+              model: this.whoopCycleScoreModel,
+              as: 'score',
+              required: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!whoopUser) {
+      throw new Error('Whoop user not found');
+    }
+
+    return whoopUser.cycles || [];
+  }
+
   cycleFilter(
     sleep_filter: object,
     recovery_filter: object,
