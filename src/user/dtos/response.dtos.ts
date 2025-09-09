@@ -39,6 +39,7 @@ export interface SignUpResponse {
   user: {
     firebase_id: string;
     email: string;
+    access: string;
   };
 }
 
@@ -47,6 +48,7 @@ export interface getUserResponse {
   data: {
     email: string;
     avatar_url: string;
+    access: string;
     age: number;
     phone: number;
     nationality: string;

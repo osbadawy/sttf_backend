@@ -58,6 +58,7 @@ export type PatchTeamBodyRequest = {
 export type SignUpBodyRequest = {
   firebase_id: string;
   email: string;
+  access: string;
 };
 
 export type getUserPkRequest = {
