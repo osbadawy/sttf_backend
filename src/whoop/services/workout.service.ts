@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
 import { Transaction, Sequelize, Op } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
@@ -366,14 +366,14 @@ export class WhoopWorkoutService {
       ],
     });
 
-    if (!user || !user.whoop_user ) {
+    if (!user || !user.whoop_user) {
       throw new Error('User or Whoop user not found');
     }
 
     return user.whoop_user.workouts;
   }
 
-  workoutFilter(startDay: Date, endDay: Date): any {
+  workoutFilter(startDay: Date, endDay: Date): object {
     return {
       model: this.whoopWorkoutModel,
       as: 'workouts',

@@ -1,5 +1,5 @@
 // whoop.controller.ts
-import { Controller, UseGuards, Post, Body, Req, Get } from '@nestjs/common';
+import { Controller, UseGuards, Body, Get } from '@nestjs/common';
 import type { Request } from 'express';
 import { WhoopUserService, WhoopWorkoutService } from 'src/whoop/services';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
@@ -17,13 +17,13 @@ export class WhoopAppController {
 
   @UseGuards(FirebaseAuthGuard)
   @Get('/day')
-  async day(@Req() req: Request, @Body() body: WhoopAppSingleDayRequest) {
+  async day(@Body() body: WhoopAppSingleDayRequest) {
     return await this.whoopUserService.getDaySummary(body.user_id, body.day);
   }
 
   @UseGuards(FirebaseAuthGuard)
   @Get('/workout')
-  async workout(@Req() req: Request, @Body() body: WhoopAppMultiDayRequest) {
+  async workout(@Body() body: WhoopAppMultiDayRequest) {
     return await this.whoopWorkoutService.getWorkouts(body.user_id, body.days);
   }
 }

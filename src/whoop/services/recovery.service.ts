@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
 import { Transaction, Sequelize } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
