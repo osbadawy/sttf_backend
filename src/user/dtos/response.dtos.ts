@@ -39,7 +39,7 @@ export interface SignUpResponse {
   user: {
     firebase_id: string;
     email: string;
-    access:string;
+    access: string;
   };
 }
 

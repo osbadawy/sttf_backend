@@ -140,20 +140,23 @@ export class UserController {
 
       if (!user) {
         user = await this.userModel.create({ firebase_id, email, access });
-        return { created: true, user: { firebase_id, email: user.email, access } };
+        return {
+          created: true,
+          user: { firebase_id, email: user.email, access },
+        };
       }
 
       if (user.email !== email) {
         await user.update({ email });
       }
 
-      return { 
-        created: false, 
-        user: { 
-          firebase_id: user.firebase_id, 
-          email: user.email, 
-          access: user.access ?? 'player' 
-        } 
+      return {
+        created: false,
+        user: {
+          firebase_id: user.firebase_id,
+          email: user.email,
+          access: user.access ?? 'player',
+        },
       };
     } catch (e: any) {
       const errorMessage =
@@ -165,7 +168,7 @@ export class UserController {
   @Post('/login')
   async logIn(
     @Body() body: SignUpBodyRequest,
-    @Session() session: Record<string, any>,
+    @Session() session: { user?: { access?: unknown } },
   ): Promise<getUserResponse> {
     const email = (body?.email ?? '').trim().toLowerCase();
 
@@ -181,10 +184,7 @@ export class UserController {
       }
 
       // avoid .access on an `any` by using a typed local
-      const sessUser: { access?: unknown } = session.user ?? {};
-      sessUser.access = user.access;
-      session.user = sessUser;
-
+      session.user = { access: user.access };
 
       const data: getUserResponse['data'] = {
         email: user.email,
