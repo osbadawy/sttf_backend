@@ -11,6 +11,7 @@ import {
 import { WhoopCycleScore } from './cycle_score.model';
 import { WhoopSleep } from './sleep.model';
 import { WhoopUser } from './whoop_user.model';
+import { WhoopRecovery } from './recovery.model';
 
 @Table({
   tableName: 'whoop_cycle',
@@ -30,4 +31,5 @@ export class WhoopCycle extends Model<WhoopCycle> {
 
   @HasOne(() => WhoopCycleScore) declare score?: WhoopCycleScore;
   @HasMany(() => WhoopSleep) declare sleeps?: WhoopSleep[];
+  @HasMany(() => WhoopRecovery) declare recoveries?: WhoopRecovery[];
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/sequelize';
-import { Transaction, Sequelize } from 'sequelize';
+import { Transaction, Sequelize, Op } from 'sequelize';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
 import { User } from 'src/user/models/user.model';
 import { WhoopCycle } from 'src/whoop/models/cycle.model';
@@ -240,5 +240,72 @@ export class WhoopCycleService {
       console.error('Error fetching or saving cycle data:', error);
       throw new Error('Failed to fetch or save cycle data from Whoop API');
     }
+  }
+
+  async getMultiDayData(
+    user_id: string,
+    days: number = 14,
+  ): Promise<WhoopCycleDataWithIds[]> {
+    const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
+    const min_date = new Date(
+      today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
+    );
+
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { user_id },
+      include: [
+        {
+          model: this.whoopCycleModel,
+          as: 'cycles',
+          required: false,
+          where: {
+            start: {
+              [Op.gte]: min_date,
+            },
+          },
+          order: [['start', 'DESC']],
+          include: [
+            {
+              model: this.whoopCycleScoreModel,
+              as: 'score',
+              required: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!whoopUser) {
+      throw new Error('Whoop user not found');
+    }
+
+    return whoopUser.cycles || [];
+  }
+
+  cycleFilter(
+    sleep_filter: object,
+    recovery_filter: object,
+    startDay: Date,
+    endDay: Date,
+  ): object {
+    return {
+      model: this.whoopCycleModel,
+      as: 'cycles',
+      required: false,
+      where: {
+        start: {
+          [Op.between]: [startDay, endDay],
+        },
+      },
+      include: [
+        {
+          model: this.whoopCycleScoreModel,
+          as: 'score',
+          required: false,
+        },
+        sleep_filter,
+        recovery_filter,
+      ],
+    };
   }
 }

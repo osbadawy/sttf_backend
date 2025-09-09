@@ -4,9 +4,11 @@ import {
   Model,
   DataType,
   ForeignKey,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from 'src/user/models/user.model';
 import type { InferAttributes, InferCreationAttributes } from 'sequelize';
+import { WhoopWorkout, WhoopCycle, WhoopSleep, WhoopRecovery } from './';
 
 @Table({
   tableName: 'whoop_user',
@@ -31,4 +33,9 @@ export class WhoopUser extends Model<
   @Column({ type: DataType.STRING }) declare refresh_token_encrypted: string;
   @Column({ type: DataType.STRING }) declare scope: string;
   @Column({ type: DataType.DATE }) declare expires_at: Date;
+
+  @HasMany(() => WhoopWorkout) declare workouts?: WhoopWorkout[];
+  @HasMany(() => WhoopCycle) declare cycles?: WhoopCycle[];
+  @HasMany(() => WhoopSleep) declare sleeps?: WhoopSleep[];
+  @HasMany(() => WhoopRecovery) declare recoveries?: WhoopRecovery[];
 }
