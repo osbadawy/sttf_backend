@@ -32,7 +32,7 @@ async function bootstrap() {
     credentials: true, // Allow cookies and authorization headers
   });
 
-  await app.listen(process.env.APP_PORT ?? 5000);
+  await app.listen(process.env.APP_PORT ?? 5000, '0.0.0.0');
 }
 bootstrap().catch((error) => {
   console.error('Error starting the application:', error);

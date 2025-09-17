@@ -21,6 +21,12 @@ import { UserModule } from './user/user.module';
       database: process.env.POSTGRES_DB,
       autoLoadModels: true,
       synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false, // For RDS, you might need this
+        },
+      },
     }),
     WhoopModule,
     UserModule,
