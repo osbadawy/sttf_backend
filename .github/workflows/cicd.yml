@@ -95,7 +95,8 @@ jobs:
             echo "tags=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
           else
             echo "environment=production" >> $GITHUB_OUTPUT
-            echo "tags=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest"$'\n'"${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:prod" >> $GITHUB_OUTPUT
+            echo "tags=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+            echo "prod-tag=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:prod" >> $GITHUB_OUTPUT
           fi
 
       - name: Configure AWS credentials
@@ -118,7 +119,9 @@ jobs:
           context: .
           file: ./Dockerfile.deploy
           push: true
-          tags: ${{ steps.set-context.outputs.tags }}
+          tags: |
+            ${{ steps.set-context.outputs.tags }}
+            ${{ steps.set-context.outputs.prod-tag }}
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -127,4 +130,7 @@ jobs:
         run: |
           echo "${{ steps.set-context.outputs.environment }} image(s) pushed:"
           echo "${{ steps.set-context.outputs.tags }}"
+          if [[ -n "${{ steps.set-context.outputs.prod-tag }}" ]]; then
+            echo "${{ steps.set-context.outputs.prod-tag }}"
+          fi
         
