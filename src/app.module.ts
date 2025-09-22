@@ -14,7 +14,7 @@ import { UserModule } from './user/user.module';
     SentryModule.forRoot(),
     SequelizeModule.forRoot({
       dialect: 'postgres',
-      host: process.env.POSTGRES_HOST,
+      host: process.env.POSTGRES_HOST || 'postgres',
       port: parseInt(process.env.POSTGRES_PORT || '5432'),
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
@@ -22,10 +22,13 @@ import { UserModule } from './user/user.module';
       autoLoadModels: true,
       synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
       dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false, // For RDS, you might need this
-        },
+        ssl:
+          process.env.NODE_ENV !== 'development'
+            ? {
+                require: true,
+                rejectUnauthorized: false, // For RDS, you might need this
+              }
+            : false,
       },
     }),
     WhoopModule,

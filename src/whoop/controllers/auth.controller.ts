@@ -74,7 +74,9 @@ export class WhoopAuthController {
     if (req.platform === 'web') {
       return res.redirect(process.env.WEB_FRONTEND_URL!);
     } else if (req.platform === 'mobile') {
-      return res.redirect(process.env.MOBILE_FRONTEND_URL!);
+      // Use custom URL scheme for React Native Expo app
+      const mobileUrl = 'sttfmobile://dashboard';
+      return res.redirect(mobileUrl);
     } else {
       throw new BadRequestException('Invalid platform', req.platform);
     }
