@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
-import { WhoopOAuthGuard, WhoopCallbackGuard } from 'src/whoop/guards';
+import { WhoopOAuthGuard, WhoopCallbackGuard, ExtractFromUrlGuard } from 'src/whoop/guards';
 import type { WhoopCallbackRequest } from 'src/whoop/dtos';
 import {
   WhoopCycleService,
@@ -30,9 +30,16 @@ export class WhoopAuthController {
     private readonly whoopWorkoutService: WhoopWorkoutService,
   ) {}
 
+
+  @Get('/')
+  @UseGuards(FirebaseAuthGuard)
+  needWhoopAuth() {
+    return { ok: true };
+  }
+
   // Step 1: kick off OAuth
-  @Post('/start')
-  @UseGuards(FirebaseAuthGuard, WhoopOAuthGuard)
+  @Get('/start')
+  @UseGuards(ExtractFromUrlGuard, FirebaseAuthGuard, WhoopOAuthGuard)
   whoopOAuthStart() {
     // Guard redirects to WHOOP automatically
     return { ok: true };
@@ -42,6 +49,10 @@ export class WhoopAuthController {
   @Get('/callback')
   @UseGuards(WhoopCallbackGuard)
   async whoopCallback(@Req() req: WhoopCallbackRequest, @Res() res: Response) {
+    if (!req.redirect_url) {
+      throw new BadRequestException('Redirect URL is missing');
+    }
+
     // The WhoopGuard has already exchanged the code for tokens
     // and stored them in req.whoopTokens
 
@@ -70,15 +81,7 @@ export class WhoopAuthController {
         req.whoopUserProfile.user_id,
       );
     }
-
-    if (req.platform === 'web') {
-      return res.redirect(process.env.WEB_FRONTEND_URL!);
-    } else if (req.platform === 'mobile') {
-      // Use custom URL scheme for React Native Expo app
-      const mobileUrl = 'sttfmobile://dashboard';
-      return res.redirect(mobileUrl);
-    } else {
-      throw new BadRequestException('Invalid platform', req.platform);
-    }
+    console.log('Redirecting to:', req.redirect_url);
+    return res.redirect(req.redirect_url);
   }
 }

@@ -16,7 +16,7 @@ export class FirebaseAuthGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<Request>();
     const auth = String(req.headers['authorization'] || '');
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-
+    
     if (!token) throw new UnauthorizedException('Missing Bearer token');
 
     try {

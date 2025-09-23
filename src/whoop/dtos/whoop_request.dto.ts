@@ -70,13 +70,10 @@ export class WhoopCallbackRequest {
   @Type(() => WhoopUserProfile)
   whoopUserProfile?: WhoopUserProfile;
 
-  @ApiPropertyOptional({
-    enum: ['web', 'mobile'],
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @IsIn(['web', 'mobile'])
-  platform?: string;
+  redirect_url?: string;
 }
 
 export class WhoopAppSingleDayRequest {
