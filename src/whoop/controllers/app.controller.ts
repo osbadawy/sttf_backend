@@ -1,6 +1,5 @@
 // whoop.controller.ts
-import { Controller, UseGuards, Body, Get } from '@nestjs/common';
-import type { Request } from 'express';
+import { Controller, UseGuards, Body, Get, Query } from '@nestjs/common';
 import {
   WhoopUserService,
   WhoopWorkoutService,
@@ -26,43 +25,46 @@ export class WhoopAppController {
 
   @UseGuards(FirebaseAuthGuard)
   @Get('/day')
-  async day(@Body() body: WhoopAppSingleDayRequest) {
-    return await this.whoopUserService.getDaySummary(body.user_id, body.day);
+  async day(@Query() query: WhoopAppSingleDayRequest) {
+    return await this.whoopUserService.getDaySummary(
+      query.firebase_id,
+      query.day,
+    );
   }
 
   @UseGuards(FirebaseAuthGuard)
   @Get('/workouts')
-  async workout(@Body() body: WhoopAppMultiDayRequest) {
+  async workout(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopWorkoutService.getMultiDayData(
-      body.user_id,
-      body.days,
+      query.firebase_id,
+      query.days,
     );
   }
 
   @UseGuards(FirebaseAuthGuard)
   @Get('/cycles')
-  async cycle(@Body() body: WhoopAppMultiDayRequest) {
+  async cycle(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopCycleService.getMultiDayData(
-      body.user_id,
-      body.days,
+      query.firebase_id,
+      query.days,
     );
   }
 
   @UseGuards(FirebaseAuthGuard)
   @Get('/sleeps')
-  async sleep(@Body() body: WhoopAppMultiDayRequest) {
+  async sleep(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopSleepService.getMultiDayData(
-      body.user_id,
-      body.days,
+      query.firebase_id,
+      query.days,
     );
   }
 
   @UseGuards(FirebaseAuthGuard)
   @Get('/recoveries')
-  async recovery(@Body() body: WhoopAppMultiDayRequest) {
+  async recovery(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopRecoveryService.getMultiDayData(
-      body.user_id,
-      body.days,
+      query.firebase_id,
+      query.days,
     );
   }
 }
