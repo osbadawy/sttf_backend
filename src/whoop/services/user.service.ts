@@ -45,7 +45,7 @@ export class WhoopUserService {
 
     return {
       whoop_user: user.whoop_user,
-    }
+    };
   }
 
   async createWhoopUser({

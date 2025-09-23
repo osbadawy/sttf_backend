@@ -5,12 +5,15 @@ import {
   Req,
   Res,
   UseGuards,
-  Post,
   BadRequestException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
-import { WhoopOAuthGuard, WhoopCallbackGuard, ExtractFromUrlGuard } from 'src/whoop/guards';
+import {
+  WhoopOAuthGuard,
+  WhoopCallbackGuard,
+  ExtractFromUrlGuard,
+} from 'src/whoop/guards';
 import type { WhoopCallbackRequest } from 'src/whoop/dtos';
 import {
   WhoopCycleService,
@@ -29,7 +32,6 @@ export class WhoopAuthController {
     private readonly whoopRecoveryService: WhoopRecoveryService,
     private readonly whoopWorkoutService: WhoopWorkoutService,
   ) {}
-
 
   @Get('/')
   @UseGuards(FirebaseAuthGuard)
