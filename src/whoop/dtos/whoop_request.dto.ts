@@ -2,7 +2,6 @@ import { WhoopTokens, WhoopUserProfile } from './whoop_user.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
-  IsIn,
   IsOptional,
   IsObject,
   ValidateNested,
@@ -13,17 +12,19 @@ import {
   IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import type { Request } from 'express';
 
-export class WhoopOAuthRequest {
-  @ApiProperty({
-    enum: ['web', 'mobile'],
-  })
+export class WhoopOAuthRequest extends Request {
+  @ApiProperty({})
   @IsString()
-  @IsIn(['web', 'mobile'])
-  platform: string;
+  redirect_url: string;
+
+  @ApiProperty({})
+  @IsObject()
+  user: { uid: string };
 }
 
-export class WhoopRequest {
+export class WhoopRequest extends Request {
   @ApiPropertyOptional({ type: () => WhoopTokens })
   @IsOptional()
   @IsObject()
@@ -49,7 +50,7 @@ class WhoopCallbackRequestQuery {
   error?: string;
 }
 
-export class WhoopCallbackRequest {
+export class WhoopCallbackRequest extends Request {
   @ApiProperty({ type: () => WhoopCallbackRequestQuery })
   @IsObject()
   @ValidateNested()
@@ -70,16 +71,13 @@ export class WhoopCallbackRequest {
   @Type(() => WhoopUserProfile)
   whoopUserProfile?: WhoopUserProfile;
 
-  @ApiPropertyOptional({
-    enum: ['web', 'mobile'],
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @IsIn(['web', 'mobile'])
-  platform?: string;
+  redirect_url?: string;
 }
 
-export class WhoopAppSingleDayRequest {
+export class WhoopAppSingleDayRequest extends Request {
   @ApiProperty()
   @IsUUID()
   user_id: string;
@@ -89,7 +87,7 @@ export class WhoopAppSingleDayRequest {
   day: Date;
 }
 
-export class WhoopAppMultiDayRequest {
+export class WhoopAppMultiDayRequest extends Request {
   @ApiProperty()
   @IsUUID()
   user_id: string;

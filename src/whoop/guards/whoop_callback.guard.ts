@@ -18,12 +18,13 @@ export class WhoopCallbackGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<WhoopCallbackRequest>();
     const state = req.query.state!;
-    const { user_id, platform } = this.oauthStateService.consumeState(state);
-    if (!user_id || !platform) {
+    const { user_id, redirect_url } =
+      this.oauthStateService.consumeState(state);
+    if (!user_id || !redirect_url) {
       throw new UnauthorizedException('Invalid state');
     }
 
-    req.platform = platform;
+    req.redirect_url = redirect_url;
 
     await this.exchangeCodeForToken(req, user_id);
     await this.getUserFromWhoop(req);

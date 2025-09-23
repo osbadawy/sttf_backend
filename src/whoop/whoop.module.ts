@@ -18,6 +18,7 @@ import {
   WhoopCallbackGuard,
   OAuthStateService,
   WhoopWebhookAccessTokenGuard,
+  ExtractFromUrlGuard,
 } from './guards';
 import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
@@ -40,6 +41,7 @@ import { CryptoUtil } from 'src/utils';
     WhoopOAuthGuard,
     WhoopCallbackGuard,
     OAuthStateService,
+    ExtractFromUrlGuard,
     WhoopWebhookAccessTokenGuard,
     CryptoUtil,
   ],

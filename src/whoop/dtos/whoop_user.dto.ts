@@ -163,5 +163,5 @@ export class WhoopUserResponse {
 
 export interface OAuthState {
   user_id: string;
-  platform: string;
+  redirect_url: string;
 }

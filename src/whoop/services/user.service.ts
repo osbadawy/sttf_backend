@@ -27,6 +27,27 @@ export class WhoopUserService {
     @InjectModel(User) private readonly userModel: typeof User,
   ) {}
 
+  async getWhoopUser(firebase_id: string) {
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+      include: [
+        {
+          model: this.whoopUserModel,
+          as: 'whoop_user',
+          attributes: ['id', 'email', 'first_name', 'last_name'],
+        },
+      ],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return {
+      whoop_user: user.whoop_user,
+    };
+  }
+
   async createWhoopUser({
     id,
     user_filter,

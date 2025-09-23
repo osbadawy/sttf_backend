@@ -1,20 +1,33 @@
-import { Injectable, ExecutionContext, CanActivate } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  CanActivate,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { OAuthStateService } from './oauth_state_service.guard';
 import * as crypto from 'crypto';
 import type { Response } from 'express';
+import { WhoopOAuthRequest } from '../dtos/whoop_request.dto';
 
 @Injectable()
 export class WhoopOAuthGuard implements CanActivate {
   constructor(private readonly oauthStateService: OAuthStateService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<{
-      user: { uid: string };
-      body: { platform: string };
-    }>();
+    const req = context.switchToHttp().getRequest<WhoopOAuthRequest>();
+    const url = req.url;
+    const queryString = url.split('?')[1] || '';
+    const params = new URLSearchParams(queryString);
 
     const state = crypto.randomBytes(8).toString('hex');
-    this.oauthStateService.setState(state, req.user.uid, req.body.platform);
+    if (!params.get('redirect_url') || params.get('redirect_url') === null) {
+      throw new UnauthorizedException('Missing redirect_url');
+    }
+    this.oauthStateService.setState(
+      state,
+      req.user.uid,
+      params.get('redirect_url')!,
+    );
 
     // Redirect to WHOOP authorization URL
     const authUrl = this.buildAuthorizationUrl(state);
