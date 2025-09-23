@@ -16,6 +16,7 @@ import {
   WhoopSleepDataWithIds,
   WhoopSleepServiceResponse,
 } from '../dtos';
+import { User } from 'src/user/models/user.model';
 
 @Injectable()
 export class WhoopSleepService {
@@ -32,6 +33,7 @@ export class WhoopSleepService {
     private readonly whoopSleepStageSummaryModel: typeof WhoopSleepStageSummary,
     @InjectModel(WhoopSleepNeeded)
     private readonly whoopSleepNeededModel: typeof WhoopSleepNeeded,
+    @InjectModel(User) private readonly userModel: typeof User,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
   ) {}
@@ -397,7 +399,7 @@ export class WhoopSleepService {
   }
 
   async getMultiDayData(
-    user_id: string,
+    firebase_id: string,
     days: number = 14,
   ): Promise<WhoopSleepDataWithIds[]> {
     const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
@@ -405,8 +407,15 @@ export class WhoopSleepService {
       today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
     );
 
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+    });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
     const whoopUser = await this.whoopUserModel.findOne({
-      where: { user_id },
+      where: { user_id: user.id },
       include: [
         {
           model: this.whoopSleepModel,

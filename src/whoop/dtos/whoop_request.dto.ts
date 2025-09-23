@@ -80,7 +80,7 @@ export class WhoopCallbackRequest extends Request {
 export class WhoopAppSingleDayRequest extends Request {
   @ApiProperty()
   @IsUUID()
-  user_id: string;
+  firebase_id: string;
 
   @ApiProperty()
   @IsDate()
@@ -90,7 +90,7 @@ export class WhoopAppSingleDayRequest extends Request {
 export class WhoopAppMultiDayRequest extends Request {
   @ApiProperty()
   @IsUUID()
-  user_id: string;
+  firebase_id: string;
 
   @ApiProperty()
   @IsNumber()

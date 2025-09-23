@@ -6,6 +6,7 @@ import { WhoopRecovery } from 'src/whoop/models/recovery.model';
 import { WhoopRecoveryScore } from 'src/whoop/models/recovery_score.model';
 import { WhoopCycle } from 'src/whoop/models/cycle.model';
 import { WhoopSleep } from 'src/whoop/models/sleep.model';
+import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -29,6 +30,7 @@ export class WhoopRecoveryService {
     private readonly whoopCycleModel: typeof WhoopCycle,
     @InjectModel(WhoopSleep)
     private readonly whoopSleepModel: typeof WhoopSleep,
+    @InjectModel(User) private readonly userModel: typeof User,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
   ) {}
@@ -276,16 +278,22 @@ export class WhoopRecoveryService {
   }
 
   async getMultiDayData(
-    user_id: string,
+    firebase_id: string,
     days: number = 14,
   ): Promise<WhoopRecoveryDataWithIds[]> {
     const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
     const min_date = new Date(
       today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
     );
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+    });
+    if (!user) {
+      throw new Error('User not found');
+    }
 
     const whoopUser = await this.whoopUserModel.findOne({
-      where: { user_id },
+      where: { user_id: user.id },
       include: [
         {
           model: this.whoopCycleModel,
