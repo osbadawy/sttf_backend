@@ -33,8 +33,8 @@ export class WhoopAuthController {
 
   @Get('/')
   @UseGuards(FirebaseAuthGuard)
-  needWhoopAuth() {
-    return { ok: true };
+  async getWhoopUser(@Req() req: Request & { user: { uid: string } }) {
+    return await this.whoopUserService.getWhoopUser(req.user.uid);
   }
 
   // Step 1: kick off OAuth
