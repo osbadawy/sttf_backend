@@ -243,7 +243,7 @@ export class WhoopCycleService {
   }
 
   async getMultiDayData(
-    user_id: string,
+    firebase_id: string,
     days: number = 14,
   ): Promise<WhoopCycleDataWithIds[]> {
     const today_midnight = new Date(new Date().setHours(0, 0, 0, 0));
@@ -251,8 +251,15 @@ export class WhoopCycleService {
       today_midnight.getTime() - days * 24 * 60 * 60 * 1000,
     );
 
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+    });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
     const whoopUser = await this.whoopUserModel.findOne({
-      where: { user_id },
+      where: { user_id: user.id },
       include: [
         {
           model: this.whoopCycleModel,

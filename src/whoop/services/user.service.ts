@@ -106,7 +106,7 @@ export class WhoopUserService {
     return { ok: true };
   }
 
-  async getDaySummary(user_id: string, day: Date) {
+  async getDaySummary(firebase_id: string, day: Date) {
     day = new Date(day);
     const startDay = new Date(day.setHours(0, 0, 0, 0));
     const endDay = new Date(day.setHours(23, 59, 59, 999));
@@ -125,7 +125,7 @@ export class WhoopUserService {
       endDay,
     );
     const user = await this.userModel.findOne({
-      where: { id: user_id },
+      where: { firebase_id },
       include: [
         {
           model: this.whoopUserModel,
