@@ -26,7 +26,10 @@ export class WhoopAppController {
   @UseGuards(FirebaseAuthGuard)
   @Get('/day')
   async day(@Query() query: WhoopAppSingleDayRequest) {
-    return await this.whoopUserService.getDaySummary(query.firebase_id, query.day);
+    return await this.whoopUserService.getDaySummary(
+      query.firebase_id,
+      query.day,
+    );
   }
 
   @UseGuards(FirebaseAuthGuard)
