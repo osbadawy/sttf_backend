@@ -106,7 +106,11 @@ export class WhoopUserService {
     return { ok: true };
   }
 
-  private async getSummaryForDateRange(firebase_id: string, startDate: Date, endDate: Date) {
+  private async getSummaryForDateRange(
+    firebase_id: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
     const sleepFilter = this.whoopSleepService.sleepFilter();
     const recoveryFilter = this.whoopRecoveryService.recoveryFilter();
     const cycleFilter = this.whoopCycleService.cycleFilter(
@@ -120,7 +124,7 @@ export class WhoopUserService {
       startDate,
       endDate,
     );
-    
+
     const user = await this.userModel.findOne({
       where: { firebase_id },
       include: [
@@ -153,13 +157,17 @@ export class WhoopUserService {
   async getMultiDaysSummary(firebase_id: string, days: number) {
     const endDate = new Date();
     endDate.setHours(23, 59, 59, 999);
-    
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
-    
-    const results = await this.getSummaryForDateRange(firebase_id, startDate, endDate);
-    
+
+    const results = await this.getSummaryForDateRange(
+      firebase_id,
+      startDate,
+      endDate,
+    );
+
     return results;
   }
 }
