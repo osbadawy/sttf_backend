@@ -313,6 +313,7 @@ export class WhoopCycleService {
         sleep_filter,
         recovery_filter,
       ],
+      order: [['start', 'DESC']],
     };
   }
 }
