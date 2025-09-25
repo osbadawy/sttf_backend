@@ -8,8 +8,11 @@ import { BodyCompositionController } from './controllers/body_composition.contro
 import { MealsController } from './controllers/meal.controller';
 import { PlayerSelfAssessmentController } from './controllers/player_self_assessment.controller';
 import { CoachAssessmentController } from './controllers/coach_assessment.controller';
+import { PlayerActivityController } from './controllers/player_activity.controller';
+import { PlayerActivityService } from './services/player_activity.service';
+import { WhoopWorkout } from 'src/whoop/models';
 
-const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
+const ALL_MODELS = Array.from(new Set([...Object.values(Models), WhoopWorkout])) as any[];
 
 @Module({
   imports: [SequelizeModule.forFeature(ALL_MODELS)],
@@ -22,6 +25,8 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
     MealsController,
     PlayerSelfAssessmentController,
     CoachAssessmentController,
+    PlayerActivityController,
   ],
+  providers: [PlayerActivityService],
 })
 export class UserModule {}

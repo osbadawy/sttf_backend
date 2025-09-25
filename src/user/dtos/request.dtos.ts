@@ -1,3 +1,6 @@
+import { ApiProperty } from "@nestjs/swagger";
+import { IsDate, IsUUID } from "class-validator";
+
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
 export type postBodyCompositionRequest = {
   player_stats_id: string;
@@ -147,3 +150,20 @@ export type patchCoachAssessmentRequest = {
   progress_made_level?: number | string;
   improvements_needed_level?: number | string;
 };
+
+
+///////////////////////////////////////////////////////////// PLAYER ACTIVITY /////////////////////////////////////////////////////////////////////
+
+export class GetPlayerActivitiesRequestQuery {
+  @ApiProperty()
+  @IsUUID()
+  firebase_id: string;
+
+  @ApiProperty()
+  @IsDate()
+  start_date: Date;
+
+  @ApiProperty()
+  @IsDate()
+  end_date: Date;
+}

@@ -12,7 +12,6 @@ import {
   IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import type { Request } from 'express';
 
 export class WhoopOAuthRequest extends Request {
   @ApiProperty({})
