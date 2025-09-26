@@ -8,13 +8,11 @@ import {
   IsNumber,
   Min,
   Max,
-  IsUUID,
   IsDate,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import type { Request } from 'express';
+import { Type, Transform } from 'class-transformer';
 
-export class WhoopOAuthRequest extends Request {
+export class WhoopOAuthRequest {
   @ApiProperty({})
   @IsString()
   redirect_url: string;
@@ -24,7 +22,7 @@ export class WhoopOAuthRequest extends Request {
   user: { uid: string };
 }
 
-export class WhoopRequest extends Request {
+export class WhoopRequest {
   @ApiPropertyOptional({ type: () => WhoopTokens })
   @IsOptional()
   @IsObject()
@@ -50,7 +48,7 @@ class WhoopCallbackRequestQuery {
   error?: string;
 }
 
-export class WhoopCallbackRequest extends Request {
+export class WhoopCallbackRequest {
   @ApiProperty({ type: () => WhoopCallbackRequestQuery })
   @IsObject()
   @ValidateNested()
@@ -77,22 +75,24 @@ export class WhoopCallbackRequest extends Request {
   redirect_url?: string;
 }
 
-export class WhoopAppSingleDayRequest extends Request {
+export class WhoopAppSingleDayRequest {
   @ApiProperty()
-  @IsUUID()
+  @IsString()
   firebase_id: string;
 
   @ApiProperty()
+  @Transform(({ value }) => new Date(value))
   @IsDate()
   day: Date;
 }
 
-export class WhoopAppMultiDayRequest extends Request {
+export class WhoopAppMultiDayRequest {
   @ApiProperty()
-  @IsUUID()
+  @IsString()
   firebase_id: string;
 
   @ApiProperty()
+  @Transform(({ value }) => parseInt(value, 10))
   @IsNumber()
   @Min(1)
   @Max(30)

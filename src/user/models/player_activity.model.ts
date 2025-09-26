@@ -25,17 +25,21 @@ export class PlayerActivity extends Model<PlayerActivity> {
 
   @ForeignKey(() => User)
   @Column({ type: DataType.UUID, allowNull: false })
-  user_id!: string;
+  declare user_id: string;
 
   @Index({ name: 'player_activity_workout_id', unique: true })
   @ForeignKey(() => WhoopWorkout)
   @Column({ type: DataType.UUID, allowNull: true })
-  workout_id?: string;
-  @Column(DataType.STRING) activity_type?: string;
-  @Column(DataType.DATE) started_at?: Date;
-  @Column(DataType.DATE) ended_at?: Date;
-  @Column(DataType.INTEGER) duration_seconds?: number;
+  declare workout_id?: string;
 
-  @BelongsTo(() => User) user?: User;
-  @BelongsTo(() => WhoopWorkout) workout?: WhoopWorkout;
+  @Column(DataType.STRING) declare activity_type?: string;
+  @Column(DataType.DATE) declare started_at: Date;
+  @Column(DataType.DATE) declare ended_at: Date;
+
+  @Column(DataType.FLOAT) declare self_assessment_satisfaction_score?: number;
+  @Column(DataType.FLOAT) declare self_assessment_tiredness_score?: number;
+  @Column(DataType.FLOAT) declare self_assessment_readiness_score?: number;
+
+  @BelongsTo(() => User) declare user: User;
+  @BelongsTo(() => WhoopWorkout) declare workout?: WhoopWorkout;
 }

@@ -33,6 +33,15 @@ export class WhoopAppController {
   }
 
   @UseGuards(FirebaseAuthGuard)
+  @Get('/days')
+  async days(@Query() query: WhoopAppMultiDayRequest) {
+    return await this.whoopUserService.getMultiDaysSummary(
+      query.firebase_id,
+      query.days,
+    );
+  }
+
+  @UseGuards(FirebaseAuthGuard)
   @Get('/workouts')
   async workout(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopWorkoutService.getMultiDayData(

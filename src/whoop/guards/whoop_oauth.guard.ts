@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { OAuthStateService } from './oauth_state_service.guard';
 import * as crypto from 'crypto';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import { WhoopOAuthRequest } from '../dtos/whoop_request.dto';
 
 @Injectable()
@@ -14,7 +14,9 @@ export class WhoopOAuthGuard implements CanActivate {
   constructor(private readonly oauthStateService: OAuthStateService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<WhoopOAuthRequest>();
+    const req = context
+      .switchToHttp()
+      .getRequest<WhoopOAuthRequest & Request>();
     const url = req.url;
     const queryString = url.split('?')[1] || '';
     const params = new URLSearchParams(queryString);

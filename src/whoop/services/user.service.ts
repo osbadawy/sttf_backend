@@ -106,24 +106,25 @@ export class WhoopUserService {
     return { ok: true };
   }
 
-  async getDaySummary(firebase_id: string, day: Date) {
-    day = new Date(day);
-    const startDay = new Date(day.setHours(0, 0, 0, 0));
-    const endDay = new Date(day.setHours(23, 59, 59, 999));
-
+  private async getSummaryForDateRange(
+    firebase_id: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
     const sleepFilter = this.whoopSleepService.sleepFilter();
     const recoveryFilter = this.whoopRecoveryService.recoveryFilter();
     const cycleFilter = this.whoopCycleService.cycleFilter(
       sleepFilter,
       recoveryFilter,
-      startDay,
-      endDay,
+      startDate,
+      endDate,
     );
 
     const workoutFilter = this.whoopWorkoutService.workoutFilter(
-      startDay,
-      endDay,
+      startDate,
+      endDate,
     );
+
     const user = await this.userModel.findOne({
       where: { firebase_id },
       include: [
@@ -133,6 +134,7 @@ export class WhoopUserService {
           required: true,
           include: [workoutFilter, cycleFilter],
           attributes: ['email', 'first_name', 'last_name', 'user_id'],
+          order: [['start', 'DESC']],
         },
       ],
     });
@@ -142,5 +144,30 @@ export class WhoopUserService {
     }
 
     return user;
+  }
+
+  async getDaySummary(firebase_id: string, day: Date) {
+    day = new Date(day);
+    const startDay = new Date(day.setHours(0, 0, 0, 0));
+    const endDay = new Date(day.setHours(23, 59, 59, 999));
+
+    return this.getSummaryForDateRange(firebase_id, startDay, endDay);
+  }
+
+  async getMultiDaysSummary(firebase_id: string, days: number) {
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const results = await this.getSummaryForDateRange(
+      firebase_id,
+      startDate,
+      endDate,
+    );
+
+    return results;
   }
 }

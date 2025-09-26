@@ -4,11 +4,20 @@ import 'dotenv/config';
 import './instrument';
 
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import session from 'express-session';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Enable global validation
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Strip properties that don't have any decorators
+      transform: true, // Automatically transform payloads to DTO instances
+    }),
+  );
 
   app.use(
     session({
