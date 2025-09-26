@@ -10,9 +10,9 @@ import { PlayerSelfAssessmentController } from './controllers/player_self_assess
 import { CoachAssessmentController } from './controllers/coach_assessment.controller';
 import { PlayerActivityController } from './controllers/player_activity.controller';
 import { PlayerActivityService } from './services/player_activity.service';
-import { WhoopWorkout } from 'src/whoop/models';
+import { WhoopWorkout, WhoopWorkoutScore } from 'src/whoop/models';
 
-const ALL_MODELS = Array.from(new Set([...Object.values(Models), WhoopWorkout])) as any[];
+const ALL_MODELS = Array.from(new Set([...Object.values(Models), WhoopWorkout, WhoopWorkoutScore])) as any[];
 
 @Module({
   imports: [SequelizeModule.forFeature(ALL_MODELS)],

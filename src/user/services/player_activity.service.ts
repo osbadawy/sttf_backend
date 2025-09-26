@@ -2,8 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { PlayerActivity } from "../models/player_activity.model";
 import { InjectModel } from "@nestjs/sequelize";
 import { User } from "../models/user.model";
-import { WhoopWorkout } from "src/whoop/models";
+import { WhoopWorkout, WhoopWorkoutScore } from "src/whoop/models";
 import { Op } from "sequelize";
+import { CreatePlayerActivityRequest } from "../dtos/request.dtos";
 
 @Injectable()
 export class PlayerActivityService {
@@ -14,40 +15,69 @@ export class PlayerActivityService {
     private readonly userModel: typeof User,
     @InjectModel(WhoopWorkout)
     private readonly whoopWorkoutModel: typeof WhoopWorkout,
+    @InjectModel(WhoopWorkoutScore)
+    private readonly whoopWorkoutScoreModel: typeof WhoopWorkoutScore,
   ) {}
 
 
   async getPlayerActivities(user_filter: Record<string, unknown>, start_date: Date, end_date: Date) {
     console.log(" start_date, end_date", start_date, end_date);
 
+    // First, find the user to get the user_id
     const user = await this.userModel.findOne({
       where: user_filter,
-      include: [
-        {
-          model: PlayerActivity,
-          as: 'player_activities',
-          where: {
-            started_at: { 
-              [Op.between]: [new Date(start_date), new Date(end_date)],
-            },
-          },
-          order: [['started_at', 'DESC']],
-          include: [
-            {
-              model: WhoopWorkout,
-              as: 'workout',
-            },
-          ],
-          required: false,
-        },
-      ],
     });
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    return user.player_activities;
+    // Query PlayerActivities directly with proper associations
+    const playerActivities = await this.playerActivityModel.findAll({
+      where: {
+        user_id: user.id,
+        started_at: { 
+          [Op.between]: [new Date(start_date), new Date(end_date)],
+        },
+      },
+      order: [['started_at', 'DESC']],
+      include: [
+        {
+          model: WhoopWorkout,
+          as: 'workout',
+          required: false,
+          include: [
+            {
+              model: WhoopWorkoutScore,
+              as: 'score',
+            },
+          ],
+        },
+      ],
+    });
+
+    return playerActivities;
+  }
+
+  async createPlayerActivity(body: CreatePlayerActivityRequest): Promise<PlayerActivity> {
+    // Find user by firebase_id
+    const user = await this.userModel.findOne({
+      where: { firebase_id: body.firebase_id },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Create the player activity
+    const playerActivity = await this.playerActivityModel.create({
+      user_id: user.id,
+      activity_type: body.activity_type,
+      started_at: new Date(body.started_at),
+      ended_at: new Date(body.ended_at),
+    } as PlayerActivity);
+
+    return playerActivity;
   }
 
 }
