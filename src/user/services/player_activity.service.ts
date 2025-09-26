@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { PlayerActivity } from "../models/player_activity.model";
-import { InjectModel } from "@nestjs/sequelize";
-import { User } from "../models/user.model";
-import { WhoopWorkout, WhoopWorkoutScore } from "src/whoop/models";
-import { Op } from "sequelize";
-import { CreatePlayerActivityRequest } from "../dtos/request.dtos";
+import { Injectable } from '@nestjs/common';
+import { PlayerActivity } from '../models/player_activity.model';
+import { InjectModel } from '@nestjs/sequelize';
+import { User } from '../models/user.model';
+import { WhoopWorkout, WhoopWorkoutScore } from 'src/whoop/models';
+import { Op } from 'sequelize';
+import { CreatePlayerActivityRequest } from '../dtos/request.dtos';
 
 @Injectable()
 export class PlayerActivityService {
@@ -19,9 +19,12 @@ export class PlayerActivityService {
     private readonly whoopWorkoutScoreModel: typeof WhoopWorkoutScore,
   ) {}
 
-
-  async getPlayerActivities(user_filter: Record<string, unknown>, start_date: Date, end_date: Date) {
-    console.log(" start_date, end_date", start_date, end_date);
+  async getPlayerActivities(
+    user_filter: Record<string, unknown>,
+    start_date: Date,
+    end_date: Date,
+  ) {
+    console.log(' start_date, end_date', start_date, end_date);
 
     // First, find the user to get the user_id
     const user = await this.userModel.findOne({
@@ -29,14 +32,14 @@ export class PlayerActivityService {
     });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     // Query PlayerActivities directly with proper associations
     const playerActivities = await this.playerActivityModel.findAll({
       where: {
         user_id: user.id,
-        started_at: { 
+        started_at: {
           [Op.between]: [new Date(start_date), new Date(end_date)],
         },
       },
@@ -59,14 +62,16 @@ export class PlayerActivityService {
     return playerActivities;
   }
 
-  async createPlayerActivity(body: CreatePlayerActivityRequest): Promise<PlayerActivity> {
+  async createPlayerActivity(
+    body: CreatePlayerActivityRequest,
+  ): Promise<PlayerActivity> {
     // Find user by firebase_id
     const user = await this.userModel.findOne({
       where: { firebase_id: body.firebase_id },
     });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error('User not found');
     }
 
     // Create the player activity
@@ -79,5 +84,4 @@ export class PlayerActivityService {
 
     return playerActivity;
   }
-
 }

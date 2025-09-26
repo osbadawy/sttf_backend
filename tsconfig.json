@@ -22,7 +22,7 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "watchOptions": {
-    "watchFile": "DynamicPriorityPolling"
-  }
+  // "watchOptions": {
+  //   "watchFile": "DynamicPriorityPolling"
+  // }
 }

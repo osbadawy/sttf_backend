@@ -12,7 +12,9 @@ import { PlayerActivityController } from './controllers/player_activity.controll
 import { PlayerActivityService } from './services/player_activity.service';
 import { WhoopWorkout, WhoopWorkoutScore } from 'src/whoop/models';
 
-const ALL_MODELS = Array.from(new Set([...Object.values(Models), WhoopWorkout, WhoopWorkoutScore])) as any[];
+const ALL_MODELS = Array.from(
+  new Set([...Object.values(Models), WhoopWorkout, WhoopWorkoutScore]),
+) as any[];
 
 @Module({
   imports: [SequelizeModule.forFeature(ALL_MODELS)],

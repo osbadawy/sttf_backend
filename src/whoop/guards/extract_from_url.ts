@@ -10,7 +10,9 @@ import { Request } from 'express';
 @Injectable()
 export class ExtractFromUrlGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<WhoopOAuthRequest & Request>();
+    const request = context
+      .switchToHttp()
+      .getRequest<WhoopOAuthRequest & Request>();
     const url = request.url;
     const queryString = url.split('?')[1] || '';
     const params = new URLSearchParams(queryString);

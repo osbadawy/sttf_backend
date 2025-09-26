@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Transform } from "class-transformer";
-import { IsDate, IsString, IsUUID } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { IsDate, IsString } from 'class-validator';
 
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
 export type postBodyCompositionRequest = {
@@ -152,7 +152,6 @@ export type patchCoachAssessmentRequest = {
   improvements_needed_level?: number | string;
 };
 
-
 ///////////////////////////////////////////////////////////// PLAYER ACTIVITY /////////////////////////////////////////////////////////////////////
 
 export class GetPlayerActivitiesRequestQuery {
@@ -170,7 +169,6 @@ export class GetPlayerActivitiesRequestQuery {
   @IsDate()
   end_date: Date;
 }
-
 
 export class CreatePlayerActivityRequest {
   @ApiProperty()

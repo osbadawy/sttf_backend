@@ -8,7 +8,6 @@ import {
   IsNumber,
   Min,
   Max,
-  IsUUID,
   IsDate,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';

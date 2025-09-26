@@ -14,7 +14,9 @@ export class WhoopOAuthGuard implements CanActivate {
   constructor(private readonly oauthStateService: OAuthStateService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<WhoopOAuthRequest & Request>();
+    const req = context
+      .switchToHttp()
+      .getRequest<WhoopOAuthRequest & Request>();
     const url = req.url;
     const queryString = url.split('?')[1] || '';
     const params = new URLSearchParams(queryString);
