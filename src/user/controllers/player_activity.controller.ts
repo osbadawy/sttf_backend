@@ -7,12 +7,14 @@ import {
   UseGuards,
   Query,
   Body,
+  Param,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { PlayerActivityService } from '../services/player_activity.service';
 import {
   GetPlayerActivitiesRequestQuery,
   CreatePlayerActivityRequest,
+  CreateSelfAssessmentRequest,
 } from '../dtos/request.dtos';
 
 @Controller('player-activity')
@@ -31,6 +33,11 @@ export class PlayerActivityController {
     );
   }
 
+  @Get('/:id')
+  async getPlayerActivityById(@Param('id') id: string) {
+    return this.playerActivityService.getPlayerActivityById(id);
+  }
+
   @Post('/')
   async createPlayerActivity(@Body() body: CreatePlayerActivityRequest) {
     return this.playerActivityService.createPlayerActivity(body);
@@ -39,6 +46,11 @@ export class PlayerActivityController {
   @Patch('/:id')
   async updatePlayerActivity() {
     // return this.playerActivityService.updatePlayerActivity();
+  }
+
+  @Post('self-assessment/')
+  async createSelfAssessment(@Body() body: CreateSelfAssessmentRequest) {
+    return this.playerActivityService.createSelfAssessment(body);
   }
 
   @Delete('/:id')
