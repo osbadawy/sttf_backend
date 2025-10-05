@@ -2,9 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { PlayerActivity } from '../models/player_activity.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models/user.model';
-import { WhoopWorkout, WhoopWorkoutScore } from 'src/whoop/models';
+import {
+  WhoopWorkout,
+  WhoopWorkoutScore,
+  WhoopWorkoutZoneDurations,
+} from 'src/whoop/models';
 import { Op } from 'sequelize';
-import { CreatePlayerActivityRequest } from '../dtos/request.dtos';
+import {
+  CreatePlayerActivityRequest,
+  CreateSelfAssessmentRequest,
+} from '../dtos/request.dtos';
 
 @Injectable()
 export class PlayerActivityService {
@@ -13,11 +20,30 @@ export class PlayerActivityService {
     private readonly playerActivityModel: typeof PlayerActivity,
     @InjectModel(User)
     private readonly userModel: typeof User,
-    @InjectModel(WhoopWorkout)
-    private readonly whoopWorkoutModel: typeof WhoopWorkout,
-    @InjectModel(WhoopWorkoutScore)
-    private readonly whoopWorkoutScoreModel: typeof WhoopWorkoutScore,
   ) {}
+
+  async getPlayerActivityById(id: string) {
+    return this.playerActivityModel.findByPk(id, {
+      include: [
+        {
+          model: WhoopWorkout,
+          as: 'workout',
+          include: [
+            {
+              model: WhoopWorkoutScore,
+              as: 'score',
+              include: [
+                {
+                  model: WhoopWorkoutZoneDurations,
+                  as: 'zoneDurations',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  }
 
   async getPlayerActivities(
     user_filter: Record<string, unknown>,
@@ -82,6 +108,21 @@ export class PlayerActivityService {
       ended_at: new Date(body.ended_at),
     } as PlayerActivity);
 
+    return playerActivity;
+  }
+
+  async createSelfAssessment(body: CreateSelfAssessmentRequest) {
+    const playerActivity = await this.playerActivityModel.findByPk(
+      body.player_activity_id,
+    );
+    if (!playerActivity) {
+      throw new Error('Player activity not found');
+    }
+    playerActivity.self_assessment_score = body.self_assessment_score;
+    if (body.activity_type) {
+      playerActivity.activity_type = body.activity_type;
+    }
+    await playerActivity.save();
     return playerActivity;
   }
 }

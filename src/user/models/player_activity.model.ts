@@ -36,9 +36,7 @@ export class PlayerActivity extends Model<PlayerActivity> {
   @Column(DataType.DATE) declare started_at: Date;
   @Column(DataType.DATE) declare ended_at: Date;
 
-  @Column(DataType.FLOAT) declare self_assessment_satisfaction_score?: number;
-  @Column(DataType.FLOAT) declare self_assessment_tiredness_score?: number;
-  @Column(DataType.FLOAT) declare self_assessment_readiness_score?: number;
+  @Column(DataType.FLOAT) declare self_assessment_score?: number;
 
   @BelongsTo(() => User) declare user: User;
   @BelongsTo(() => WhoopWorkout) declare workout?: WhoopWorkout;

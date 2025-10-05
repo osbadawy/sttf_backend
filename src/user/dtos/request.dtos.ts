@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDate, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsNumber,
+  IsString,
+  Min,
+  Max,
+  IsOptional,
+} from 'class-validator';
 
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
 export type postBodyCompositionRequest = {
@@ -187,5 +194,22 @@ export class CreatePlayerActivityRequest {
 
   @ApiProperty()
   @IsString()
+  activity_type: string;
+}
+
+export class CreateSelfAssessmentRequest {
+  @ApiProperty()
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  self_assessment_score: number;
+
+  @ApiProperty()
+  @IsString()
+  player_activity_id: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   activity_type: string;
 }
