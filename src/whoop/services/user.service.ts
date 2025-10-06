@@ -43,9 +43,7 @@ export class WhoopUserService {
       throw new Error('User not found');
     }
 
-    return {
-      whoop_user: user.whoop_user,
-    };
+    return user;
   }
 
   async createWhoopUser({
@@ -64,6 +62,11 @@ export class WhoopUserService {
     });
     if (!user) {
       throw new Error('User not found');
+    }
+
+    if (!user.display_name) {
+      user.display_name = `${first_name} ${last_name}`;
+      await user.save();
     }
 
     const encryptedAccessToken = this.cryptoUtil.simpleEncrypt(access_token);
