@@ -21,6 +21,10 @@ import { UserModule } from './user/user.module';
       database: process.env.POSTGRES_DB,
       autoLoadModels: true,
       synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
+      define: {
+        underscored: true,
+        freezeTableName: true,
+      },
       dialectOptions: {
         ssl:
           process.env.NODE_ENV !== 'development'

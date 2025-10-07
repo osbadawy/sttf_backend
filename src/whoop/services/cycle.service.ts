@@ -452,16 +452,34 @@ export class WhoopCycleService {
             longestSleep.score?.stage_summary?.total_in_bed_time_milli || 0;
           sleep.neededMilli =
             longestSleep.score?.sleep_needed?.baseline_milli || 0;
-          sleep.stage_summary = longestSleep.score?.stage_summary || {
-            total_in_bed_time_milli: 0,
-            total_awake_time_milli: 0,
-            total_no_data_time_milli: 0,
-            total_light_sleep_time_milli: 0,
-            total_slow_wave_sleep_time_milli: 0,
-            total_rem_sleep_time_milli: 0,
-            sleep_cycle_count: 0,
-            disturbance_count: 0,
-          };
+          // Access the stage_summary data with proper field names
+          const stageSummaryData = longestSleep.score?.stage_summary;
+          if (stageSummaryData) {
+            // Access the actual data values from Sequelize model
+            const dataValues = (stageSummaryData as any).dataValues || stageSummaryData;
+            // Map the truncated field names to the correct full names
+            sleep.stage_summary = {
+              total_in_bed_time_milli: dataValues.total_in_bed_time_ || dataValues.total_in_bed_time_milli || 0,
+              total_awake_time_milli: dataValues.total_awake_time_m || dataValues.total_awake_time_milli || 0,
+              total_no_data_time_milli: dataValues.total_no_data_time || dataValues.total_no_data_time_milli || 0,
+              total_light_sleep_time_milli: dataValues.total_light_sleep_ || dataValues.total_light_sleep_time_milli || 0,
+              total_slow_wave_sleep_time_milli: dataValues.total_slow_wave_sl || dataValues.total_slow_wave_sleep_time_milli || 0,
+              total_rem_sleep_time_milli: dataValues.total_rem_sleep_ti || dataValues.total_rem_sleep_time_milli || 0,
+              sleep_cycle_count: dataValues.sleep_cycle_count || 0,
+              disturbance_count: dataValues.disturbance_count || 0,
+            };
+          } else {
+            sleep.stage_summary = {
+              total_in_bed_time_milli: 0,
+              total_awake_time_milli: 0,
+              total_no_data_time_milli: 0,
+              total_light_sleep_time_milli: 0,
+              total_slow_wave_sleep_time_milli: 0,
+              total_rem_sleep_time_milli: 0,
+              sleep_cycle_count: 0,
+              disturbance_count: 0,
+            };
+          }
         }
       }
     }

@@ -58,6 +58,12 @@ export class UserController {
     }
   }
 
+  @Get("/players")
+  async getPlayers() {
+    const players = await this.userModel.findAll({ where: { access: 'player' } });
+    return players;
+  }
+
   @Patch()
   async patchUserByPk(
     @Body() body: PatchUserBodyRequest,
