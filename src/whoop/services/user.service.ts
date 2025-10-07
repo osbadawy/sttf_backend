@@ -4,20 +4,13 @@ import { WhoopUser } from 'src/whoop/models';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { CreateWhoopUserParams } from 'src/whoop/dtos';
-import {
-  WhoopWorkoutService,
-  WhoopCycleService,
-  WhoopSleepService,
-  WhoopRecoveryService,
-} from './';
+import { WhoopCycleService, WhoopSleepService, WhoopRecoveryService } from './';
 
 @Injectable()
 export class WhoopUserService {
   constructor(
     private readonly cryptoUtil: CryptoUtil,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
-    @Inject(forwardRef(() => WhoopWorkoutService))
-    private readonly whoopWorkoutService: WhoopWorkoutService,
     @Inject(forwardRef(() => WhoopSleepService))
     private readonly whoopSleepService: WhoopSleepService,
     @Inject(forwardRef(() => WhoopRecoveryService))
@@ -109,11 +102,7 @@ export class WhoopUserService {
     return { ok: true };
   }
 
-  private async getSummaryForDateRange(
-    firebase_id: string,
-    startDate: Date,
-    endDate: Date,
-  ) {
+  private daySummaryFilter(startDate: Date, endDate: Date): object {
     const sleepFilter = this.whoopSleepService.sleepFilter();
     const recoveryFilter = this.whoopRecoveryService.recoveryFilter();
     const cycleFilter = this.whoopCycleService.cycleFilter(
@@ -123,52 +112,81 @@ export class WhoopUserService {
       endDate,
     );
 
-    const workoutFilter = this.whoopWorkoutService.workoutFilter(
-      startDate,
-      endDate,
-    );
-
-    const user = await this.userModel.findOne({
-      where: { firebase_id },
+    return {
       include: [
         {
           model: this.whoopUserModel,
           as: 'whoop_user',
           required: true,
-          include: [workoutFilter, cycleFilter],
+          include: [cycleFilter],
           attributes: ['email', 'first_name', 'last_name', 'user_id'],
           order: [['start', 'DESC']],
         },
       ],
+    };
+  }
+
+  private async getSummaryForDateRange(
+    firebase_id: string,
+    lastDay: Date,
+    days: number,
+  ) {
+    const lastDayCopy = new Date(lastDay); // clone to avoid mutation
+
+    const startDate = new Date(lastDayCopy);
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(lastDay);
+    endDate.setHours(23, 59, 59, 999);
+
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+      ...this.daySummaryFilter(startDate, endDate),
     });
 
-    if (!user) {
-      throw new Error('User not found');
+    if (!user || !user.whoop_user) {
+      throw new Error('User or Whoop user not found');
     }
 
-    return user;
+    const dayCycles = this.whoopCycleService.getDayCycles(
+      user.whoop_user.cycles || [],
+      endDate,
+      days,
+    );
+    const daySummary = {};
+
+    for (const key of Object.keys(dayCycles)) {
+      daySummary[key] = this.whoopCycleService.extractCycleData(dayCycles[key]);
+    }
+
+    return daySummary;
   }
 
   async getDaySummary(firebase_id: string, day: Date) {
+    return await this.getSummaryForDateRange(firebase_id, new Date(day), 1);
+  }
+
+  async getAllPlayersDaySummary(day: Date) {
     day = new Date(day);
     const startDay = new Date(day.setHours(0, 0, 0, 0));
     const endDay = new Date(day.setHours(23, 59, 59, 999));
 
-    return this.getSummaryForDateRange(firebase_id, startDay, endDay);
+    const players = await this.userModel.findAll({
+      where: {
+        access: 'player',
+      },
+      ...this.daySummaryFilter(startDay, endDay),
+    });
+
+    return players;
   }
 
   async getMultiDaysSummary(firebase_id: string, days: number) {
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
-
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-    startDate.setHours(0, 0, 0, 0);
-
     const results = await this.getSummaryForDateRange(
       firebase_id,
-      startDate,
-      endDate,
+      new Date(),
+      days,
     );
 
     return results;
