@@ -398,7 +398,7 @@ export class WhoopCycleService {
   }
 
   extractCycleData(cycle: WhoopCycle | null): { [key: string]: any } {
-    let basic = {
+    const basic = {
       performance: 0,
       stress: 0,
       strain: 0,
@@ -419,7 +419,7 @@ export class WhoopCycleService {
       },
     };
 
-    let heart = {
+    const heart = {
       resting: 0,
       max: 0,
       avg: 0,
@@ -454,43 +454,36 @@ export class WhoopCycleService {
           sleep.score =
             (longestSleep.score?.sleep_performance_percentage || 0) / 100;
           sleep.durationMilli =
-            longestSleep.score?.stage_summary?.total_in_bed_time_milli || 0;
+            Number(
+              longestSleep.score?.stage_summary?.total_in_bed_time_milli,
+            ) || 0;
           sleep.neededMilli =
-            longestSleep.score?.sleep_needed?.baseline_milli || 0;
+            Number(longestSleep.score?.sleep_needed?.baseline_milli) || 0;
           // Access the stage_summary data with proper field names
           const stageSummaryData = longestSleep.score?.stage_summary;
           if (stageSummaryData) {
-            // Access the actual data values from Sequelize model
-            const dataValues =
-              (stageSummaryData as any).dataValues || stageSummaryData;
-            // Map the truncated field names to the correct full names
+            // Use getDataValue() method to access the full field names
             sleep.stage_summary = {
-              total_in_bed_time_milli:
-                dataValues.total_in_bed_time_ ||
-                dataValues.total_in_bed_time_milli ||
-                0,
-              total_awake_time_milli:
-                dataValues.total_awake_time_m ||
-                dataValues.total_awake_time_milli ||
-                0,
-              total_no_data_time_milli:
-                dataValues.total_no_data_time ||
-                dataValues.total_no_data_time_milli ||
-                0,
-              total_light_sleep_time_milli:
-                dataValues.total_light_sleep_ ||
-                dataValues.total_light_sleep_time_milli ||
-                0,
-              total_slow_wave_sleep_time_milli:
-                dataValues.total_slow_wave_sl ||
-                dataValues.total_slow_wave_sleep_time_milli ||
-                0,
-              total_rem_sleep_time_milli:
-                dataValues.total_rem_sleep_ti ||
-                dataValues.total_rem_sleep_time_milli ||
-                0,
-              sleep_cycle_count: dataValues.sleep_cycle_count || 0,
-              disturbance_count: dataValues.disturbance_count || 0,
+              total_in_bed_time_milli: Number(
+                stageSummaryData.total_in_bed_time_milli,
+              ),
+              total_awake_time_milli: Number(
+                stageSummaryData.total_awake_time_milli,
+              ),
+              total_no_data_time_milli: Number(
+                stageSummaryData.total_no_data_time_milli,
+              ),
+              total_light_sleep_time_milli: Number(
+                stageSummaryData.total_light_sleep_time_milli,
+              ),
+              total_slow_wave_sleep_time_milli: Number(
+                stageSummaryData.total_slow_wave_sleep_time_milli,
+              ),
+              total_rem_sleep_time_milli: Number(
+                stageSummaryData.total_rem_sleep_time_milli,
+              ),
+              sleep_cycle_count: Number(stageSummaryData.sleep_cycle_count),
+              disturbance_count: Number(stageSummaryData.disturbance_count),
             };
           } else {
             sleep.stage_summary = {

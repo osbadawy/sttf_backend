@@ -34,6 +34,7 @@ import { UserModule } from './user/user.module';
               }
             : false,
       },
+      minifyAliases: true,
     }),
     WhoopModule,
     UserModule,
