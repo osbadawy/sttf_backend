@@ -14,6 +14,7 @@ import {
   WhoopCycleDataWithIds,
   WhoopCycleServiceResponse,
 } from '../dtos';
+import { WhoopSleep } from '../models';
 
 @Injectable()
 export class WhoopCycleService {
@@ -190,7 +191,7 @@ export class WhoopCycleService {
 
   async createCycles(
     whoop_user_id: number,
-    max_pages: number = 10,
+    max_pages: number = 1,
   ): Promise<WhoopCycleServiceResponse> {
     // Find Whoop user
     const whoopUser = await this.whoopUserModel.findOne({
@@ -295,14 +296,35 @@ export class WhoopCycleService {
     startDay: Date,
     endDay: Date,
   ): object {
+    // Expand the time window: start can be up to 6 hours before startDay, end can be up to 6 hours after endDay
+    const expandedStartDay = new Date(startDay.getTime() - 6 * 60 * 60 * 1000); // 6 hours before
+    const expandedEndDay = new Date(endDay.getTime() + 6 * 60 * 60 * 1000); // 6 hours after
+
     return {
       model: this.whoopCycleModel,
       as: 'cycles',
       required: false,
       where: {
-        start: {
-          [Op.between]: [startDay, endDay],
-        },
+        // Get all cycles that start before expandedEndDay and (end after expandedStartDay OR end is null)
+        [Op.and]: [
+          {
+            start: {
+              [Op.lte]: expandedEndDay,
+            },
+          },
+          {
+            [Op.or]: [
+              {
+                end: {
+                  [Op.gte]: expandedStartDay,
+                },
+              },
+              {
+                end: null,
+              },
+            ],
+          },
+        ],
       },
       include: [
         {
@@ -314,6 +336,181 @@ export class WhoopCycleService {
         recovery_filter,
       ],
       order: [['start', 'DESC']],
+    };
+  }
+
+  private filterCyclesByMiddleTime(
+    cycles: WhoopCycle[],
+    startDay: Date,
+    endDay: Date,
+  ): WhoopCycle[] {
+    return cycles.filter((cycle) => {
+      const middleTime = cycle.end
+        ? new Date(
+            cycle.start.getTime() +
+              (cycle.end.getTime() - cycle.start.getTime()) / 2,
+          )
+        : new Date(cycle.start.getTime() + 12 * 60 * 60 * 1000); // +12 hours
+
+      return middleTime >= startDay && middleTime <= endDay;
+    });
+  }
+
+  getDayCycles(
+    cycles: WhoopCycle[],
+    lastDay: Date,
+    days: number,
+  ): { [key: string]: WhoopCycle | null } {
+    // Starting from today at 00:00 going back days
+    const dayTimestamps = Array.from({ length: days }, (_, i) => {
+      const date = new Date(lastDay);
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    });
+
+    const dayCyclesData = {};
+
+    for (const day of dayTimestamps) {
+      const endDate = new Date(day.getTime() + 24 * 60 * 60 * 1000);
+      const dayCycles = this.filterCyclesByMiddleTime(cycles, day, endDate);
+
+      if (dayCycles.length === 0) {
+        dayCyclesData[day.toISOString()] = null;
+      }
+
+      if (dayCycles.length === 1) {
+        dayCyclesData[day.toISOString()] = dayCycles[0];
+      }
+
+      if (dayCycles.length > 1) {
+        const longestCycle = dayCycles.sort((a: WhoopCycle, b: WhoopCycle) => {
+          const endTime = b.end
+            ? b.end.getTime()
+            : a.start.getTime() + 12 * 60 * 60 * 1000;
+          return endTime - a.start.getTime();
+        })[0];
+        dayCyclesData[day.toISOString()] = longestCycle;
+      }
+    }
+
+    return dayCyclesData;
+  }
+
+  extractCycleData(cycle: WhoopCycle | null): { [key: string]: any } {
+    const basic = {
+      performance: 0,
+      stress: 0,
+      strain: 0,
+    };
+    const sleep = {
+      score: 0,
+      durationMilli: 0,
+      neededMilli: 0,
+      stage_summary: {
+        total_in_bed_time_milli: 0,
+        total_awake_time_milli: 0,
+        total_no_data_time_milli: 0,
+        total_light_sleep_time_milli: 0,
+        total_slow_wave_sleep_time_milli: 0,
+        total_rem_sleep_time_milli: 0,
+        sleep_cycle_count: 0,
+        disturbance_count: 0,
+      },
+    };
+
+    const heart = {
+      resting: 0,
+      max: 0,
+      avg: 0,
+      hrv: 0,
+    };
+
+    if (cycle && cycle.score) {
+      basic.strain = cycle.score.strain / 21;
+      heart.avg = cycle.score.average_heart_rate;
+      heart.max = cycle.score.max_heart_rate;
+
+      if (cycle.recoveries && cycle.recoveries.length > 0) {
+        basic.stress =
+          (100 - (cycle.recoveries[0].score?.recovery_score || 0)) / 100;
+        heart.resting = cycle.recoveries[0].score?.resting_heart_rate || 0;
+        heart.hrv = cycle.recoveries[0].score?.hrv_rmssd_milli || 0;
+      }
+
+      if (cycle.sleeps && cycle.sleeps.length > 0) {
+        // Choose the sleep which lasts the longest (stop-start) and nap is false
+        const longestSleep = cycle.sleeps
+          .filter((sleep: WhoopSleep) => !sleep.nap) // Filter out naps
+          .sort((a: WhoopSleep, b: WhoopSleep) => {
+            const durationA =
+              new Date(a.end).getTime() - new Date(a.start).getTime();
+            const durationB =
+              new Date(b.end).getTime() - new Date(b.start).getTime();
+            return durationB - durationA; // Sort by duration descending
+          })[0];
+
+        if (longestSleep) {
+          sleep.score =
+            (longestSleep.score?.sleep_performance_percentage || 0) / 100;
+          sleep.durationMilli =
+            Number(
+              longestSleep.score?.stage_summary?.total_in_bed_time_milli,
+            ) || 0;
+          sleep.neededMilli =
+            Number(longestSleep.score?.sleep_needed?.baseline_milli) || 0;
+          // Access the stage_summary data with proper field names
+          const stageSummaryData = longestSleep.score?.stage_summary;
+          if (stageSummaryData) {
+            // Use getDataValue() method to access the full field names
+            sleep.stage_summary = {
+              total_in_bed_time_milli: Number(
+                stageSummaryData.total_in_bed_time_milli,
+              ),
+              total_awake_time_milli: Number(
+                stageSummaryData.total_awake_time_milli,
+              ),
+              total_no_data_time_milli: Number(
+                stageSummaryData.total_no_data_time_milli,
+              ),
+              total_light_sleep_time_milli: Number(
+                stageSummaryData.total_light_sleep_time_milli,
+              ),
+              total_slow_wave_sleep_time_milli: Number(
+                stageSummaryData.total_slow_wave_sleep_time_milli,
+              ),
+              total_rem_sleep_time_milli: Number(
+                stageSummaryData.total_rem_sleep_time_milli,
+              ),
+              sleep_cycle_count: Number(stageSummaryData.sleep_cycle_count),
+              disturbance_count: Number(stageSummaryData.disturbance_count),
+            };
+          } else {
+            sleep.stage_summary = {
+              total_in_bed_time_milli: 0,
+              total_awake_time_milli: 0,
+              total_no_data_time_milli: 0,
+              total_light_sleep_time_milli: 0,
+              total_slow_wave_sleep_time_milli: 0,
+              total_rem_sleep_time_milli: 0,
+              sleep_cycle_count: 0,
+              disturbance_count: 0,
+            };
+          }
+        }
+      }
+    }
+
+    if (basic.stress && basic.strain) {
+      basic.performance = 1 - (basic.stress + basic.strain) / 2;
+    } else if (basic.stress || basic.strain) {
+      basic.performance = basic.stress || basic.strain;
+    }
+
+    return {
+      basic,
+      sleep,
+      heart,
     };
   }
 }

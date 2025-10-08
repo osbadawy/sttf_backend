@@ -304,7 +304,7 @@ export class WhoopWorkoutService {
 
   async createWorkout(
     whoop_user_id: number,
-    max_pages: number = 10,
+    max_pages: number = 1,
   ): Promise<WhoopWorkoutServiceResponse> {
     // Find Whoop user
     const whoopUser = await this.whoopUserModel.findOne({
@@ -412,17 +412,28 @@ export class WhoopWorkoutService {
   }
 
   workoutFilter(startDay: Date, endDay: Date): object {
+    // Expand the time window: start can be up to 6 hours before startDay, end can be up to 6 hours after endDay
+    const expandedStartDay = new Date(startDay.getTime() - 6 * 60 * 60 * 1000); // 6 hours before
+    const expandedEndDay = new Date(endDay.getTime() + 6 * 60 * 60 * 1000); // 6 hours after
+
     return {
       model: this.whoopWorkoutModel,
       as: 'workouts',
       required: false,
       where: {
-        start: {
-          [Op.lte]: endDay,
-        },
-        end: {
-          [Op.gte]: startDay,
-        },
+        // Get all workouts that start before expandedEndDay and end after expandedStartDay
+        [Op.and]: [
+          {
+            start: {
+              [Op.lte]: expandedEndDay,
+            },
+          },
+          {
+            end: {
+              [Op.gte]: expandedStartDay,
+            },
+          },
+        ],
       },
       include: [
         {
@@ -440,5 +451,63 @@ export class WhoopWorkoutService {
       ],
       order: [['start', 'DESC']],
     };
+  }
+
+  private filterWorkoutsByMiddleTime(
+    workouts: WhoopWorkout[],
+    startDay: Date,
+    endDay: Date,
+  ): WhoopWorkout[] {
+    return workouts.filter((workout) => {
+      const middleTime = new Date(
+        workout.start.getTime() +
+          (workout.end.getTime() - workout.start.getTime()) / 2,
+      );
+      return middleTime >= startDay && middleTime <= endDay;
+    });
+  }
+
+  getDayWorkouts(
+    workouts: WhoopWorkout[],
+    lastDay: Date,
+    days: number,
+  ): { [key: string]: WhoopWorkout[] } {
+    const dayTimestamps = Array.from({ length: days }, (_, i) => {
+      const date = new Date(lastDay);
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    });
+
+    const dayWorkoutsData = {};
+
+    for (const day of dayTimestamps) {
+      const endDate = new Date(day.getTime() + 24 * 60 * 60 * 1000);
+      const dayWorkouts = this.filterWorkoutsByMiddleTime(
+        workouts,
+        day,
+        endDate,
+      );
+
+      dayWorkoutsData[day.toISOString()] = dayWorkouts;
+    }
+
+    return dayWorkoutsData;
+  }
+
+  extractWorkoutsData(workouts: WhoopWorkout[]): { [key: string]: any } {
+    let workoutAverageHeartRate = 0;
+    if (workouts.length > 0) {
+      // Calculate average heart rate across all workouts in this cycle
+      const totalHeartRate = workouts.reduce(
+        (sum: number, workout: WhoopWorkout) => {
+          return sum + (workout.score?.average_heart_rate || 0);
+        },
+        0,
+      );
+      workoutAverageHeartRate = totalHeartRate / workouts.length;
+    }
+
+    return { workoutAverageHeartRate };
   }
 }
