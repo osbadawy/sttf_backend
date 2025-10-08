@@ -4,6 +4,7 @@ import {
   Model,
   DataType,
   ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { WhoopSleepScore } from './sleep_score.model';
 
@@ -19,12 +20,21 @@ export class WhoopSleepStageSummary extends Model<WhoopSleepStageSummary> {
   @Column(DataType.BIGINT)
   declare sleep_score_id: number;
 
-  @Column(DataType.BIGINT) declare total_in_bed_time_milli: number;
-  @Column(DataType.BIGINT) declare total_awake_time_milli: number;
-  @Column(DataType.BIGINT) declare total_no_data_time_milli: number;
-  @Column(DataType.BIGINT) declare total_light_sleep_time_milli: number;
-  @Column(DataType.BIGINT) declare total_slow_wave_sleep_time_milli: number;
-  @Column(DataType.BIGINT) declare total_rem_sleep_time_milli: number;
+  @Column({ type: DataType.BIGINT })
+  declare total_in_bed_time_milli: number;
+  @Column({ type: DataType.BIGINT })
+  declare total_awake_time_milli: number;
+  @Column({ type: DataType.BIGINT })
+  declare total_no_data_time_milli: number;
+  @Column({ type: DataType.BIGINT })
+  declare total_light_sleep_time_milli: number;
+  @Column({ type: DataType.BIGINT })
+  declare total_slow_wave_sleep_time_milli: number;
+  @Column({ type: DataType.BIGINT })
+  declare total_rem_sleep_time_milli: number;
   @Column(DataType.INTEGER) declare sleep_cycle_count: number;
   @Column(DataType.INTEGER) declare disturbance_count: number;
+
+  @BelongsTo(() => WhoopSleepScore, { foreignKey: 'sleep_score_id' })
+  declare sleep_score: WhoopSleepScore;
 }

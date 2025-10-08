@@ -14,6 +14,7 @@ import {
 } from 'src/whoop/dtos';
 
 @Controller('whoop/app')
+@UseGuards(FirebaseAuthGuard)
 export class WhoopAppController {
   constructor(
     private readonly whoopWorkoutService: WhoopWorkoutService,
@@ -23,7 +24,6 @@ export class WhoopAppController {
     private readonly whoopRecoveryService: WhoopRecoveryService,
   ) {}
 
-  @UseGuards(FirebaseAuthGuard)
   @Get('/day')
   async day(@Query() query: WhoopAppSingleDayRequest) {
     return await this.whoopUserService.getDaySummary(
@@ -32,7 +32,11 @@ export class WhoopAppController {
     );
   }
 
-  @UseGuards(FirebaseAuthGuard)
+  @Get('/day/players')
+  async dayAll(@Query() query: { day: Date }) {
+    return await this.whoopUserService.getAllPlayersDaySummary(query.day);
+  }
+
   @Get('/days')
   async days(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopUserService.getMultiDaysSummary(
@@ -41,7 +45,6 @@ export class WhoopAppController {
     );
   }
 
-  @UseGuards(FirebaseAuthGuard)
   @Get('/workouts')
   async workout(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopWorkoutService.getMultiDayData(
@@ -50,7 +53,6 @@ export class WhoopAppController {
     );
   }
 
-  @UseGuards(FirebaseAuthGuard)
   @Get('/cycles')
   async cycle(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopCycleService.getMultiDayData(
@@ -59,7 +61,6 @@ export class WhoopAppController {
     );
   }
 
-  @UseGuards(FirebaseAuthGuard)
   @Get('/sleeps')
   async sleep(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopSleepService.getMultiDayData(
@@ -68,7 +69,6 @@ export class WhoopAppController {
     );
   }
 
-  @UseGuards(FirebaseAuthGuard)
   @Get('/recoveries')
   async recovery(@Query() query: WhoopAppMultiDayRequest) {
     return await this.whoopRecoveryService.getMultiDayData(

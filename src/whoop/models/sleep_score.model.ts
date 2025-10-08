@@ -31,7 +31,8 @@ export class WhoopSleepScore extends Model<WhoopSleepScore> {
   @Column({ type: DataType.DOUBLE, allowNull: true })
   declare sleep_efficiency_percentage?: number;
 
-  @HasOne(() => WhoopSleepStageSummary)
+  @HasOne(() => WhoopSleepStageSummary, { foreignKey: 'sleep_score_id' })
   declare stage_summary: WhoopSleepStageSummary;
-  @HasOne(() => WhoopSleepNeeded) declare sleep_needed: WhoopSleepNeeded;
+  @HasOne(() => WhoopSleepNeeded, { foreignKey: 'sleep_score_id' })
+  declare sleep_needed: WhoopSleepNeeded;
 }
