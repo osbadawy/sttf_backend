@@ -191,7 +191,7 @@ export class WhoopCycleService {
 
   async createCycles(
     whoop_user_id: number,
-    max_pages: number = 10,
+    max_pages: number = 1,
   ): Promise<WhoopCycleServiceResponse> {
     // Find Whoop user
     const whoopUser = await this.whoopUserModel.findOne({
@@ -398,9 +398,11 @@ export class WhoopCycleService {
   }
 
   extractCycleData(cycle: WhoopCycle | null): { [key: string]: any } {
-    let performance = 0;
-    let stress = 0;
-    let strain = 0;
+    let basic = {
+      performance: 0,
+      stress: 0,
+      strain: 0,
+    };
     const sleep = {
       score: 0,
       durationMilli: 0,
@@ -417,20 +419,23 @@ export class WhoopCycleService {
       },
     };
 
-    let restingHeartRate = 0;
-    let maxHeartRate = 0;
-    let dailyAvgHeartRate = 0;
-    let hrv = 0;
+    let heart = {
+      resting: 0,
+      max: 0,
+      avg: 0,
+      hrv: 0,
+    };
 
     if (cycle && cycle.score) {
-      strain = cycle.score.strain / 21;
-      dailyAvgHeartRate = cycle.score.average_heart_rate;
-      maxHeartRate = cycle.score.max_heart_rate;
+      basic.strain = cycle.score.strain / 21;
+      heart.avg = cycle.score.average_heart_rate;
+      heart.max = cycle.score.max_heart_rate;
 
       if (cycle.recoveries && cycle.recoveries.length > 0) {
-        stress = (100 - (cycle.recoveries[0].score?.recovery_score || 0)) / 100;
-        restingHeartRate = cycle.recoveries[0].score?.resting_heart_rate || 0;
-        hrv = cycle.recoveries[0].score?.hrv_rmssd_milli || 0;
+        basic.stress =
+          (100 - (cycle.recoveries[0].score?.recovery_score || 0)) / 100;
+        heart.resting = cycle.recoveries[0].score?.resting_heart_rate || 0;
+        heart.hrv = cycle.recoveries[0].score?.hrv_rmssd_milli || 0;
       }
 
       if (cycle.sleeps && cycle.sleeps.length > 0) {
@@ -456,15 +461,34 @@ export class WhoopCycleService {
           const stageSummaryData = longestSleep.score?.stage_summary;
           if (stageSummaryData) {
             // Access the actual data values from Sequelize model
-            const dataValues = (stageSummaryData as any).dataValues || stageSummaryData;
+            const dataValues =
+              (stageSummaryData as any).dataValues || stageSummaryData;
             // Map the truncated field names to the correct full names
             sleep.stage_summary = {
-              total_in_bed_time_milli: dataValues.total_in_bed_time_ || dataValues.total_in_bed_time_milli || 0,
-              total_awake_time_milli: dataValues.total_awake_time_m || dataValues.total_awake_time_milli || 0,
-              total_no_data_time_milli: dataValues.total_no_data_time || dataValues.total_no_data_time_milli || 0,
-              total_light_sleep_time_milli: dataValues.total_light_sleep_ || dataValues.total_light_sleep_time_milli || 0,
-              total_slow_wave_sleep_time_milli: dataValues.total_slow_wave_sl || dataValues.total_slow_wave_sleep_time_milli || 0,
-              total_rem_sleep_time_milli: dataValues.total_rem_sleep_ti || dataValues.total_rem_sleep_time_milli || 0,
+              total_in_bed_time_milli:
+                dataValues.total_in_bed_time_ ||
+                dataValues.total_in_bed_time_milli ||
+                0,
+              total_awake_time_milli:
+                dataValues.total_awake_time_m ||
+                dataValues.total_awake_time_milli ||
+                0,
+              total_no_data_time_milli:
+                dataValues.total_no_data_time ||
+                dataValues.total_no_data_time_milli ||
+                0,
+              total_light_sleep_time_milli:
+                dataValues.total_light_sleep_ ||
+                dataValues.total_light_sleep_time_milli ||
+                0,
+              total_slow_wave_sleep_time_milli:
+                dataValues.total_slow_wave_sl ||
+                dataValues.total_slow_wave_sleep_time_milli ||
+                0,
+              total_rem_sleep_time_milli:
+                dataValues.total_rem_sleep_ti ||
+                dataValues.total_rem_sleep_time_milli ||
+                0,
               sleep_cycle_count: dataValues.sleep_cycle_count || 0,
               disturbance_count: dataValues.disturbance_count || 0,
             };
@@ -484,21 +508,16 @@ export class WhoopCycleService {
       }
     }
 
-    if (stress && strain) {
-      performance = 1 - (stress + strain) / 2;
-    } else if (stress || strain) {
-      performance = stress || strain;
+    if (basic.stress && basic.strain) {
+      basic.performance = 1 - (basic.stress + basic.strain) / 2;
+    } else if (basic.stress || basic.strain) {
+      basic.performance = basic.stress || basic.strain;
     }
 
     return {
-      performance,
-      stress,
-      strain,
+      basic,
       sleep,
-      restingHeartRate,
-      maxHeartRate,
-      dailyAvgHeartRate,
-      hrv,
+      heart,
     };
   }
 }

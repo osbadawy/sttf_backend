@@ -14,7 +14,7 @@ import {
 } from 'src/whoop/dtos';
 
 @Controller('whoop/app')
-// @UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard)
 export class WhoopAppController {
   constructor(
     private readonly whoopWorkoutService: WhoopWorkoutService,

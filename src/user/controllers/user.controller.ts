@@ -58,9 +58,11 @@ export class UserController {
     }
   }
 
-  @Get("/players")
+  @Get('/players')
   async getPlayers() {
-    const players = await this.userModel.findAll({ where: { access: 'player' } });
+    const players = await this.userModel.findAll({
+      where: { access: 'player' },
+    });
     return players;
   }
 

@@ -304,7 +304,7 @@ export class WhoopWorkoutService {
 
   async createWorkout(
     whoop_user_id: number,
-    max_pages: number = 10,
+    max_pages: number = 1,
   ): Promise<WhoopWorkoutServiceResponse> {
     // Find Whoop user
     const whoopUser = await this.whoopUserModel.findOne({

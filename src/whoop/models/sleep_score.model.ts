@@ -33,5 +33,6 @@ export class WhoopSleepScore extends Model<WhoopSleepScore> {
 
   @HasOne(() => WhoopSleepStageSummary, { foreignKey: 'sleep_score_id' })
   declare stage_summary: WhoopSleepStageSummary;
-  @HasOne(() => WhoopSleepNeeded, { foreignKey: 'sleep_score_id' }) declare sleep_needed: WhoopSleepNeeded;
+  @HasOne(() => WhoopSleepNeeded, { foreignKey: 'sleep_score_id' })
+  declare sleep_needed: WhoopSleepNeeded;
 }
