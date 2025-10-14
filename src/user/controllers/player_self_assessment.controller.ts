@@ -10,7 +10,7 @@ import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 
 import {
   PlayerCreateSelfAssessmentRequest,
-  GetPlayerSelfAssessmentsForDate,
+  GetPlayerSelfAssessmentsForDate
 } from '../dtos/request.dtos';
 import { PlayerSelfAssessmentService } from '../services/player_self_assessment.service';
 
@@ -28,4 +28,10 @@ export class PlayerSelfAssessmentController {
    return this.playerSelfAssessmentService.createSelfAssessment(body);
   }
 
+  @Get("/day")
+  async getPlayerSelfAssessmentsForDate(
+    @Query() query: GetPlayerSelfAssessmentsForDate,
+  ): Promise<PlayerSelfAssessment[]> {
+    return this.playerSelfAssessmentService.getPlayerSelfAssessmentsForDate(query);
+  }
 }

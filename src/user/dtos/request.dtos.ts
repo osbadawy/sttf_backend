@@ -137,6 +137,18 @@ export class PlayerCreateSelfAssessmentRequest {
   assessment_type: SelfAssessmentType;
 }
 
+export class GetPlayerSelfAssessmentsForDate {
+  @ApiProperty()
+  @IsString()
+  firebase_id: string;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsOptional()
+  date?: Date;
+}
+
 ///////////////////////////////////////////////////////////// COACH ASSESSMENT /////////////////////////////////////////////////////////////////////
 export type coachAssessmentRequest = {
   player_stats_id: string;
