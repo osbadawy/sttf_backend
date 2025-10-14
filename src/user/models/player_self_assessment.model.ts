@@ -5,9 +5,11 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  Index,
 } from 'sequelize-typescript';
 import { PlayerStats } from './player_stats.model';
+
+export const SelfAssessmentOptions = ['tiredness', 'readiness'] as const;
+export type SelfAssessmentType = (typeof SelfAssessmentOptions)[number];
 
 @Table({
   tableName: 'player_self_assessments',
@@ -22,31 +24,12 @@ export class PlayerSelfAssessment extends Model<PlayerSelfAssessment> {
   })
   declare id: string;
 
-  @Index('psa_player_stats_id')
   @ForeignKey(() => PlayerStats)
   @Column({ type: DataType.UUID, allowNull: false })
-  player_stats_id!: string;
+  declare player_stats_id: string;
 
-  @Column({
-    type: DataType.FLOAT,
-    allowNull: false,
-    validate: { min: 1, max: 10 },
-  })
-  tiredness_level!: number;
+  @Column(DataType.FLOAT) declare score?: number;
+  @Column(DataType.STRING) declare assessment_type?: SelfAssessmentType;
 
-  @Column({
-    type: DataType.FLOAT,
-    allowNull: false,
-    validate: { min: 1, max: 10 },
-  })
-  emotional_level!: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    allowNull: false,
-    validate: { min: 1, max: 10 },
-  })
-  progress_achieved_level!: number;
-
-  @BelongsTo(() => PlayerStats) player_stats?: PlayerStats;
+  @BelongsTo(() => PlayerStats) declare player_stats?: PlayerStats;
 }

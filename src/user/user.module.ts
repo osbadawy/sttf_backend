@@ -10,6 +10,7 @@ import { PlayerSelfAssessmentController } from './controllers/player_self_assess
 import { CoachAssessmentController } from './controllers/coach_assessment.controller';
 import { PlayerActivityController } from './controllers/player_activity.controller';
 import { PlayerActivityService } from './services/player_activity.service';
+import { PlayerSelfAssessmentService } from './services/player_self_assessment.service';
 import {
   WhoopWorkout,
   WhoopWorkoutScore,
@@ -36,6 +37,6 @@ import {
     CoachAssessmentController,
     PlayerActivityController,
   ],
-  providers: [PlayerActivityService],
+  providers: [PlayerActivityService, PlayerSelfAssessmentService],
 })
 export class UserModule {}

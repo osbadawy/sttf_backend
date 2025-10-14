@@ -30,24 +30,29 @@ export class PlayerStats extends Model<PlayerStats> {
   @Index({ name: 'user_id', unique: true })
   @ForeignKey(() => User)
   @Column({ type: DataType.UUID, allowNull: false })
-  user_id!: string;
+  declare user_id: string;
 
-  @Column(DataType.ENUM('left', 'right')) dominant_hand?: 'left' | 'right';
-  @Column(DataType.DECIMAL(5, 2)) win_rate?: string;
-  @Column(DataType.INTEGER) matches_played?: number;
-  @Column(DataType.DECIMAL(5, 2)) serve_win_percentage?: string;
-  @Column(DataType.DECIMAL(5, 2)) third_ball_conversion_percentage?: string;
-  @Column(DataType.DECIMAL(5, 2)) receive_win_percentage?: string;
-  @Column(DataType.FLOAT) aggression_ratio?: number;
-  @Column(DataType.FLOAT) avg_rally_length?: number;
-  @Column(DataType.DECIMAL(5, 2)) stats_rating?: string;
-  @Column(DataType.DECIMAL(5, 2)) physical_rating?: string;
-  @Column(DataType.DECIMAL(5, 2)) health_rating?: string;
+  @Column(DataType.ENUM('left', 'right')) declare dominant_hand?:
+    | 'left'
+    | 'right';
+  @Column(DataType.DECIMAL(5, 2)) declare win_rate?: string;
+  @Column(DataType.INTEGER) declare matches_played?: number;
+  @Column(DataType.DECIMAL(5, 2)) declare serve_win_percentage?: string;
+  @Column(DataType.DECIMAL(5, 2))
+  declare third_ball_conversion_percentage?: string;
+  @Column(DataType.DECIMAL(5, 2)) declare receive_win_percentage?: string;
+  @Column(DataType.FLOAT) declare aggression_ratio?: number;
+  @Column(DataType.FLOAT) declare avg_rally_length?: number;
+  @Column(DataType.DECIMAL(5, 2)) declare stats_rating?: string;
+  @Column(DataType.DECIMAL(5, 2)) declare physical_rating?: string;
+  @Column(DataType.DECIMAL(5, 2)) declare health_rating?: string;
 
-  @BelongsTo(() => User) user?: User;
-  @HasMany(() => BodyComposition) body_compositions?: BodyComposition[];
-  @HasMany(() => Meal) meals?: Meal[];
-  @HasMany(() => PlayerSelfAssessment)
-  self_assessments?: PlayerSelfAssessment[];
-  @HasMany(() => CoachAssessment) coach_assessments?: CoachAssessment[];
+  @BelongsTo(() => User) declare user?: User;
+  @HasMany(() => BodyComposition, { as: 'body_compositions' })
+  declare body_compositions?: BodyComposition[];
+  @HasMany(() => Meal, { as: 'meals' }) declare meals?: Meal[];
+  @HasMany(() => PlayerSelfAssessment, { as: 'self_assessments' })
+  declare self_assessments?: PlayerSelfAssessment[];
+  @HasMany(() => CoachAssessment, { as: 'coach_assessments' })
+  declare coach_assessments?: CoachAssessment[];
 }
