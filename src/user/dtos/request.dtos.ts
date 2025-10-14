@@ -7,7 +7,9 @@ import {
   Min,
   Max,
   IsOptional,
+  IsIn,
 } from 'class-validator';
+import { SelfAssessmentOptions, type SelfAssessmentType } from '../models/player_self_assessment.model';
 
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
 export type postBodyCompositionRequest = {
@@ -118,25 +120,22 @@ export type patchMealRequest = {
 
 ////////////////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ////////////////////////////////////////////////////////
 
-export type PlayerSelfAssessmentRequest = {
-  player_stats_id: string;
-  tiredness_level: number | string;
-  emotional_level: number | string;
-  progress_achieved_level: number | string;
-};
+export class PlayerCreateSelfAssessmentRequest {
+  @ApiProperty()
+  @IsString()
+  firebase_id: string;
 
-export type patchPlayerSelfAssessmentRequest = {
-  id: string;
-  data?: {
-    tiredness_level?: number | string;
-    emotional_level?: number | string;
-    progress_achieved_level?: number | string;
-  };
-} & {
-  tiredness_level?: number | string;
-  emotional_level?: number | string;
-  progress_achieved_level?: number | string;
-};
+  @ApiProperty()
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  score: number;
+
+  @ApiProperty()
+  @IsString()
+  @IsIn(SelfAssessmentOptions)
+  assessment_type: SelfAssessmentType;
+}
 
 ///////////////////////////////////////////////////////////// COACH ASSESSMENT /////////////////////////////////////////////////////////////////////
 export type coachAssessmentRequest = {
