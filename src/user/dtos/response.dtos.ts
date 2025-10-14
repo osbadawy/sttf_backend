@@ -1,3 +1,5 @@
+import type { SelfAssessmentType } from '../models/player_self_assessment.model';
+
 //////////////////////////////////////////////// BODY COMPOSITION //////////////////////////////////////////////////
 export type bodyCompositionResponse = {
   ok: boolean;
@@ -76,9 +78,8 @@ export type playerSelfAssessmentResponse = {
   data: {
     id: string;
     player_stats_id: string;
-    tiredness_level: number;
-    emotional_level: number;
-    progress_achieved_level: number;
+    score?: number;
+    assessment_type?: SelfAssessmentType;
   };
 };
 
