@@ -5,12 +5,11 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  Index,
 } from 'sequelize-typescript';
 import { PlayerStats } from './player_stats.model';
 
 export const SelfAssessmentOptions = ['tiredness', 'readiness'] as const;
-export type SelfAssessmentType = typeof SelfAssessmentOptions[number];
+export type SelfAssessmentType = (typeof SelfAssessmentOptions)[number];
 
 @Table({
   tableName: 'player_self_assessments',

@@ -1,16 +1,10 @@
 // src/modules/player-self-assessment/player-self-assessment.controller.ts
-import {
-  Body,
-  Controller,
-  Post,
-  Get,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Post, Get, Query } from '@nestjs/common';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 
 import {
   PlayerCreateSelfAssessmentRequest,
-  GetPlayerSelfAssessmentsForDate
+  GetPlayerSelfAssessmentsForDate,
 } from '../dtos/request.dtos';
 import { PlayerSelfAssessmentService } from '../services/player_self_assessment.service';
 
@@ -25,13 +19,15 @@ export class PlayerSelfAssessmentController {
   async createPlayerSelfAssessment(
     @Body() body: PlayerCreateSelfAssessmentRequest,
   ): Promise<PlayerSelfAssessment> {
-   return this.playerSelfAssessmentService.createSelfAssessment(body);
+    return this.playerSelfAssessmentService.createSelfAssessment(body);
   }
 
-  @Get("/day")
+  @Get('/day')
   async getPlayerSelfAssessmentsForDate(
     @Query() query: GetPlayerSelfAssessmentsForDate,
   ): Promise<PlayerSelfAssessment[]> {
-    return this.playerSelfAssessmentService.getPlayerSelfAssessmentsForDate(query);
+    return this.playerSelfAssessmentService.getPlayerSelfAssessmentsForDate(
+      query,
+    );
   }
 }

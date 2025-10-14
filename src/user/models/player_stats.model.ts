@@ -32,11 +32,14 @@ export class PlayerStats extends Model<PlayerStats> {
   @Column({ type: DataType.UUID, allowNull: false })
   declare user_id: string;
 
-  @Column(DataType.ENUM('left', 'right')) declare dominant_hand?: 'left' | 'right';
+  @Column(DataType.ENUM('left', 'right')) declare dominant_hand?:
+    | 'left'
+    | 'right';
   @Column(DataType.DECIMAL(5, 2)) declare win_rate?: string;
   @Column(DataType.INTEGER) declare matches_played?: number;
   @Column(DataType.DECIMAL(5, 2)) declare serve_win_percentage?: string;
-  @Column(DataType.DECIMAL(5, 2)) declare third_ball_conversion_percentage?: string;
+  @Column(DataType.DECIMAL(5, 2))
+  declare third_ball_conversion_percentage?: string;
   @Column(DataType.DECIMAL(5, 2)) declare receive_win_percentage?: string;
   @Column(DataType.FLOAT) declare aggression_ratio?: number;
   @Column(DataType.FLOAT) declare avg_rally_length?: number;
@@ -45,9 +48,11 @@ export class PlayerStats extends Model<PlayerStats> {
   @Column(DataType.DECIMAL(5, 2)) declare health_rating?: string;
 
   @BelongsTo(() => User) declare user?: User;
-  @HasMany(() => BodyComposition, { as: 'body_compositions' }) declare body_compositions?: BodyComposition[];
+  @HasMany(() => BodyComposition, { as: 'body_compositions' })
+  declare body_compositions?: BodyComposition[];
   @HasMany(() => Meal, { as: 'meals' }) declare meals?: Meal[];
   @HasMany(() => PlayerSelfAssessment, { as: 'self_assessments' })
   declare self_assessments?: PlayerSelfAssessment[];
-  @HasMany(() => CoachAssessment, { as: 'coach_assessments' }) declare coach_assessments?: CoachAssessment[];
+  @HasMany(() => CoachAssessment, { as: 'coach_assessments' })
+  declare coach_assessments?: CoachAssessment[];
 }

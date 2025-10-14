@@ -9,7 +9,10 @@ import {
   IsOptional,
   IsIn,
 } from 'class-validator';
-import { SelfAssessmentOptions, type SelfAssessmentType } from '../models/player_self_assessment.model';
+import {
+  SelfAssessmentOptions,
+  type SelfAssessmentType,
+} from '../models/player_self_assessment.model';
 
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
 export type postBodyCompositionRequest = {
