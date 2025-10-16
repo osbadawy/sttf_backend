@@ -7,19 +7,23 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import session from 'express-session';
+import * as fs from 'fs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  // Enable global validation
-  app.useGlobalPipes(
+  // Create HTTP app (always available)
+  const httpApp = await NestFactory.create(AppModule);
+
+  // Configure HTTP app
+  httpApp.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Strip properties that don't have any decorators
-      transform: true, // Automatically transform payloads to DTO instances
+      whitelist: true,
+      transform: true,
     }),
   );
 
-  app.use(
+  httpApp.use(
     session({
       secret: process.env.SESSION_SECRET! || 'some-session-secret',
       resave: false,
@@ -27,9 +31,8 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS with permissive settings
-  app.enableCors({
-    origin: true, // Allow all origins
+  httpApp.enableCors({
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
@@ -38,11 +41,74 @@ async function bootstrap() {
       'Origin',
       'X-Requested-With',
     ],
-    credentials: true, // Allow cookies and authorization headers
+    credentials: true,
   });
 
-  await app.listen(process.env.APP_PORT ?? 5000, '0.0.0.0');
+  // Start HTTP server
+  await httpApp.listen(process.env.APP_PORT || 5000, '0.0.0.0');
+  console.log(`HTTP Server running on port ${process.env.APP_PORT || 5000}`);
+
+  // Only create HTTPS server in production
+  if (isProduction) {
+    try {
+      // HTTPS options for production
+      const httpsOptions = {
+        key: fs.readFileSync(
+          process.env.SSL_KEY_PATH || '/app/ssl/sttf.api.key',
+        ),
+        cert: fs.readFileSync(
+          process.env.SSL_CERT_PATH || '/app/ssl/sttf.api.crt',
+        ),
+      };
+
+      // Create HTTPS app
+      const httpsApp = await NestFactory.create(AppModule, {
+        httpsOptions,
+      });
+
+      // Configure HTTPS app (same as HTTP)
+      httpsApp.useGlobalPipes(
+        new ValidationPipe({
+          whitelist: true,
+          transform: true,
+        }),
+      );
+
+      httpsApp.use(
+        session({
+          secret: process.env.SESSION_SECRET! || 'some-session-secret',
+          resave: false,
+          saveUninitialized: false,
+        }),
+      );
+
+      httpsApp.enableCors({
+        origin: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: [
+          'Content-Type',
+          'Authorization',
+          'Accept',
+          'Origin',
+          'X-Requested-With',
+        ],
+        credentials: true,
+      });
+
+      // Start HTTPS server on port 443 (standard HTTPS port)
+      await httpsApp.listen(443, '0.0.0.0');
+      console.log('HTTPS Server running on port 443');
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to start HTTPS server:', errorMessage);
+      console.log('Continuing with HTTP-only mode');
+    }
+  } else {
+    console.log('Development mode: HTTPS server not started');
+  }
 }
+
 bootstrap().catch((error) => {
   console.error('Error starting the application:', error);
   process.exit(1);

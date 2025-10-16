@@ -32,5 +32,8 @@ export class WhoopRecovery extends Model<WhoopRecovery> {
   @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'))
   declare score_state: string;
 
+  //Custom field
+  @Column(DataType.INTEGER) declare points_assigned: number;
+
   @HasOne(() => WhoopRecoveryScore) declare score?: WhoopRecoveryScore;
 }

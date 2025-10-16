@@ -15,7 +15,7 @@ import {
   WhoopWorkoutServiceResponse,
 } from '../dtos';
 import { User } from 'src/user/models/user.model';
-import { PlayerActivity } from 'src/user/models/player_activity.model';
+import { DailyPointsService } from 'src/user/services/daily_points.service';
 
 @Injectable()
 export class WhoopWorkoutService {
@@ -29,10 +29,9 @@ export class WhoopWorkoutService {
     @InjectModel(WhoopWorkoutZoneDurations)
     private readonly whoopWorkoutZoneDurationsModel: typeof WhoopWorkoutZoneDurations,
     @InjectModel(User) private readonly userModel: typeof User,
-    @InjectModel(PlayerActivity)
-    private readonly playerActivityModel: typeof PlayerActivity,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
+    private readonly dailyPointsService: DailyPointsService,
   ) {}
 
   async getSingleWorkoutFromWhoopApi(
@@ -74,6 +73,37 @@ export class WhoopWorkoutService {
       `Processing workout record ${workoutRecord.id}, score_state: ${workoutRecord.score_state}`,
     );
 
+    let pointsToBeAssigned = 0;
+    if (
+      workoutRecord.score_state === 'SCORED' &&
+      workoutRecord.score &&
+      workoutRecord.score.strain
+    ) {
+      pointsToBeAssigned = Math.floor((workoutRecord.score.strain / 21) * 40);
+      pointsToBeAssigned = Math.max(pointsToBeAssigned, 20);
+    }
+
+    // Update daily points immediately after calculating points
+    if (pointsToBeAssigned > 0) {
+      try {
+        await this.dailyPointsService.updateDailyPointsForWhoopUser(
+          whoopUserId,
+          pointsToBeAssigned,
+          new Date(workoutRecord.start),
+          transaction,
+        );
+        console.log(
+          `Updated daily points for workout ${workoutRecord.id}: +${pointsToBeAssigned} points`,
+        );
+      } catch (error) {
+        console.error(
+          `Failed to update daily points for workout ${workoutRecord.id}:`,
+          error,
+        );
+        // Don't throw error to avoid breaking the main workflow
+      }
+    }
+
     // Upsert workout record
     const [workout] = await this.whoopWorkoutModel.upsert(
       {
@@ -86,6 +116,7 @@ export class WhoopWorkoutService {
         timezone_offset: workoutRecord.timezone_offset,
         sport_name: workoutRecord.sport_name,
         score_state: workoutRecord.score_state,
+        points_assigned: pointsToBeAssigned,
       } as WhoopWorkout,
       { transaction },
     );
@@ -213,23 +244,6 @@ export class WhoopWorkoutService {
     return workoutWithScore;
   }
 
-  private async createPlayerActivity(
-    workoutRecord: WhoopWorkoutData,
-    userId: string,
-    transaction: Transaction,
-  ): Promise<void> {
-    await this.playerActivityModel.create(
-      {
-        user_id: userId,
-        workout_id: workoutRecord.id,
-        activity_type: workoutRecord.sport_name,
-        started_at: new Date(workoutRecord.start),
-        ended_at: new Date(workoutRecord.end),
-      } as PlayerActivity,
-      { transaction },
-    );
-  }
-
   async saveWorkoutsToDatabase(
     workoutsData: WhoopWorkoutData[],
     whoopUserId: number,
@@ -262,13 +276,6 @@ export class WhoopWorkoutService {
         const workoutWithScore = await this.saveSingleWorkoutRecord(
           workoutRecord,
           whoopUserId,
-          transaction,
-        );
-
-        // Create PlayerActivity entry
-        await this.createPlayerActivity(
-          workoutRecord,
-          whoopUser.user_id,
           transaction,
         );
 
@@ -453,61 +460,109 @@ export class WhoopWorkoutService {
     };
   }
 
-  private filterWorkoutsByMiddleTime(
-    workouts: WhoopWorkout[],
-    startDay: Date,
-    endDay: Date,
-  ): WhoopWorkout[] {
-    return workouts.filter((workout) => {
-      const middleTime = new Date(
-        workout.start.getTime() +
-          (workout.end.getTime() - workout.start.getTime()) / 2,
-      );
-      return middleTime >= startDay && middleTime <= endDay;
-    });
-  }
+  // private filterWorkoutsByMiddleTime(
+  //   workouts: WhoopWorkout[],
+  //   startDay: Date,
+  //   endDay: Date,
+  // ): WhoopWorkout[] {
+  //   return workouts.filter((workout) => {
+  //     const middleTime = new Date(
+  //       workout.start.getTime() +
+  //         (workout.end.getTime() - workout.start.getTime()) / 2,
+  //     );
+  //     return middleTime >= startDay && middleTime <= endDay;
+  //   });
+  // }
 
-  getDayWorkouts(
-    workouts: WhoopWorkout[],
-    lastDay: Date,
-    days: number,
-  ): { [key: string]: WhoopWorkout[] } {
-    const dayTimestamps = Array.from({ length: days }, (_, i) => {
-      const date = new Date(lastDay);
-      date.setDate(date.getDate() - i);
-      date.setHours(0, 0, 0, 0);
-      return date;
-    });
+  // getDayWorkouts(
+  //   workouts: WhoopWorkout[],
+  //   lastDay: Date,
+  //   days: number,
+  // ): { [key: string]: WhoopWorkout[] } {
+  //   const dayTimestamps = Array.from({ length: days }, (_, i) => {
+  //     const date = new Date(lastDay);
+  //     date.setDate(date.getDate() - i);
+  //     date.setHours(0, 0, 0, 0);
+  //     return date;
+  //   });
 
-    const dayWorkoutsData = {};
+  //   const dayWorkoutsData = {};
 
-    for (const day of dayTimestamps) {
-      const endDate = new Date(day.getTime() + 24 * 60 * 60 * 1000);
-      const dayWorkouts = this.filterWorkoutsByMiddleTime(
-        workouts,
-        day,
-        endDate,
-      );
+  //   for (const day of dayTimestamps) {
+  //     const endDate = new Date(day.getTime() + 24 * 60 * 60 * 1000);
+  //     const dayWorkouts = this.filterWorkoutsByMiddleTime(
+  //       workouts,
+  //       day,
+  //       endDate,
+  //     );
 
-      dayWorkoutsData[day.toISOString()] = dayWorkouts;
-    }
+  //     dayWorkoutsData[day.toISOString()] = dayWorkouts;
+  //   }
 
-    return dayWorkoutsData;
-  }
+  //   return dayWorkoutsData;
+  // }
 
-  extractWorkoutsData(workouts: WhoopWorkout[]): { [key: string]: any } {
-    let workoutAverageHeartRate = 0;
-    if (workouts.length > 0) {
-      // Calculate average heart rate across all workouts in this cycle
-      const totalHeartRate = workouts.reduce(
-        (sum: number, workout: WhoopWorkout) => {
-          return sum + (workout.score?.average_heart_rate || 0);
+  // extractWorkoutsData(workouts: WhoopWorkout[]): { [key: string]: any } {
+  //   let workoutAverageHeartRate = 0;
+  //   if (workouts.length > 0) {
+  //     // Calculate average heart rate across all workouts in this cycle
+  //     const totalHeartRate = workouts.reduce(
+  //       (sum: number, workout: WhoopWorkout) => {
+  //         return sum + (workout.score?.average_heart_rate || 0);
+  //       },
+  //       0,
+  //     );
+  //     workoutAverageHeartRate = totalHeartRate / workouts.length;
+  //   }
+
+  //   return { workoutAverageHeartRate };
+  // }
+
+  async getWorkouts(
+    firebase_id: string,
+    start_date: Date,
+    end_date: Date,
+  ): Promise<WhoopWorkout[]> {
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+      include: [
+        {
+          model: this.whoopUserModel,
+          include: [this.workoutFilter(start_date, end_date)],
         },
-        0,
-      );
-      workoutAverageHeartRate = totalHeartRate / workouts.length;
+      ],
+    });
+    if (!user || !user.whoop_user) {
+      throw new Error('User or Whoop user not found');
     }
 
-    return { workoutAverageHeartRate };
+    if (user.whoop_user.workouts && user.whoop_user.workouts.length > 0) {
+      return user.whoop_user.workouts;
+    }
+
+    return [];
+  }
+
+  async getWorkoutById(id: string): Promise<WhoopWorkout> {
+    const workout = await this.whoopWorkoutModel.findByPk(id, {
+      include: [
+        {
+          model: this.whoopWorkoutScoreModel,
+          as: 'score',
+          required: false,
+          include: [
+            {
+              model: this.whoopWorkoutZoneDurationsModel,
+              as: 'zoneDurations',
+              required: false,
+            },
+          ],
+        },
+      ],
+    });
+    if (!workout) {
+      throw new Error('Workout not found');
+    }
+    return workout;
   }
 }

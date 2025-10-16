@@ -98,3 +98,19 @@ export class WhoopAppMultiDayRequest {
   @Max(30)
   days: number;
 }
+
+export class WhoopWorkoutRequestQuery {
+  @ApiProperty()
+  @IsString()
+  firebase_id: string;
+
+  @ApiProperty()
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  start_date: Date;
+
+  @ApiProperty()
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  end_date: Date;
+}

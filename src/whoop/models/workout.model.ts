@@ -7,7 +7,6 @@ import {
   ForeignKey,
 } from 'sequelize-typescript';
 import { WhoopWorkoutScore } from './workout_score.model';
-import { PlayerActivity } from 'src/user/models/player_activity.model';
 import { WhoopUser } from './whoop_user.model';
 
 // workout.model.ts
@@ -31,6 +30,8 @@ export class WhoopWorkout extends Model<WhoopWorkout> {
   declare score_state: string;
   // @Column(DataType.INTEGER) sport_id?: number; // soon to be deprecated
 
+  //Custom field
+  @Column(DataType.INTEGER) declare points_assigned: number;
+
   @HasOne(() => WhoopWorkoutScore) declare score?: WhoopWorkoutScore;
-  @HasOne(() => PlayerActivity) declare player_activity?: PlayerActivity;
 }

@@ -11,6 +11,7 @@ import {
   WhoopAuthController,
   WhoopWebhookController,
   WhoopAppController,
+  WhoopWorkoutController,
 } from './controllers';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 import {
@@ -49,6 +50,7 @@ import { CryptoUtil } from 'src/utils';
     WhoopAuthController,
     WhoopWebhookController,
     WhoopAppController,
+    WhoopWorkoutController,
   ],
 })
 export class WhoopModule {}

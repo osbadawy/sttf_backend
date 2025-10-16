@@ -34,6 +34,9 @@ export class WhoopSleep extends Model<WhoopSleep> {
   @Column(DataType.ENUM('SCORED', 'PENDING_SCORE', 'UNSCORABLE'))
   declare score_state: string;
 
+  //Custom field
+  @Column(DataType.INTEGER) declare points_assigned: number;
+
   @HasOne(() => WhoopSleepScore) declare score?: WhoopSleepScore;
   @BelongsTo(() => WhoopCycle) declare cycle?: WhoopCycle;
 }

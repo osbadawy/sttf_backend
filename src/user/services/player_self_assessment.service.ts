@@ -8,6 +8,8 @@ import {
 } from '../dtos/request.dtos';
 import { PlayerStats } from '../models/player_stats.model';
 import { Op } from 'sequelize';
+import { DailyPoints } from '../models/daily_points.model';
+import { DailyPointsService } from './daily_points.service';
 
 @Injectable()
 export class PlayerSelfAssessmentService {
@@ -18,6 +20,9 @@ export class PlayerSelfAssessmentService {
     private readonly userModel: typeof User,
     @InjectModel(PlayerStats)
     private readonly playerStatsModel: typeof PlayerStats,
+    @InjectModel(DailyPoints)
+    private readonly dailyPointsModel: typeof DailyPoints,
+    private readonly dailyPointsService: DailyPointsService,
   ) {}
 
   async createSelfAssessment({
@@ -30,6 +35,7 @@ export class PlayerSelfAssessmentService {
       include: [
         {
           model: PlayerStats,
+          required: true,
           include: [
             {
               model: PlayerSelfAssessment,
@@ -43,24 +49,39 @@ export class PlayerSelfAssessmentService {
       throw new Error('User not found');
     }
 
-    let playerStats = user.player_stats;
-
-    if (!playerStats) {
-      playerStats = await this.playerStatsModel.create({
-        user_id: user.id as string,
-      } as PlayerStats);
+    if (!user.player_stats) {
+      throw new Error('Player stats not found');
     }
 
     const data = {
-      player_stats_id: playerStats.id,
+      player_stats_id: user.player_stats.id,
       score: score,
       assessment_type: assessment_type,
+      points_assigned: 20,
     } as PlayerSelfAssessment;
 
     console.log('data', data);
 
     const playerSelfAssessment =
       await this.playerSelfAssessmentModel.create(data);
+
+    // Update daily points for self assessment
+    try {
+      await this.dailyPointsService.updateDailyPointsForUser(
+        firebase_id,
+        data.points_assigned,
+        new Date(),
+      );
+      console.log(
+        `Updated daily points for self assessment: +${data.points_assigned} points`,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to update daily points for self assessment:`,
+        error,
+      );
+      // Don't throw error to avoid breaking the main workflow
+    }
 
     return playerSelfAssessment;
   }
