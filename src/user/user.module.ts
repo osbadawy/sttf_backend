@@ -8,8 +8,6 @@ import { BodyCompositionController } from './controllers/body_composition.contro
 import { MealsController } from './controllers/meal.controller';
 import { PlayerSelfAssessmentController } from './controllers/player_self_assessment.controller';
 import { CoachAssessmentController } from './controllers/coach_assessment.controller';
-import { PlayerActivityController } from './controllers/player_activity.controller';
-import { PlayerActivityService } from './services/player_activity.service';
 import { PlayerSelfAssessmentService } from './services/player_self_assessment.service';
 import {
   WhoopWorkout,
@@ -35,8 +33,7 @@ import {
     MealsController,
     PlayerSelfAssessmentController,
     CoachAssessmentController,
-    PlayerActivityController,
   ],
-  providers: [PlayerActivityService, PlayerSelfAssessmentService],
+  providers: [PlayerSelfAssessmentService],
 })
 export class UserModule {}

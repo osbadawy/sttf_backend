@@ -15,7 +15,6 @@ import {
   WhoopWorkoutServiceResponse,
 } from '../dtos';
 import { User } from 'src/user/models/user.model';
-import { PlayerActivity } from 'src/user/models/player_activity.model';
 
 @Injectable()
 export class WhoopWorkoutService {
@@ -29,8 +28,6 @@ export class WhoopWorkoutService {
     @InjectModel(WhoopWorkoutZoneDurations)
     private readonly whoopWorkoutZoneDurationsModel: typeof WhoopWorkoutZoneDurations,
     @InjectModel(User) private readonly userModel: typeof User,
-    @InjectModel(PlayerActivity)
-    private readonly playerActivityModel: typeof PlayerActivity,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
   ) {}
@@ -224,23 +221,6 @@ export class WhoopWorkoutService {
     return workoutWithScore;
   }
 
-  private async createPlayerActivity(
-    workoutRecord: WhoopWorkoutData,
-    userId: string,
-    transaction: Transaction,
-  ): Promise<void> {
-    await this.playerActivityModel.create(
-      {
-        user_id: userId,
-        workout_id: workoutRecord.id,
-        activity_type: workoutRecord.sport_name,
-        started_at: new Date(workoutRecord.start),
-        ended_at: new Date(workoutRecord.end),
-      } as PlayerActivity,
-      { transaction },
-    );
-  }
-
   async saveWorkoutsToDatabase(
     workoutsData: WhoopWorkoutData[],
     whoopUserId: number,
@@ -273,13 +253,6 @@ export class WhoopWorkoutService {
         const workoutWithScore = await this.saveSingleWorkoutRecord(
           workoutRecord,
           whoopUserId,
-          transaction,
-        );
-
-        // Create PlayerActivity entry
-        await this.createPlayerActivity(
-          workoutRecord,
-          whoopUser.user_id,
           transaction,
         );
 

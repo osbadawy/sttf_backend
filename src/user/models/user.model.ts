@@ -11,7 +11,6 @@ import {
 import { HasOne, HasMany } from 'sequelize-typescript';
 import { Team } from './team.model';
 import { PlayerStats } from './player_stats.model';
-import { PlayerActivity } from './player_activity.model';
 import { WhoopUser } from '../../whoop/models/whoop_user.model';
 
 // ✨ Import these from 'sequelize'
@@ -73,8 +72,5 @@ export class User extends Model<
   @BelongsTo(() => Team) declare team: NonAttribute<Team | null>;
   @HasOne(() => PlayerStats)
   declare player_stats: NonAttribute<PlayerStats | null>;
-  @HasMany(() => PlayerActivity) declare player_activities: NonAttribute<
-    PlayerActivity[] | null
-  >;
   @HasOne(() => WhoopUser) declare whoop_user: NonAttribute<WhoopUser | null>;
 }

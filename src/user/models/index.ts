@@ -5,5 +5,4 @@ export { Meal } from './meal.model';
 export { BodyComposition } from './body_composition.model';
 export { PlayerSelfAssessment } from './player_self_assessment.model';
 export { CoachAssessment } from './coach_assessment.model';
-export { PlayerActivity } from './player_activity.model';
 export { DailyPoints } from './daily_points.model';
