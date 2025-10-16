@@ -28,6 +28,7 @@ services:
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
       FIREBASE_API_KEY: ${FIREBASE_API_KEY}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      INITIAL_SETUP: ${INITIAL_SETUP}
     depends_on:
       postgres:
         condition: service_healthy
