@@ -9,10 +9,12 @@ import { MealsController } from './controllers/meal.controller';
 import { PlayerSelfAssessmentController } from './controllers/player_self_assessment.controller';
 import { CoachAssessmentController } from './controllers/coach_assessment.controller';
 import { PlayerSelfAssessmentService } from './services/player_self_assessment.service';
+import { DailyPointsService } from './services/daily_points.service';
 import {
   WhoopWorkout,
   WhoopWorkoutScore,
   WhoopWorkoutZoneDurations,
+  WhoopUser,
 } from 'src/whoop/models';
 
 @Module({
@@ -22,9 +24,10 @@ import {
       WhoopWorkout,
       WhoopWorkoutScore,
       WhoopWorkoutZoneDurations,
+      WhoopUser,
     ]),
   ],
-  exports: [SequelizeModule],
+  exports: [SequelizeModule, DailyPointsService],
   controllers: [
     UserController,
     TeamController,
@@ -34,6 +37,6 @@ import {
     PlayerSelfAssessmentController,
     CoachAssessmentController,
   ],
-  providers: [PlayerSelfAssessmentService],
+  providers: [PlayerSelfAssessmentService, DailyPointsService],
 })
 export class UserModule {}

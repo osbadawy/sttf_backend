@@ -152,11 +152,16 @@ export class UserController {
       let user = await this.userModel.findOne({ where: { firebase_id } });
 
       if (!user) {
-        const createData: any = { firebase_id, email, access };
+        const createData: {
+          firebase_id: string;
+          email: string;
+          access: string;
+          player_stats?: PlayerStats;
+        } = { firebase_id, email, access };
 
         // Include player_stats creation for players
         if (access === 'player') {
-          createData.player_stats = {};
+          createData.player_stats = {} as PlayerStats;
         }
 
         user = await this.userModel.create(createData, {

@@ -8,7 +8,7 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import { HasOne, HasMany } from 'sequelize-typescript';
+import { HasOne } from 'sequelize-typescript';
 import { Team } from './team.model';
 import { PlayerStats } from './player_stats.model';
 import { WhoopUser } from '../../whoop/models/whoop_user.model';

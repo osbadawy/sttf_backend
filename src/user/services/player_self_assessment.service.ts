@@ -9,6 +9,7 @@ import {
 import { PlayerStats } from '../models/player_stats.model';
 import { Op } from 'sequelize';
 import { DailyPoints } from '../models/daily_points.model';
+import { DailyPointsService } from './daily_points.service';
 
 @Injectable()
 export class PlayerSelfAssessmentService {
@@ -21,6 +22,7 @@ export class PlayerSelfAssessmentService {
     private readonly playerStatsModel: typeof PlayerStats,
     @InjectModel(DailyPoints)
     private readonly dailyPointsModel: typeof DailyPoints,
+    private readonly dailyPointsService: DailyPointsService,
   ) {}
 
   async createSelfAssessment({
@@ -62,6 +64,24 @@ export class PlayerSelfAssessmentService {
 
     const playerSelfAssessment =
       await this.playerSelfAssessmentModel.create(data);
+
+    // Update daily points for self assessment
+    try {
+      await this.dailyPointsService.updateDailyPointsForUser(
+        firebase_id,
+        data.points_assigned,
+        new Date(),
+      );
+      console.log(
+        `Updated daily points for self assessment: +${data.points_assigned} points`,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to update daily points for self assessment:`,
+        error,
+      );
+      // Don't throw error to avoid breaking the main workflow
+    }
 
     return playerSelfAssessment;
   }

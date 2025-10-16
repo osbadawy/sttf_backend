@@ -16,6 +16,7 @@ import {
   WhoopRecoveryDataWithIds,
   WhoopRecoveryServiceResponse,
 } from '../dtos';
+import { DailyPointsService } from 'src/user/services/daily_points.service';
 
 @Injectable()
 export class WhoopRecoveryService {
@@ -33,6 +34,7 @@ export class WhoopRecoveryService {
     @InjectModel(User) private readonly userModel: typeof User,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
+    private readonly dailyPointsService: DailyPointsService,
   ) {}
 
   async getSingleRecoveryFromWhoopApi(
@@ -103,6 +105,27 @@ export class WhoopRecoveryService {
       pointsToBeAssigned = Math.floor(
         (recoveryRecord.score.recovery_score / 100) * 25,
       );
+    }
+
+    // Update daily points immediately after calculating points
+    if (pointsToBeAssigned > 0) {
+      try {
+        await this.dailyPointsService.updateDailyPointsForWhoopUser(
+          whoopUserId,
+          pointsToBeAssigned,
+          new Date(recoveryRecord.created_at),
+          transaction,
+        );
+        console.log(
+          `Updated daily points for recovery ${recoveryRecord.id}: +${pointsToBeAssigned} points`,
+        );
+      } catch (error) {
+        console.error(
+          `Failed to update daily points for recovery ${recoveryRecord.id}:`,
+          error,
+        );
+        // Don't throw error to avoid breaking the main workflow
+      }
     }
 
     // Upsert recovery record

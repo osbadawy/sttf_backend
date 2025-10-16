@@ -17,6 +17,7 @@ import {
   WhoopSleepServiceResponse,
 } from '../dtos';
 import { User } from 'src/user/models/user.model';
+import { DailyPointsService } from 'src/user/services/daily_points.service';
 
 @Injectable()
 export class WhoopSleepService {
@@ -36,6 +37,7 @@ export class WhoopSleepService {
     @InjectModel(User) private readonly userModel: typeof User,
     @InjectConnection() private readonly sequelize: Sequelize,
     private readonly httpService: HttpService,
+    private readonly dailyPointsService: DailyPointsService,
   ) {}
 
   async getSingleSleepFromWhoopApi(
@@ -97,6 +99,27 @@ export class WhoopSleepService {
       pointsToBeAssigned = Math.floor(
         (sleepRecord.score.sleep_performance_percentage / 100) * 25,
       );
+    }
+
+    // Update daily points immediately after calculating points
+    if (pointsToBeAssigned > 0) {
+      try {
+        await this.dailyPointsService.updateDailyPointsForWhoopUser(
+          whoopUserId,
+          pointsToBeAssigned,
+          new Date(sleepRecord.start),
+          transaction,
+        );
+        console.log(
+          `Updated daily points for sleep ${sleepRecord.id}: +${pointsToBeAssigned} points`,
+        );
+      } catch (error) {
+        console.error(
+          `Failed to update daily points for sleep ${sleepRecord.id}:`,
+          error,
+        );
+        // Don't throw error to avoid breaking the main workflow
+      }
     }
 
     // Upsert sleep record
@@ -303,6 +326,7 @@ export class WhoopSleepService {
           }
         : undefined,
     };
+
     return sleepWithScore;
   }
 
