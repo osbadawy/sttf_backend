@@ -35,6 +35,5 @@ export class WhoopRecovery extends Model<WhoopRecovery> {
   //Custom field
   @Column(DataType.INTEGER) declare points_assigned: number;
 
-
   @HasOne(() => WhoopRecoveryScore) declare score?: WhoopRecoveryScore;
 }

@@ -31,7 +31,8 @@ import type {
 export class UserController {
   constructor(
     @InjectModel(User) private readonly userModel: typeof User,
-    @InjectModel(PlayerStats) private readonly playerStatsModel: typeof PlayerStats,
+    @InjectModel(PlayerStats)
+    private readonly playerStatsModel: typeof PlayerStats,
   ) {}
 
   @Get()
@@ -152,16 +153,16 @@ export class UserController {
 
       if (!user) {
         const createData: any = { firebase_id, email, access };
-        
+
         // Include player_stats creation for players
         if (access === 'player') {
           createData.player_stats = {};
         }
-        
+
         user = await this.userModel.create(createData, {
           include: access === 'player' ? [{ model: PlayerStats }] : undefined,
         });
-        
+
         return {
           created: true,
           user: { firebase_id, email: user.email, access },

@@ -20,7 +20,9 @@ import { UserModule } from './user/user.module';
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
       autoLoadModels: true,
-      synchronize: process.env.NODE_ENV === 'development', // ⚠️ only in dev
+      synchronize:
+        process.env.NODE_ENV === 'development' ||
+        process.env.INITIAL_SETUP === 'true', // Add this condition
       define: {
         underscored: true,
         freezeTableName: true,
@@ -30,7 +32,7 @@ import { UserModule } from './user/user.module';
           process.env.NODE_ENV !== 'development'
             ? {
                 require: true,
-                rejectUnauthorized: false, // For RDS, you might need this
+                rejectUnauthorized: false,
               }
             : false,
       },

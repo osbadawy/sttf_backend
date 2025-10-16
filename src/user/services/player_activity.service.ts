@@ -106,6 +106,7 @@ export class PlayerActivityService {
       activity_type: body.activity_type,
       started_at: new Date(body.started_at),
       ended_at: new Date(body.ended_at),
+      points_assigned: 0,
     } as PlayerActivity);
 
     return playerActivity;
@@ -119,6 +120,7 @@ export class PlayerActivityService {
       throw new Error('Player activity not found');
     }
     playerActivity.self_assessment_score = body.self_assessment_score;
+    playerActivity.points_assigned = 10;
     if (body.activity_type) {
       playerActivity.activity_type = body.activity_type;
     }

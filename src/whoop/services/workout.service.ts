@@ -74,6 +74,16 @@ export class WhoopWorkoutService {
       `Processing workout record ${workoutRecord.id}, score_state: ${workoutRecord.score_state}`,
     );
 
+    let pointsToBeAssigned = 0;
+    if (
+      workoutRecord.score_state === 'SCORED' &&
+      workoutRecord.score &&
+      workoutRecord.score.strain
+    ) {
+      pointsToBeAssigned = Math.floor((workoutRecord.score.strain / 21) * 40);
+      pointsToBeAssigned = Math.max(pointsToBeAssigned, 20);
+    }
+
     // Upsert workout record
     const [workout] = await this.whoopWorkoutModel.upsert(
       {
@@ -86,6 +96,7 @@ export class WhoopWorkoutService {
         timezone_offset: workoutRecord.timezone_offset,
         sport_name: workoutRecord.sport_name,
         score_state: workoutRecord.score_state,
+        points_assigned: pointsToBeAssigned,
       } as WhoopWorkout,
       { transaction },
     );

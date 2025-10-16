@@ -94,6 +94,17 @@ export class WhoopRecoveryService {
       throw new Error(`Sleep ${recoveryRecord.sleep_id} could not be found`);
     }
 
+    let pointsToBeAssigned = 0;
+    if (
+      recoveryRecord.score_state === 'SCORED' &&
+      recoveryRecord.score &&
+      recoveryRecord.score.recovery_score
+    ) {
+      pointsToBeAssigned = Math.floor(
+        (recoveryRecord.score.recovery_score / 100) * 25,
+      );
+    }
+
     // Upsert recovery record
     const [recovery] = await this.whoopRecoveryModel.upsert(
       {
@@ -104,6 +115,7 @@ export class WhoopRecoveryService {
         created_at: new Date(recoveryRecord.created_at),
         updated_at: new Date(recoveryRecord.updated_at),
         score_state: recoveryRecord.score_state,
+        points_assigned: pointsToBeAssigned,
       } as WhoopRecovery,
       { transaction },
     );

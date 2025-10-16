@@ -43,18 +43,18 @@ export class PlayerActivityController {
     return this.playerActivityService.createPlayerActivity(body);
   }
 
-  @Patch('/:id')
-  async updatePlayerActivity() {
-    // return this.playerActivityService.updatePlayerActivity();
-  }
+  // @Patch('/:id')
+  // async updatePlayerActivity() {
+  //   return this.playerActivityService.updatePlayerActivity();
+  // }
 
   @Post('self-assessment/')
   async createSelfAssessment(@Body() body: CreateSelfAssessmentRequest) {
     return this.playerActivityService.createSelfAssessment(body);
   }
 
-  @Delete('/:id')
-  async deletePlayerActivity() {
-    // return this.playerActivityService.deletePlayerActivity();
-  }
+  // @Delete('/:id')
+  // async deletePlayerActivity() {
+  //   return this.playerActivityService.deletePlayerActivity();
+  // }
 }

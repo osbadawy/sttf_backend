@@ -87,6 +87,18 @@ export class WhoopSleepService {
       throw new Error(`Cycle ${sleepRecord.cycle_id} could not be found`);
     }
 
+    let pointsToBeAssigned = 0;
+    if (
+      !sleepRecord.nap &&
+      sleepRecord.score_state === 'SCORED' &&
+      sleepRecord.score &&
+      sleepRecord.score.sleep_performance_percentage
+    ) {
+      pointsToBeAssigned = Math.floor(
+        (sleepRecord.score.sleep_performance_percentage / 100) * 25,
+      );
+    }
+
     // Upsert sleep record
     const [sleep] = await this.whoopSleepModel.upsert(
       {
@@ -100,6 +112,7 @@ export class WhoopSleepService {
         timezone_offset: sleepRecord.timezone_offset,
         nap: sleepRecord.nap,
         score_state: sleepRecord.score_state,
+        points_assigned: pointsToBeAssigned,
       } as WhoopSleep,
       { transaction },
     );
