@@ -98,11 +98,10 @@ async function bootstrap() {
       // Start HTTPS server on port 443 (standard HTTPS port)
       await httpsApp.listen(443, '0.0.0.0');
       console.log('HTTPS Server running on port 443');
-    } catch (error: Error) {
-      console.error(
-        'Failed to start HTTPS server:',
-        error instanceof Error ? error.message : 'Unknown error',
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to start HTTPS server:', errorMessage);
       console.log('Continuing with HTTP-only mode');
     }
   } else {
