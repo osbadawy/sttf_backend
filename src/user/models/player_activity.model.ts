@@ -38,6 +38,8 @@ export class PlayerActivity extends Model<PlayerActivity> {
 
   @Column(DataType.FLOAT) declare self_assessment_score?: number;
 
+  @Column(DataType.INTEGER) declare points_assigned: number;
+
   @BelongsTo(() => User) declare user: User;
   @BelongsTo(() => WhoopWorkout) declare workout?: WhoopWorkout;
 }

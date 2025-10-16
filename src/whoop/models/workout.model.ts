@@ -31,6 +31,9 @@ export class WhoopWorkout extends Model<WhoopWorkout> {
   declare score_state: string;
   // @Column(DataType.INTEGER) sport_id?: number; // soon to be deprecated
 
+  //Custom field
+  @Column(DataType.INTEGER) declare points_assigned: number;
+
   @HasOne(() => WhoopWorkoutScore) declare score?: WhoopWorkoutScore;
   @HasOne(() => PlayerActivity) declare player_activity?: PlayerActivity;
 }

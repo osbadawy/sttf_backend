@@ -31,5 +31,7 @@ export class PlayerSelfAssessment extends Model<PlayerSelfAssessment> {
   @Column(DataType.FLOAT) declare score?: number;
   @Column(DataType.STRING) declare assessment_type?: SelfAssessmentType;
 
+  @Column(DataType.INTEGER) declare points_assigned: number;
+
   @BelongsTo(() => PlayerStats) declare player_stats?: PlayerStats;
 }
