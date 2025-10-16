@@ -13,6 +13,7 @@ import {
 import { UniqueConstraintError } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models/user.model';
+import { PlayerStats } from '../models/player_stats.model';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { SignUpResponse, getUserResponse } from '../dtos/response.dtos';
 // import session, { Session } from 'express-session';
@@ -28,7 +29,10 @@ import type {
 @Controller('user')
 @UseGuards(FirebaseAuthGuard)
 export class UserController {
-  constructor(@InjectModel(User) private readonly userModel: typeof User) {}
+  constructor(
+    @InjectModel(User) private readonly userModel: typeof User,
+    @InjectModel(PlayerStats) private readonly playerStatsModel: typeof PlayerStats,
+  ) {}
 
   @Get()
   async getUserByPk(@Body() body: getUserPkRequest): Promise<getUserResponse> {
@@ -147,7 +151,17 @@ export class UserController {
       let user = await this.userModel.findOne({ where: { firebase_id } });
 
       if (!user) {
-        user = await this.userModel.create({ firebase_id, email, access });
+        const createData: any = { firebase_id, email, access };
+        
+        // Include player_stats creation for players
+        if (access === 'player') {
+          createData.player_stats = {};
+        }
+        
+        user = await this.userModel.create(createData, {
+          include: access === 'player' ? [{ model: PlayerStats }] : undefined,
+        });
+        
         return {
           created: true,
           user: { firebase_id, email: user.email, access },

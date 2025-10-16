@@ -8,6 +8,7 @@ import {
 } from '../dtos/request.dtos';
 import { PlayerStats } from '../models/player_stats.model';
 import { Op } from 'sequelize';
+import { DailyPoints } from '../models/daily_points.model';
 
 @Injectable()
 export class PlayerSelfAssessmentService {
@@ -18,6 +19,8 @@ export class PlayerSelfAssessmentService {
     private readonly userModel: typeof User,
     @InjectModel(PlayerStats)
     private readonly playerStatsModel: typeof PlayerStats,
+    @InjectModel(DailyPoints)
+    private readonly dailyPointsModel: typeof DailyPoints,
   ) {}
 
   async createSelfAssessment({
@@ -30,6 +33,7 @@ export class PlayerSelfAssessmentService {
       include: [
         {
           model: PlayerStats,
+          required: true,
           include: [
             {
               model: PlayerSelfAssessment,
@@ -43,18 +47,15 @@ export class PlayerSelfAssessmentService {
       throw new Error('User not found');
     }
 
-    let playerStats = user.player_stats;
-
-    if (!playerStats) {
-      playerStats = await this.playerStatsModel.create({
-        user_id: user.id as string,
-      } as PlayerStats);
+    if (!user.player_stats) {
+      throw new Error('Player stats not found');
     }
 
     const data = {
-      player_stats_id: playerStats.id,
+      player_stats_id: user.player_stats.id,
       score: score,
       assessment_type: assessment_type,
+      points_assigned: 20,
     } as PlayerSelfAssessment;
 
     console.log('data', data);
