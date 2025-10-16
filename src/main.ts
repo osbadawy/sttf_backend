@@ -11,7 +11,7 @@ import * as fs from 'fs';
 
 async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   // Create HTTP app (always available)
   const httpApp = await NestFactory.create(AppModule);
 
@@ -53,8 +53,12 @@ async function bootstrap() {
     try {
       // HTTPS options for production
       const httpsOptions = {
-        key: fs.readFileSync(process.env.SSL_KEY_PATH || '/app/ssl/sttf.api.key'),
-        cert: fs.readFileSync(process.env.SSL_CERT_PATH || '/app/ssl/sttf.api.crt'),
+        key: fs.readFileSync(
+          process.env.SSL_KEY_PATH || '/app/ssl/sttf.api.key',
+        ),
+        cert: fs.readFileSync(
+          process.env.SSL_CERT_PATH || '/app/ssl/sttf.api.crt',
+        ),
       };
 
       // Create HTTPS app
@@ -94,7 +98,6 @@ async function bootstrap() {
       // Start HTTPS server on port 443 (standard HTTPS port)
       await httpsApp.listen(443, '0.0.0.0');
       console.log('HTTPS Server running on port 443');
-      
     } catch (error) {
       console.error('Failed to start HTTPS server:', error.message);
       console.log('Continuing with HTTP-only mode');
