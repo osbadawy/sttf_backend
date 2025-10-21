@@ -71,6 +71,9 @@ export class User extends Model<
   declare player_stats: NonAttribute<PlayerStats | null>;
   @HasOne(() => WhoopUser) declare whoop_user: NonAttribute<WhoopUser | null>;
 
-  @HasMany(() => PlannedActivity) declare created_activities: NonAttribute<PlannedActivity[] | null>;
-  @HasMany(() => PlannedActivityAssignment) declare assigned_activities: NonAttribute<PlannedActivityAssignment[] | null>;
+  @HasMany(() => PlannedActivity) declare created_activities: NonAttribute<
+    PlannedActivity[] | null
+  >;
+  @HasMany(() => PlannedActivityAssignment)
+  declare assigned_activities: NonAttribute<PlannedActivityAssignment[] | null>;
 }

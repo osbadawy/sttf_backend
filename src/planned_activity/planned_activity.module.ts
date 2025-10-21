@@ -9,7 +9,12 @@ import { PlannedActivityService } from './planned_activity.service';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([PlannedActivity, PlannedActivityAssignment, PlannedActivityItem, PlannedActivityPerformance]),
+    SequelizeModule.forFeature([
+      PlannedActivity,
+      PlannedActivityAssignment,
+      PlannedActivityItem,
+      PlannedActivityPerformance,
+    ]),
   ],
   exports: [SequelizeModule],
   controllers: [PlannedActivityController],
