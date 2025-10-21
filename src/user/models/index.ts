@@ -1,4 +1,3 @@
-export { Team } from './team.model';
 export { User } from './user.model';
 export { PlayerStats } from './player_stats.model';
 export { Meal } from './meal.model';

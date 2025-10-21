@@ -8,6 +8,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { PlannedActivityModule } from './planned_activity/planned_activity.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { UserModule } from './user/user.module';
     WhoopModule,
     UserModule,
     AuthModule,
+    PlannedActivityModule,
   ],
   controllers: [AppController],
   providers: [

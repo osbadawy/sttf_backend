@@ -49,27 +49,6 @@ export type CreatePlayerStatsRequest = {
 export type PatchFields = { [key: string]: any };
 export type PatchBodyRequest = { id: string; data?: PatchFields } & PatchFields;
 
-/////////////////////////////////////////////////// TEAM //////////////////////////////////////////////////////////////////////////////
-export type getTeamPkRequest = {
-  id: string;
-};
-
-export type postTeamPkRequest = {
-  team: string;
-};
-
-export type PatchTeamFieldsRequest = {
-  team?: string;
-  metadata?: Record<string, unknown> | null;
-  totalPlayers?: number;
-  image?: string | null;
-};
-
-export type PatchTeamBodyRequest = {
-  id: string;
-  data?: PatchTeamFieldsRequest;
-} & PatchTeamFieldsRequest;
-
 ///////////////////////////////////////////////////// USER //////////////////////////////////////////////////////////////////////////////////
 export type SignUpBodyRequest = {
   firebase_id: string;
