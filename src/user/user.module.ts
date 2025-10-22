@@ -4,7 +4,6 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { UserController } from './controllers/user.controller';
 import { PlayerStatsController } from './controllers/player_stats.controller';
 import { BodyCompositionController } from './controllers/body_composition.controller';
-import { MealsController } from './controllers/meal.controller';
 import { PlayerSelfAssessmentController } from './controllers/player_self_assessment.controller';
 import { CoachAssessmentController } from './controllers/coach_assessment.controller';
 import { PlayerSelfAssessmentService } from './services/player_self_assessment.service';
@@ -31,7 +30,6 @@ import {
     UserController,
     PlayerStatsController,
     BodyCompositionController,
-    MealsController,
     PlayerSelfAssessmentController,
     CoachAssessmentController,
   ],
