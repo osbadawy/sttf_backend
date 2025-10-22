@@ -5,11 +5,9 @@ import {
   Column,
   DataType,
   Index,
-  ForeignKey,
-  BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { HasOne } from 'sequelize-typescript';
-import { Team } from './team.model';
 import { PlayerStats } from './player_stats.model';
 import { WhoopUser } from '../../whoop/models/whoop_user.model';
 
@@ -20,6 +18,8 @@ import type {
   CreationOptional,
   NonAttribute,
 } from 'sequelize';
+import { PlannedActivity } from 'src/planned_activity/models/planned_activity.model';
+import { PlannedActivityAssignment } from 'src/planned_activity/models/planned_activity_assignment.model';
 
 @Table({
   tableName: 'users',
@@ -40,10 +40,6 @@ export class User extends Model<
   @Index({ name: 'firebase_id', unique: true })
   @Column({ type: DataType.STRING, allowNull: false })
   declare firebase_id: string;
-
-  @ForeignKey(() => Team)
-  @Column({ type: DataType.UUID, allowNull: true })
-  declare team_id: CreationOptional<string | null>;
 
   @Index({ name: 'email', unique: true })
   @Column({ type: DataType.STRING, allowNull: false })
@@ -69,8 +65,13 @@ export class User extends Model<
   declare readonly updatedAt: CreationOptional<Date>;
 
   // associations should be NonAttribute so they don't pollute attribute typing
-  @BelongsTo(() => Team) declare team: NonAttribute<Team | null>;
   @HasOne(() => PlayerStats)
   declare player_stats: NonAttribute<PlayerStats | null>;
   @HasOne(() => WhoopUser) declare whoop_user: NonAttribute<WhoopUser | null>;
+
+  @HasMany(() => PlannedActivity) declare created_activities: NonAttribute<
+    PlannedActivity[] | null
+  >;
+  @HasMany(() => PlannedActivityAssignment)
+  declare assigned_activities: NonAttribute<PlannedActivityAssignment[] | null>;
 }
