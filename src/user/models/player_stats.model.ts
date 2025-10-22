@@ -9,7 +9,6 @@ import {
 } from 'sequelize-typescript';
 import { HasMany } from 'sequelize-typescript';
 import { User } from './user.model';
-import { Meal } from './meal.model';
 import { BodyComposition } from './body_composition.model';
 import { PlayerSelfAssessment } from './player_self_assessment.model';
 import { CoachAssessment } from './coach_assessment.model';
@@ -51,7 +50,6 @@ export class PlayerStats extends Model<PlayerStats> {
   @BelongsTo(() => User) declare user?: User;
   @HasMany(() => BodyComposition, { as: 'body_compositions' })
   declare body_compositions?: BodyComposition[];
-  @HasMany(() => Meal, { as: 'meals' }) declare meals?: Meal[];
   @HasMany(() => PlayerSelfAssessment, { as: 'self_assessments' })
   declare self_assessments?: PlayerSelfAssessment[];
   @HasMany(() => CoachAssessment, { as: 'coach_assessments' })

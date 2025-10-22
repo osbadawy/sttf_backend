@@ -73,32 +73,6 @@ export type PatchUserBodyRequest = {
   id: string;
   data?: PatchUserFieldsRequest;
 } & PatchUserFieldsRequest;
-////////////////////////////////////////////////// MEALS //////////////////////////////////////////////////////////////////////////////
-export type mealRequest = {
-  player_stats_id: string;
-  food: string;
-  consumed_at: string | Date;
-  is_recommended?: boolean;
-  recommended_time?: string | null;
-  calories?: number | string | null;
-};
-
-export type patchMealRequest = {
-  id: string;
-  data?: {
-    is_recommended?: boolean;
-    food?: string;
-    recommended_time?: string | null;
-    consumed_at?: string | Date;
-    calories?: number | string | null;
-  };
-} & {
-  is_recommended?: boolean;
-  food?: string;
-  recommended_time?: string | null;
-  consumed_at?: string | Date;
-  calories?: number | string | null;
-};
 
 ////////////////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ////////////////////////////////////////////////////////
 

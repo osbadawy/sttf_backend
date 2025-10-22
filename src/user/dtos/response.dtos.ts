@@ -47,20 +47,6 @@ export interface getUserResponse {
   };
 }
 
-//////////////////////////////////////////////////////// MEAL ////////////////////////////////////////////////////////////
-export type mealResponse = {
-  ok: boolean;
-  data: {
-    id: string;
-    player_stats_id: string;
-    is_recommended: boolean;
-    food: string;
-    recommended_time: string | null;
-    consumed_at: string; // ISO
-    calories: number | null;
-  };
-};
-
 ///////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ///////////////////////////////////////////////////
 export type playerSelfAssessmentResponse = {
   ok: boolean;

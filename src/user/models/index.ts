@@ -1,6 +1,5 @@
 export { User } from './user.model';
 export { PlayerStats } from './player_stats.model';
-export { Meal } from './meal.model';
 export { BodyComposition } from './body_composition.model';
 export { PlayerSelfAssessment } from './player_self_assessment.model';
 export { CoachAssessment } from './coach_assessment.model';
