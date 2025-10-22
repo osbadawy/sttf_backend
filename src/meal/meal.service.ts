@@ -6,7 +6,7 @@ import {
 import {
   CompleteMealRequest,
   CreateMealBodyRequest,
-  GetMealsQuery,
+  GetMealsParams,
   MealRecurrenceDTO,
   UnassignMealBodyRequest,
   UpdateMealBodyRequest,
@@ -257,16 +257,12 @@ export class MealService {
     };
   }
 
-  async getMeals({ day, users_assigned }: GetMealsQuery) {
-    const startDate = new Date(day);
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(day);
-    endDate.setHours(23, 59, 59, 999);
-
-    const dayOfWeek = startDate
-      .toLocaleDateString('en-US', { weekday: 'short' })
-      .toLowerCase();
-
+  async getMeals({
+    startDate,
+    endDate,
+    dayOfWeek,
+    users_assigned,
+  }: GetMealsParams) {
     const assignedPlayers = await this.validatePlayers(users_assigned);
     const assignedPlayerIds = assignedPlayers.map((player) => player.id);
 
@@ -280,12 +276,15 @@ export class MealService {
     });
 
     // Condition 2: Recurring activities that match the day of week
-    const recurringCondition: any = {
+    const recurringCondition: Record<string, any> = {
       '$recurrence_patterns.id$': { [Op.ne]: null }, // Has recurrence pattern
-      [`$recurrence_patterns.${dayOfWeek}$`]: true, // Matches the day of week
       '$recurrence_patterns.start$': { [Op.lte]: endDate }, // Recurrence started before or on this day
       '$recurrence_patterns.end$': { [Op.gte]: startDate }, // Recurrence ends after or on this day
     };
+    // Only add day of week condition if dayOfWeek is defined
+    if (dayOfWeek !== undefined) {
+      recurringCondition[`$recurrence_patterns.${dayOfWeek}$`] = true; // Matches the day of week
+    }
     whereConditions.push(recurringCondition);
 
     const meals = await this.mealModel.findAll({

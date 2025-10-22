@@ -116,6 +116,30 @@ export class GetPlannedActivitiesQuery {
   users_assigned: string[];
 }
 
+export class GetPlannedActivitiesParams {
+  @ApiProperty()
+  @IsArray()
+  @IsString({ each: true })
+  users_assigned: string[];
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  startDate: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  endDate: Date;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @IsIn(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], { each: true })
+  dayOfWeek?: string;
+}
+
 export class CompletePlannedActivityRequest {
   @ApiProperty()
   @IsNumber()

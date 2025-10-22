@@ -130,6 +130,30 @@ export class GetMealsQuery {
   users_assigned: string[];
 }
 
+export class GetMealsParams {
+  @ApiProperty()
+  @IsArray()
+  @IsString({ each: true })
+  users_assigned: string[];
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  startDate: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  endDate: Date;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @IsIn(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], { each: true })
+  dayOfWeek?: string;
+}
+
 export class CompleteMealRequest {
   @ApiProperty()
   @IsUrl()

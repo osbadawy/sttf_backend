@@ -61,7 +61,21 @@ export class PlannedActivityController {
   //Get planned activities based on players and day
   @Get()
   async getPlannedActivities(@Query() query: GetPlannedActivitiesQuery) {
-    return this.plannedActivityService.getPlannedActivities(query);
+    const startDate = new Date(query.day);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(query.day);
+    endDate.setHours(23, 59, 59, 999);
+
+    const dayOfWeek = startDate
+      .toLocaleDateString('en-US', { weekday: 'short' })
+      .toLowerCase();
+
+    return this.plannedActivityService.getPlannedActivities({
+      startDate,
+      endDate,
+      dayOfWeek,
+      users_assigned: query.users_assigned,
+    });
   }
 
   //Gets a planned activity by id
