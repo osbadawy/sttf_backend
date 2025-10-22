@@ -7,7 +7,6 @@ import {
   HasMany,
 } from 'sequelize-typescript';
 import { User } from 'src/user/models';
-import { PlannedActivityItem } from './planned_activity_item.model';
 import { PlannedActivityAssignment } from './planned_activity_assignment.model';
 import { PlannedActivityRecurrence } from './planned_activity_recurrence.model';
 
@@ -28,16 +27,16 @@ export class PlannedActivity extends Model<PlannedActivity> {
   @Column({ type: DataType.UUID, allowNull: false })
   declare assigned_by: string;
 
+  @Column(DataType.STRING) declare category: string;
+  @Column(DataType.STRING) declare activity_type: string;
+
+  @Column({ type: DataType.BOOLEAN, defaultValue: true })
+  declare is_custom: boolean;
+
   @Column({ type: DataType.STRING, allowNull: true }) declare notes?: string;
 
-  @Column(DataType.STRING) declare category: string;
-  @Column({ type: DataType.BOOLEAN, defaultValue: true })
-  declare category_is_custom: boolean;
+  @Column(DataType.DATE) declare start: Date;
 
-  @Column(DataType.DATE) declare start_date: Date;
-  @Column({ type: DataType.DATE, allowNull: true }) declare end_date?: Date;
-
-  @HasMany(() => PlannedActivityItem) declare items?: PlannedActivityItem[];
   @HasMany(() => PlannedActivityAssignment) declare players_assigned?: PlannedActivityAssignment[];
   @HasMany(() => PlannedActivityRecurrence) declare recurrence_patterns?: PlannedActivityRecurrence[];
 }

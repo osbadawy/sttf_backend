@@ -1,6 +1,26 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type, Transform } from "class-transformer";
-import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsString, IsUUID, IsIn, IsOptional } from "class-validator";
+import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsString, IsUUID, IsIn, IsOptional, ValidateNested } from "class-validator";
+
+
+export class PlannedActivityRecurranceDTO {
+    @ApiProperty()
+    @IsDate()
+    @Type(() => Date)
+    start: Date;
+
+    @ApiProperty()
+    @IsDate()
+    @Type(() => Date)
+    end: Date;
+
+    @ApiProperty()
+    @IsArray()
+    @IsString({ each: true })
+    @Transform(({ value }) => value?.map((day: string) => day.toLowerCase()))
+    @IsIn(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], { each: true })
+    recurring_days: string[]; // Array of day names (automatically converted to lowercase)
+}
 
 export class CreatePlannedActivityBodyRequest {
     @ApiProperty()
@@ -11,12 +31,23 @@ export class CreatePlannedActivityBodyRequest {
     @ApiProperty()
     @IsDate()
     @Type(() => Date)
-    starts_at: Date;
+    start: Date;
 
     @ApiProperty()
-    @IsDate()
-    @Type(() => Date)
-    ends_at: Date;
+    @IsString()
+    @IsNotEmpty()
+    @IsIn(['technical', 'strength', 'recovery'])
+    category: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    activity_type: string;
+
+    @ApiProperty()
+    @IsBoolean()
+    @IsNotEmpty()
+    is_custom: boolean;
 
     @ApiProperty()
     @IsString()
@@ -24,25 +55,8 @@ export class CreatePlannedActivityBodyRequest {
     notes: string;
 
     @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
-    category: string;
-
-    @ApiProperty()
-    @IsBoolean()
-    @IsNotEmpty()
-    category_is_custom: boolean;
-
-    @ApiProperty()
-    @IsArray()
-    @IsString({ each: true })
-    @Transform(({ value }) => value?.map((day: string) => day.toLowerCase()))
-    @IsIn(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], { each: true })
+    @Type(() => PlannedActivityRecurranceDTO)
+    @ValidateNested()
     @IsOptional()
-    recurring_days?: string[]; // Array of day names (automatically converted to lowercase)
-
-    @ApiProperty()
-    @IsArray()
-    @IsString({ each: true })
-    activity_items: string[];
+    recurrance?: PlannedActivityRecurranceDTO;
 }   

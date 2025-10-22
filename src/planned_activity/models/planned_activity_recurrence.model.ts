@@ -25,6 +25,9 @@ export class PlannedActivityRecurrence extends Model<PlannedActivityRecurrence> 
   @Column({ type: DataType.UUID, allowNull: false })
   declare planned_activity_id: string;
 
+  @Column(DataType.DATE) declare start: Date;
+  @Column(DataType.DATE) declare end: Date;
+
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare sun?: boolean;
   

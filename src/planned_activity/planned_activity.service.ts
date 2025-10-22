@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePlannedActivityBodyRequest } from './dtos/request.dto';
+import { CreatePlannedActivityBodyRequest, PlannedActivityRecurranceDTO } from './dtos/request.dto';
 import { InjectModel } from '@nestjs/sequelize';
-import { PlannedActivity, PlannedActivityItem, PlannedActivityAssignment, PlannedActivityRecurrence } from './models';
+import { PlannedActivity, PlannedActivityAssignment, PlannedActivityRecurrence } from './models';
 import { User } from 'src/user/models';
 import { Model } from 'sequelize-typescript';
 import { Op, Transaction } from 'sequelize';
@@ -27,17 +27,6 @@ export class PlannedActivityService {
         return assigned_players;
     }
 
-    private prepareActivityItems(activity_items: string[]): PlannedActivityItem[] {
-        const items: PlannedActivityItem[] = [];
-        for (let i = 0; i < activity_items.length; i++) {
-            items.push({
-                item_index: i,
-                activity_type: activity_items[i],
-            } as PlannedActivityItem);
-        }
-        return items;
-    }
-
     private prepareAssignments(assigned_players: User[]): PlannedActivityAssignment[] {
         const assignments: PlannedActivityAssignment[] = [];
         for (let i = 0; i < assigned_players.length; i++) {
@@ -50,49 +39,34 @@ export class PlannedActivityService {
     }
 
     private async createRecurrencePattern(
-        plannedActivityId: string, 
-        recurring_days: string[], 
-        transaction: Transaction
+        plannedActivityId: string,
+        recurrance: PlannedActivityRecurranceDTO | undefined, 
+        transaction: Transaction,
     ) {
-        if (recurring_days && recurring_days.length > 0) {
-            const recurrenceData = {
+        if (recurrance) {
+            await this.plannedActivityRecurrenceModel.create({
                 planned_activity_id: plannedActivityId,
-                sun: false,
-                mon: false,
-                tue: false,
-                wed: false,
-                thu: false,
-                fri: false,
-                sat: false,
-            };
-
-            // Set the appropriate days to true based on the input array
-            recurring_days.forEach(day => {
-                if (recurrenceData.hasOwnProperty(day)) {
-                    recurrenceData[day] = true;
-                }
-            });
-
-            await this.plannedActivityRecurrenceModel.create(recurrenceData as PlannedActivityRecurrence, { transaction });
+                start: recurrance.start,
+                end: recurrance.end,
+                sun: recurrance.recurring_days.includes('sun'),
+                mon: recurrance.recurring_days.includes('mon'),
+                tue: recurrance.recurring_days.includes('tue'),
+                wed: recurrance.recurring_days.includes('wed'),
+                thu: recurrance.recurring_days.includes('thu'),
+                fri: recurrance.recurring_days.includes('fri'),
+                sat: recurrance.recurring_days.includes('sat'),
+            } as PlannedActivityRecurrence, { transaction });
         }
     }
 
     private async createActivityRecords(
         plannedActivity: PlannedActivity,
-        items: PlannedActivityItem[],
         assignments: PlannedActivityAssignment[],
-        recurring_days: string[],
-        transaction: Transaction
+        recurrance: PlannedActivityRecurranceDTO | undefined,
+        transaction: Transaction,
     ) {
         // Create recurrence patterns if recurring
-        await this.createRecurrencePattern(plannedActivity.id, recurring_days, transaction);
-
-        // Create activity items
-        await this.plannedActivityItemModel.bulkCreate(
-            items.map(item => ({ ...item, activity_id: plannedActivity.id })) as PlannedActivityItem[],
-            { transaction }
-        );
-
+        await this.createRecurrencePattern(plannedActivity.id, recurrance, transaction);
         // Create assignments
         await this.plannedActivityAssignmentModel.bulkCreate(
             assignments.map(assignment => ({ ...assignment, activity_id: plannedActivity.id })) as PlannedActivityAssignment[],
@@ -103,8 +77,6 @@ export class PlannedActivityService {
     constructor(
         @InjectModel(PlannedActivity)
         private readonly plannedActivityModel: typeof PlannedActivity,
-        @InjectModel(PlannedActivityItem)
-        private readonly plannedActivityItemModel: typeof PlannedActivityItem,
         @InjectModel(PlannedActivityAssignment)
         private readonly plannedActivityAssignmentModel: typeof PlannedActivityAssignment,
         @InjectModel(PlannedActivityRecurrence)
@@ -115,37 +87,33 @@ export class PlannedActivityService {
 
     async createPlannedActivity({
         users_assigned,
-        starts_at,
-        ends_at,
-        notes,
+        start,
         category,
-        category_is_custom,
-        recurring_days,
-        activity_items,
+        activity_type,
+        is_custom,
+        notes,
+        recurrance,
     }: CreatePlannedActivityBodyRequest, 
     uid: string){
 
         const coach = await this.validateCoach(uid);
         const assigned_players = await this.validatePlayers(users_assigned);
 
-        const items = this.prepareActivityItems(activity_items);
         const assignments = this.prepareAssignments(assigned_players);
-
-
         const transaction = await this.plannedActivityModel.sequelize!.transaction();
         
         try {            
             const plannedActivity = await this.plannedActivityModel.create({
-                assigned_by: coach.id,
-                notes: notes,
+                start: start,
                 category: category,
-                category_is_custom: category_is_custom,
-
-                start_date: new Date(starts_at),
-                end_date: new Date(ends_at),
+                activity_type: activity_type,
+                is_custom: is_custom,
+                notes: notes,
+                assigned_by: coach.id,
             } as PlannedActivity, { transaction });
 
-            await this.createActivityRecords(plannedActivity, items, assignments, recurring_days || [], transaction);
+            await this.createActivityRecords(plannedActivity, assignments, recurrance,transaction);
+
 
             await transaction.commit();
             return plannedActivity;
@@ -160,13 +128,12 @@ export class PlannedActivityService {
         activityId: string,
         {
             users_assigned,
-            starts_at,
-            ends_at,
-            notes,
+            start,
             category,
-            category_is_custom,
-            recurring_days,
-            activity_items,
+            activity_type,
+            is_custom,
+            notes,
+            recurrance,
         }: CreatePlannedActivityBodyRequest,
         uid: string
     ) {
@@ -184,8 +151,6 @@ export class PlannedActivityService {
         }
 
         const assigned_players = await this.validatePlayers(users_assigned);
-        
-        const items = this.prepareActivityItems(activity_items);
         const assignments = this.prepareAssignments(assigned_players);
 
         const transaction = await this.plannedActivityModel.sequelize!.transaction();
@@ -205,15 +170,15 @@ export class PlannedActivityService {
 
             // Create new activity for the selected players
             const newActivity = await this.plannedActivityModel.create({
-                assigned_by: coach.id,
-                notes: notes,
+                start: start,
                 category: category,
-                category_is_custom: category_is_custom,
-                start_date: new Date(starts_at),
-                end_date: new Date(ends_at),
+                activity_type: activity_type,
+                is_custom: is_custom,
+                notes: notes,
+                assigned_by: coach.id,
             } as PlannedActivity, { transaction });
 
-            await this.createActivityRecords(newActivity, items, assignments, recurring_days || [], transaction);
+            await this.createActivityRecords(newActivity, assignments, recurrance,transaction);
 
             await transaction.commit();
             return newActivity;
