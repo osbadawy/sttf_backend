@@ -501,11 +501,24 @@ export class WhoopCycleService {
       }
     }
 
-    if (basic.stress && basic.strain) {
-      basic.performance = 1 - (basic.stress + basic.strain) / 2;
-    } else if (basic.stress || basic.strain) {
-      basic.performance = basic.stress || basic.strain;
+    const performanceWeights = [{ stress: 0.5, strain: 0.2, sleep: 0.3 }];
+
+    let performanceMax = 0;
+
+    if (basic.stress) {
+      basic.performance += (1 - basic.stress) * performanceWeights[0].stress;
+      performanceMax += performanceWeights[0].stress;
     }
+    if (basic.strain) {
+      basic.performance += (1 - basic.strain) * performanceWeights[0].strain;
+      performanceMax += performanceWeights[0].strain;
+    }
+    if (sleep.score) {
+      basic.performance += sleep.score * performanceWeights[0].sleep;
+      performanceMax += performanceWeights[0].sleep;
+    }
+
+    basic.performance = basic.performance / performanceMax;
 
     return {
       basic,
