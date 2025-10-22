@@ -6,12 +6,12 @@ import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsString, IsUUID, IsIn, IsOptio
 export class PlannedActivityRecurranceDTO {
     @ApiProperty()
     @IsDate()
-    @Type(() => Date)
+    @Transform(({ value }) => new Date(value))
     start: Date;
 
     @ApiProperty()
     @IsDate()
-    @Type(() => Date)
+    @Transform(({ value }) => new Date(value))
     end: Date;
 
     @ApiProperty()
@@ -30,7 +30,7 @@ export class CreatePlannedActivityBodyRequest {
 
     @ApiProperty()
     @IsDate()
-    @Type(() => Date)
+    @Transform(({ value }) => new Date(value))
     start: Date;
 
     @ApiProperty()
@@ -59,4 +59,18 @@ export class CreatePlannedActivityBodyRequest {
     @ValidateNested()
     @IsOptional()
     recurrance?: PlannedActivityRecurranceDTO;
-}   
+}
+
+
+
+export class GetPlannedActivitiesQuery {
+    @ApiProperty()
+    @IsDate()
+    @Transform(({ value }) => new Date(value))
+    day: Date;
+
+    @IsArray()
+    @IsString({ each: true })
+    @Transform(({ value }) => Array.isArray(value) ? value : [value])
+    users_assigned: string[];
+}

@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Patch, Body, Req, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Req, Param, Query } from '@nestjs/common';
 import { PlannedActivityService } from './planned_activity.service';
-import { CreatePlannedActivityBodyRequest } from './dtos/request.dto';
+import { CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery } from './dtos/request.dto';
 import { UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 
@@ -29,19 +29,19 @@ export class PlannedActivityController {
     }
 
 
-    // //Coach gets a planned activity by id
-    // @Get("/:id")
-    // async getPlannedActivityById(){
-    // }
+    //Get planned activities based on players and day
+    @Get()
+    async getPlannedActivities(@Query() query: GetPlannedActivitiesQuery){
+        return this.plannedActivityService.getPlannedActivities(query);
+    }
 
-
-    //Player gets planned activities for selected day
-    @Get("/player")
-    async getPlannedActivities(){
+    //Gets a planned activity by id
+    @Get("/:id")
+    async getPlannedActivityById(){
     }
 
     //Player completes a planned activity
-    @Post("/player/:id")
+    @Post("/player-self-assessment/:id")
     async completePlannedActivity(){
     }
 

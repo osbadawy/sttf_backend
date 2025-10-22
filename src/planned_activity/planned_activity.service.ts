@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePlannedActivityBodyRequest, PlannedActivityRecurranceDTO } from './dtos/request.dto';
+import { CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, PlannedActivityRecurranceDTO } from './dtos/request.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { PlannedActivity, PlannedActivityAssignment, PlannedActivityRecurrence } from './models';
 import { User } from 'src/user/models';
@@ -186,5 +186,62 @@ export class PlannedActivityService {
             await transaction.rollback();
             throw error;
         }
+    }
+
+    async getPlannedActivities({
+        day,
+        users_assigned,
+    }: GetPlannedActivitiesQuery){
+        const startDate = new Date(day);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(day);
+        endDate.setHours(23, 59, 59, 999);
+
+        const dayOfWeek = startDate.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+        
+        const assignedPlayers = await this.validatePlayers(users_assigned);
+        const assignedPlayerIds = assignedPlayers.map(player => player.id);
+
+        // Build the where conditions for both one-time and recurring activities
+        const whereConditions: any[] = [];
+
+        // Condition 1: One-time activities within the date range
+        whereConditions.push({
+            start: { [Op.gte]: startDate, [Op.lte]: endDate },
+            '$recurrence_patterns.id$': { [Op.is]: null } // No recurrence pattern
+        });
+
+        // Condition 2: Recurring activities that match the day of week
+        const recurringCondition: any = {
+            '$recurrence_patterns.id$': { [Op.ne]: null }, // Has recurrence pattern
+            [`$recurrence_patterns.${dayOfWeek}$`]: true, // Matches the day of week
+            '$recurrence_patterns.start$': { [Op.lte]: endDate }, // Recurrence started before or on this day
+            '$recurrence_patterns.end$': { [Op.gte]: startDate } // Recurrence ends after or on this day
+        };
+        whereConditions.push(recurringCondition);
+
+        const plannedActivities = await this.plannedActivityModel.findAll({
+            where: {
+                [Op.or]: whereConditions
+            },
+            include: [
+                { 
+                    model: PlannedActivityAssignment,
+                    where: {
+                        assigned_to: { [Op.in]: assignedPlayerIds },
+                        [Op.or]: [
+                            { removed_at: { [Op.is]: null } }, // Not removed
+                            { removed_at: { [Op.gt]: endDate } } // Removed after the queried day
+                        ]
+                    },
+                    required: true, // Always require assignments since users_assigned is mandatory
+                    include: [
+                        { model: User, attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'] }
+                    ]
+                },
+                { model: PlannedActivityRecurrence }
+            ]
+        });
+        return plannedActivities;
     }
 }

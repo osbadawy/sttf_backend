@@ -33,4 +33,7 @@ export class PlannedActivityAssignment extends Model<PlannedActivityAssignment> 
 
   @Column(DataType.DATE) declare assigned_at: Date;
   @Column(DataType.DATE) declare removed_at: Date;
+
+  @BelongsTo(() => User)
+  declare assigned_to_user?: User;
 }
