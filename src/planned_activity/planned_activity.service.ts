@@ -244,4 +244,17 @@ export class PlannedActivityService {
         });
         return plannedActivities;
     }
+
+    async getPlannedActivityById(id: string){
+        return await this.plannedActivityModel.findByPk(id, {
+            include: [
+                { model: PlannedActivityAssignment,
+                    include: [
+                        { model: User, attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'] }
+                    ]
+                },
+                { model: PlannedActivityRecurrence }
+            ]
+        });
+    }
 }

@@ -37,7 +37,8 @@ export class PlannedActivityController {
 
     //Gets a planned activity by id
     @Get("/:id")
-    async getPlannedActivityById(){
+    async getPlannedActivityById(@Param('id') id: string){
+        return this.plannedActivityService.getPlannedActivityById(id);
     }
 
     //Player completes a planned activity
