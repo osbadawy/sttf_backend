@@ -70,19 +70,20 @@ export type coachAssessmentResponse = {
   };
 };
 
-
 ////////////////////////////////////////////////////////// Player With Plans ///////////////////////////////////////////////////////////
+export type playerWithPlansData = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  age: number | null;
+  readiness: number | null;
+  meal: boolean;
+  workout: boolean;
+  nationality: string | null;
+  photo_url: string | null;
+};
+
 export type playerWithPlansResponse = {
   ok: boolean;
-  data: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    age: number;
-    readiness: number;
-    meal: boolean;
-    workout: boolean;
-    nationality: string;
-    photo_url: string;
-  };
+  data: playerWithPlansData[];
 };

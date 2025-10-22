@@ -15,11 +15,17 @@ import {
   WhoopWorkoutZoneDurations,
   WhoopUser,
 } from 'src/whoop/models';
+import { MealService } from 'src/meal/meal.service';
+import { PlannedActivityService } from 'src/planned_activity/planned_activity.service';
+import * as MealModels from 'src/meal/models';
+import * as PlannedActivityModels from 'src/planned_activity/models';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([
       ...Object.values(Models),
+      ...Object.values(MealModels),
+      ...Object.values(PlannedActivityModels),
       WhoopWorkout,
       WhoopWorkoutScore,
       WhoopWorkoutZoneDurations,
@@ -34,6 +40,12 @@ import {
     PlayerSelfAssessmentController,
     CoachAssessmentController,
   ],
-  providers: [PlayerSelfAssessmentService, DailyPointsService, UserService],
+  providers: [
+    PlayerSelfAssessmentService,
+    DailyPointsService,
+    UserService,
+    PlannedActivityService,
+    MealService,
+  ],
 })
 export class UserModule {}

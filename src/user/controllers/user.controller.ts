@@ -11,7 +11,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
-import { SignUpResponse, getUserResponse } from '../dtos/response.dtos';
+import {
+  SignUpResponse,
+  getUserResponse,
+  playerWithPlansResponse,
+} from '../dtos/response.dtos';
 import { Session } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 
@@ -57,7 +61,11 @@ export class UserController {
     } catch (e: any) {
       const errorMessage =
         e instanceof Error ? e.message : 'Failed to update user.';
-      if (errorMessage.includes('id is required') || errorMessage.includes('email cannot be empty') || errorMessage.includes('age must be a non-negative number')) {
+      if (
+        errorMessage.includes('id is required') ||
+        errorMessage.includes('email cannot be empty') ||
+        errorMessage.includes('age must be a non-negative number')
+      ) {
         throw new BadRequestException(errorMessage);
       }
       if (errorMessage.includes('user not found')) {
@@ -68,6 +76,12 @@ export class UserController {
       }
       throw new UnauthorizedException(errorMessage);
     }
+  }
+
+  @Get('/players/week')
+  async getPlayersWeekPlans(): Promise<playerWithPlansResponse> {
+    const data = await this.userService.getPlayersWeekPlans();
+    return { ok: true, data: data };
   }
 
   @Post('signup')
@@ -94,7 +108,11 @@ export class UserController {
     } catch (e: any) {
       const errorMessage =
         e instanceof Error ? e.message : 'Failed to save user.';
-      if (errorMessage.includes('email is required') || errorMessage.includes('user not found') || errorMessage.includes('access not found')) {
+      if (
+        errorMessage.includes('email is required') ||
+        errorMessage.includes('user not found') ||
+        errorMessage.includes('access not found')
+      ) {
         throw new BadRequestException(errorMessage);
       }
       throw new UnauthorizedException(errorMessage);

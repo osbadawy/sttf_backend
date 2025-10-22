@@ -3,13 +3,19 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UniqueConstraintError } from 'sequelize';
 import { User } from '../models/user.model';
 import { PlayerStats } from '../models/player_stats.model';
-import { SignUpResponse, getUserResponse } from '../dtos/response.dtos';
+import {
+  SignUpResponse,
+  getUserResponse,
+  playerWithPlansData,
+} from '../dtos/response.dtos';
 import type {
   SignUpBodyRequest,
   getUserPkRequest,
   PatchUserFieldsRequest,
   PatchUserBodyRequest,
 } from '../dtos/request.dtos';
+import { PlannedActivityService } from 'src/planned_activity/planned_activity.service';
+import { MealService } from 'src/meal/meal.service';
 
 @Injectable()
 export class UserService {
@@ -17,6 +23,8 @@ export class UserService {
     @InjectModel(User) private readonly userModel: typeof User,
     @InjectModel(PlayerStats)
     private readonly playerStatsModel: typeof PlayerStats,
+    private readonly plannedActivityService: PlannedActivityService,
+    private readonly mealService: MealService,
   ) {}
 
   async getUserByPk(body: getUserPkRequest): Promise<getUserResponse> {
@@ -65,8 +73,7 @@ export class UserService {
       updates.email = email;
     }
     if ('avatar_url' in src) updates.avatar_url = src.avatar_url ?? null;
-    if ('display_name' in src)
-      updates.display_name = src.display_name ?? null;
+    if ('display_name' in src) updates.display_name = src.display_name ?? null;
     if ('nationality' in src) updates.nationality = src.nationality ?? null;
 
     if ('age' in src) {
@@ -183,5 +190,68 @@ export class UserService {
       display_name: user.display_name ?? undefined,
     };
     return { ok: false, data };
+  }
+
+  async getPlayersWeekPlans(): Promise<playerWithPlansData[]> {
+    const players = await this.userModel.findAll({
+      where: { access: 'player' },
+    });
+
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    const endOfWeek = new Date();
+    endOfWeek.setHours(23, 59, 59, 999);
+    endOfWeek.setDate(endOfWeek.getDate() - endOfWeek.getDay() + 6);
+
+    const plannedActivities =
+      await this.plannedActivityService.getPlannedActivities({
+        startDate: startOfWeek,
+        endDate: endOfWeek,
+        dayOfWeek: undefined,
+        users_assigned: players.map((player) => player.firebase_id),
+      });
+
+    const meals = await this.mealService.getMeals({
+      startDate: startOfWeek,
+      endDate: endOfWeek,
+      dayOfWeek: undefined,
+      users_assigned: players.map((player) => player.firebase_id),
+    });
+
+    const data: playerWithPlansData[] = [];
+    for (const player of players) {
+      const anyPlannedActivities = plannedActivities.some((activity) =>
+        activity.players_assigned?.some(
+          (assignment) => assignment.assigned_to === player.id,
+        ),
+      );
+      const anyMeals = meals.some((meal) =>
+        meal.players_assigned?.some(
+          (assignment) => assignment.assigned_to === player.id,
+        ),
+      );
+
+      const age = player.birth_date
+        ? new Date().getFullYear() - player.birth_date.getFullYear()
+        : null;
+
+      const playerData: playerWithPlansData = {
+        id: player.id,
+        first_name: player.display_name,
+        last_name: player.display_name,
+        age: age,
+        readiness: 0,
+        meal: anyMeals ?? false,
+        workout: anyPlannedActivities ?? false,
+        nationality: player.nationality,
+        photo_url: player.avatar_url,
+      };
+
+      data.push(playerData);
+    }
+
+    return data;
   }
 }

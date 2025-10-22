@@ -51,7 +51,21 @@ export class MealController {
   //Get meal based on players and day
   @Get()
   async getMeals(@Query() query: GetMealsQuery) {
-    return this.mealService.getMeals(query);
+    const startDate = new Date(query.day);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(query.day);
+    endDate.setHours(23, 59, 59, 999);
+
+    const dayOfWeek = startDate
+      .toLocaleDateString('en-US', { weekday: 'short' })
+      .toLowerCase();
+
+    return this.mealService.getMeals({
+      startDate,
+      endDate,
+      dayOfWeek,
+      users_assigned: query.users_assigned,
+    });
   }
 
   //Gets a meal by id
