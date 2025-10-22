@@ -5,8 +5,6 @@ import {
   Column,
   DataType,
   Index,
-  ForeignKey,
-  BelongsTo,
   HasMany,
 } from 'sequelize-typescript';
 import { HasOne } from 'sequelize-typescript';

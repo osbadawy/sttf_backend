@@ -4,11 +4,7 @@ import {
   Column,
   DataType,
   ForeignKey,
-  BelongsTo,
-  Index,
 } from 'sequelize-typescript';
-import { User } from 'src/user/models';
-import { PlannedActivity } from './planned_activity.model';
 import { PlannedActivityAssignment } from './planned_activity_assignment.model';
 
 @Table({

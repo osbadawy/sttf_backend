@@ -30,22 +30,22 @@ export class PlannedActivityRecurrence extends Model<PlannedActivityRecurrence> 
 
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare sun?: boolean;
-  
+
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare mon?: boolean;
-  
+
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare tue?: boolean;
-  
+
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare wed?: boolean;
-  
+
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare thu?: boolean;
-  
+
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare fri?: boolean;
-  
+
   @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
   declare sat?: boolean;
 

@@ -37,6 +37,8 @@ export class PlannedActivity extends Model<PlannedActivity> {
 
   @Column(DataType.DATE) declare start: Date;
 
-  @HasMany(() => PlannedActivityAssignment) declare players_assigned?: PlannedActivityAssignment[];
-  @HasMany(() => PlannedActivityRecurrence) declare recurrence_patterns?: PlannedActivityRecurrence[];
+  @HasMany(() => PlannedActivityAssignment)
+  declare players_assigned?: PlannedActivityAssignment[];
+  @HasMany(() => PlannedActivityRecurrence)
+  declare recurrence_patterns?: PlannedActivityRecurrence[];
 }
