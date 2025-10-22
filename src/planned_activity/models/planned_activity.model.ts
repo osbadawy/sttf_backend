@@ -8,6 +8,8 @@ import {
 } from 'sequelize-typescript';
 import { User } from 'src/user/models';
 import { PlannedActivityItem } from './planned_activity_item.model';
+import { PlannedActivityAssignment } from './planned_activity_assignment.model';
+import { PlannedActivityRecurrence } from './planned_activity_recurrence.model';
 
 @Table({
   tableName: 'planned_activity',
@@ -35,11 +37,7 @@ export class PlannedActivity extends Model<PlannedActivity> {
   @Column(DataType.DATE) declare start_date: Date;
   @Column({ type: DataType.DATE, allowNull: true }) declare end_date?: Date;
 
-  @Column(DataType.BOOLEAN) declare is_recurring: boolean;
-
-  //Days Bitmask Su=1, Mo=2, Tu=4, We=8, Th=16, Fr=32, Sa=64
-  @Column({ type: DataType.INTEGER, allowNull: true })
-  declare recurring_days?: number;
-
   @HasMany(() => PlannedActivityItem) declare items?: PlannedActivityItem[];
+  @HasMany(() => PlannedActivityAssignment) declare players_assigned?: PlannedActivityAssignment[];
+  @HasMany(() => PlannedActivityRecurrence) declare recurrence_patterns?: PlannedActivityRecurrence[];
 }
