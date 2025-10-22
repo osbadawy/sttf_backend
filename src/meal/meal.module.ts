@@ -3,6 +3,8 @@ import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from 'src/user/models';
 import { UserModule } from 'src/user/user.module';
+import { MealService } from './meal.service';
+import { MealController } from './meal.controller';
 
 @Module({
   imports: [
@@ -10,5 +12,7 @@ import { UserModule } from 'src/user/user.module';
     UserModule,
   ],
   exports: [SequelizeModule],
+  providers: [MealService],
+  controllers: [MealController],
 })
 export class MealModule {}

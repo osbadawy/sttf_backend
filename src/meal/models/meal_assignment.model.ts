@@ -9,7 +9,7 @@ import {
 } from 'sequelize-typescript';
 import { User } from 'src/user/models';
 import { Meal } from './meal.model';
-import { MealResults } from './meal_performance.model';
+import { MealResults } from './meal_results.model';
 
 @Table({
   tableName: 'meal_assignment',

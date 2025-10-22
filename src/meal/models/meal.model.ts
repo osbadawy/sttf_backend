@@ -30,12 +30,10 @@ export class Meal extends Model<Meal> {
   @Column(DataType.STRING) declare category: string;
   @Column(DataType.STRING) declare name: string;
 
-  @Column(DataType.DOUBLE) declare calories: number;
+  @Column(DataType.DOUBLE) declare kilojoule: number;
   @Column(DataType.DOUBLE) declare protein: number;
   @Column(DataType.DOUBLE) declare carbohydrates: number;
   @Column(DataType.DOUBLE) declare fat: number;
-
-
 
   @Column({ type: DataType.BOOLEAN, defaultValue: true })
   declare is_planned: boolean;

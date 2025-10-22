@@ -24,7 +24,7 @@ export class MealResults extends Model<MealResults> {
   @Column({ type: DataType.UUID, allowNull: false })
   declare assignment_id: string;
 
-  @Column(DataType.STRING) declare img_url: string;
+  @Column({ type: DataType.STRING, allowNull: true }) declare img_url?: string;
 
   @Column(DataType.INTEGER) declare points_assigned: number;
 }
