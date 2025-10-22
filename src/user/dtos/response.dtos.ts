@@ -38,12 +38,12 @@ export interface getUserResponse {
   ok: boolean;
   data: {
     email: string;
-    avatar_url: string;
-    access: string;
-    age: number;
-    phone: number;
-    nationality: string;
-    display_name: string;
+    avatar_url?: string;
+    access?: string;
+    birth_date?: Date;
+    phone?: string;
+    nationality?: string;
+    display_name?: string;
   };
 }
 
@@ -67,5 +67,22 @@ export type coachAssessmentResponse = {
     satisfaction_of_training_level: number;
     progress_made_level: number;
     improvements_needed_level: number;
+  };
+};
+
+
+////////////////////////////////////////////////////////// Player With Plans ///////////////////////////////////////////////////////////
+export type playerWithPlansResponse = {
+  ok: boolean;
+  data: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    age: number;
+    readiness: number;
+    meal: boolean;
+    workout: boolean;
+    nationality: string;
+    photo_url: string;
   };
 };

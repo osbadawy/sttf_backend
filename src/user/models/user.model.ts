@@ -48,8 +48,8 @@ export class User extends Model<
   @Column(DataType.STRING) declare display_name: CreationOptional<
     string | null
   >;
-  @Column(DataType.INTEGER) declare age: CreationOptional<number | null>;
-  @Column(DataType.INTEGER) declare phone: CreationOptional<number | null>;
+  @Column(DataType.DATEONLY) declare birth_date: CreationOptional<Date | null>;
+  @Column(DataType.STRING) declare phone: CreationOptional<string | null>;
   @Column(DataType.STRING) declare nationality: CreationOptional<string | null>;
   @Column(DataType.STRING) declare access: CreationOptional<string | null>;
   @Column(DataType.STRING) declare avatar_url: CreationOptional<string | null>;
