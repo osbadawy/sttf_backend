@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, PlannedActivityRecurranceDTO } from './dtos/request.dto';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { CompletePlannedActivityRequest, CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, PlannedActivityRecurranceDTO, UpdatePlannedActivityBodyRequest } from './dtos/request.dto';
 import { InjectModel } from '@nestjs/sequelize';
-import { PlannedActivity, PlannedActivityAssignment, PlannedActivityRecurrence } from './models';
+import { PlannedActivity, PlannedActivityAssignment, PlannedActivityPerformance, PlannedActivityRecurrence } from './models';
 import { User } from 'src/user/models';
-import { Model } from 'sequelize-typescript';
 import { Op, Transaction } from 'sequelize';
+import { DailyPointsService } from 'src/user/services/daily_points.service';
 
 @Injectable()
 export class PlannedActivityService {
@@ -83,6 +83,9 @@ export class PlannedActivityService {
         private readonly plannedActivityRecurrenceModel: typeof PlannedActivityRecurrence,
         @InjectModel(User)
         private readonly userModel: typeof User,
+        @InjectModel(PlannedActivityPerformance)
+        private readonly plannedActivityPerformanceModel: typeof PlannedActivityPerformance,
+        private readonly dailyPointsService: DailyPointsService,
     ) {}
 
     async createPlannedActivity({
@@ -125,8 +128,8 @@ export class PlannedActivityService {
     }
 
     async updatePlannedActivity(
-        activityId: string,
         {
+            id,
             users_assigned,
             start,
             category,
@@ -134,13 +137,14 @@ export class PlannedActivityService {
             is_custom,
             notes,
             recurrance,
-        }: CreatePlannedActivityBodyRequest,
+            day,
+        }: UpdatePlannedActivityBodyRequest,
         uid: string
     ) {
         const coach = await this.validateCoach(uid);
         
         // Find the existing activity
-        const existingActivity = await this.plannedActivityModel.findByPk(activityId, {
+        const existingActivity = await this.plannedActivityModel.findByPk(id, {
             include: [
                 { model: PlannedActivityAssignment },
                 { model: PlannedActivityRecurrence }
@@ -157,11 +161,15 @@ export class PlannedActivityService {
 
         try {
             // End old assignments for the selected players
+            const endOfPrevDay = new Date(day);
+            endOfPrevDay.setDate(endOfPrevDay.getDate() - 1);
+            endOfPrevDay.setHours(23, 59, 59, 999);
+
             await this.plannedActivityAssignmentModel.update(
-                { removed_at: new Date() },
+                { removed_at: endOfPrevDay },
                 { 
                     where: { 
-                        activity_id: activityId,
+                        activity_id: id,
                         assigned_to: { [Op.in]: assigned_players.map(p => p.id) }
                     },
                     transaction 
@@ -256,5 +264,54 @@ export class PlannedActivityService {
                 { model: PlannedActivityRecurrence }
             ]
         });
+    }
+
+    async completePlannedActivity({
+        self_assessment_score,
+        id,
+    }: CompletePlannedActivityRequest, firebase_id: string){
+        console.log('firebase_id', firebase_id);
+        const players = await this.validatePlayers([firebase_id]);
+        console.log('player', players[0]);
+        const assignment = await this.plannedActivityAssignmentModel.findOne({
+            where: {
+                assigned_to: players[0].id,
+                activity_id: id,
+            },
+            include: [
+                { model: PlannedActivityPerformance, required: false }
+            ]
+        });
+        if (!assignment) {
+            throw new NotFoundException('Assignment not found');
+        }
+        if (assignment.performance) {
+            throw new BadRequestException('Planned activity performance already exists');
+        }
+
+
+        const points_assigned = 20;
+        const transaction = await this.plannedActivityModel.sequelize!.transaction();    
+        try {
+            const plannedActivityPerformance = await this.plannedActivityPerformanceModel.create({
+                self_assessment_score: self_assessment_score,
+                assignment_id: assignment.id,
+                points_assigned: points_assigned,
+            } as PlannedActivityPerformance, { transaction });
+
+            // Update daily points for the player
+            await this.dailyPointsService.updateDailyPointsForUser(
+            firebase_id,
+            points_assigned,
+            new Date(),
+            transaction,
+            );
+
+            await transaction.commit();
+            return plannedActivityPerformance;
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
     }
 }

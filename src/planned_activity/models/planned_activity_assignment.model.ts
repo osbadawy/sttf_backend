@@ -6,9 +6,11 @@ import {
   ForeignKey,
   BelongsTo,
   Index,
+  HasOne,
 } from 'sequelize-typescript';
 import { User } from 'src/user/models';
 import { PlannedActivity } from './planned_activity.model';
+import { PlannedActivityPerformance } from './planned_activity_performance.model';
 
 @Table({
   tableName: 'planned_activity_assignment',
@@ -36,4 +38,6 @@ export class PlannedActivityAssignment extends Model<PlannedActivityAssignment> 
 
   @BelongsTo(() => User)
   declare assigned_to_user?: User;
+  @HasOne(() => PlannedActivityPerformance)
+  declare performance?: PlannedActivityPerformance;
 }

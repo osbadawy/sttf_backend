@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Body, Req, Param, Query } from '@nestjs/common';
 import { PlannedActivityService } from './planned_activity.service';
-import { CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery } from './dtos/request.dto';
+import { CompletePlannedActivityRequest, CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, UpdatePlannedActivityBodyRequest } from './dtos/request.dto';
 import { UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 
@@ -19,13 +19,12 @@ export class PlannedActivityController {
     }
 
     //Coach updates a planned activity
-    @Patch("/:id")
+    @Patch("")
     async updatePlannedActivity(
-        @Param('id') id: string,
-        @Body() body: CreatePlannedActivityBodyRequest, 
+        @Body() body: UpdatePlannedActivityBodyRequest, 
         @Req() req: Request & { user: { uid: string } }
     ){
-        return this.plannedActivityService.updatePlannedActivity(id, body, req.user.uid);
+        return this.plannedActivityService.updatePlannedActivity(body, req.user.uid);
     }
 
 
@@ -42,8 +41,9 @@ export class PlannedActivityController {
     }
 
     //Player completes a planned activity
-    @Post("/player-self-assessment/:id")
-    async completePlannedActivity(){
+    @Post("/player-self-assessment")
+    async completePlannedActivity(@Body() body: CompletePlannedActivityRequest, @Req() req: Request & { user: { uid: string } }){
+        return this.plannedActivityService.completePlannedActivity(body, req.user.uid);
     }
 
 }

@@ -28,8 +28,6 @@ export class PlannedActivityPerformance extends Model<PlannedActivityPerformance
   @Column({ type: DataType.UUID, allowNull: false })
   declare assignment_id: string;
 
-  @Column(DataType.DATE) declare completed_at: Date;
-
   @Column(DataType.FLOAT) declare self_assessment_score: number;
 
   @Column(DataType.INTEGER) declare points_assigned: number;

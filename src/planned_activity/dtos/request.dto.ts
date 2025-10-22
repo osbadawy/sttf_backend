@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type, Transform } from "class-transformer";
-import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsString, IsUUID, IsIn, IsOptional, ValidateNested } from "class-validator";
+import { IsArray, IsBoolean, IsDate, IsNotEmpty, IsString, IsUUID, IsIn, IsOptional, ValidateNested, IsNumber , Min, Max} from "class-validator";
 
 
 export class PlannedActivityRecurranceDTO {
@@ -61,6 +61,18 @@ export class CreatePlannedActivityBodyRequest {
     recurrance?: PlannedActivityRecurranceDTO;
 }
 
+export class UpdatePlannedActivityBodyRequest extends CreatePlannedActivityBodyRequest {
+    @ApiProperty()
+    @IsUUID()
+    @IsNotEmpty()
+    id: string;
+
+    @ApiProperty()
+    @IsDate()
+    @Transform(({ value }) => new Date(value))
+    day: Date;
+}
+
 
 
 export class GetPlannedActivitiesQuery {
@@ -73,4 +85,19 @@ export class GetPlannedActivitiesQuery {
     @IsString({ each: true })
     @Transform(({ value }) => Array.isArray(value) ? value : [value])
     users_assigned: string[];
+}
+
+
+export class CompletePlannedActivityRequest {
+    @ApiProperty()
+    @IsNumber()
+    @Min(0)
+    @Max(1)
+    @IsNotEmpty()
+    self_assessment_score: number;
+
+    @ApiProperty()
+    @IsUUID()
+    @IsNotEmpty()
+    id: string;
 }
