@@ -73,7 +73,22 @@ export class UpdatePlannedActivityBodyRequest extends CreatePlannedActivityBodyR
     day: Date;
 }
 
+export class UnassignPlannedActivityBodyRequest {
+    @ApiProperty()
+    @IsArray()
+    @IsString({ each: true })
+    users_assigned: string[];
 
+    @ApiProperty()
+    @IsUUID()
+    @IsNotEmpty()
+    id: string;
+
+    @ApiProperty()
+    @IsDate()
+    @Transform(({ value }) => new Date(value))
+    day: Date;
+}
 
 export class GetPlannedActivitiesQuery {
     @ApiProperty()

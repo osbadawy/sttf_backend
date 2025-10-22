@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CompletePlannedActivityRequest, CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, PlannedActivityRecurranceDTO, UpdatePlannedActivityBodyRequest } from './dtos/request.dto';
+import { CompletePlannedActivityRequest, CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, PlannedActivityRecurranceDTO, UnassignPlannedActivityBodyRequest, UpdatePlannedActivityBodyRequest } from './dtos/request.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { PlannedActivity, PlannedActivityAssignment, PlannedActivityPerformance, PlannedActivityRecurrence } from './models';
 import { User } from 'src/user/models';
@@ -193,6 +193,28 @@ export class PlannedActivityService {
         } catch (error) {
             await transaction.rollback();
             throw error;
+        }
+    }
+
+    async unassignPlayersFromPlannedActivity(
+        {
+            id,
+            users_assigned,
+            day,
+        }: UnassignPlannedActivityBodyRequest
+    ) {
+        const assigned_players = await this.validatePlayers(users_assigned);
+
+        const endOfPrevDay = new Date(day);
+        endOfPrevDay.setDate(endOfPrevDay.getDate() - 1);
+        endOfPrevDay.setHours(23, 59, 59, 999);
+
+        await this.plannedActivityAssignmentModel.update(
+            { removed_at: endOfPrevDay },
+            { where: { activity_id: id, assigned_to: { [Op.in]: assigned_players.map(p => p.id) } } });
+
+        return {
+            message: 'Players unassigned from planned activity successfully',
         }
     }
 

@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Patch, Body, Req, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Req, Param, Query, Delete } from '@nestjs/common';
 import { PlannedActivityService } from './planned_activity.service';
-import { CompletePlannedActivityRequest, CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, UpdatePlannedActivityBodyRequest } from './dtos/request.dto';
+import { CompletePlannedActivityRequest, CreatePlannedActivityBodyRequest, GetPlannedActivitiesQuery, UnassignPlannedActivityBodyRequest, UpdatePlannedActivityBodyRequest } from './dtos/request.dto';
 import { UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 
@@ -19,12 +19,19 @@ export class PlannedActivityController {
     }
 
     //Coach updates a planned activity
-    @Patch("")
+    @Patch()
     async updatePlannedActivity(
         @Body() body: UpdatePlannedActivityBodyRequest, 
         @Req() req: Request & { user: { uid: string } }
     ){
         return this.plannedActivityService.updatePlannedActivity(body, req.user.uid);
+    }
+
+    @Delete()
+    async unassignPlayersFromPlannedActivity(
+        @Body() body: UnassignPlannedActivityBodyRequest, 
+    ){
+        return this.plannedActivityService.unassignPlayersFromPlannedActivity(body);
     }
 
 
