@@ -155,7 +155,22 @@ export class PlannedActivityService {
       );
 
       await transaction.commit();
-      return plannedActivity;
+
+      // Return the created activity with all related data
+      return await this.plannedActivityModel.findByPk(plannedActivity.id, {
+        include: [
+          {
+            model: PlannedActivityAssignment,
+            include: [
+              {
+                model: User,
+                attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+              },
+            ],
+          },
+          { model: PlannedActivityRecurrence },
+        ],
+      });
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -233,7 +248,22 @@ export class PlannedActivityService {
       );
 
       await transaction.commit();
-      return newActivity;
+
+      // Return the created activity with all related data
+      return await this.plannedActivityModel.findByPk(newActivity.id, {
+        include: [
+          {
+            model: PlannedActivityAssignment,
+            include: [
+              {
+                model: User,
+                attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+              },
+            ],
+          },
+          { model: PlannedActivityRecurrence },
+        ],
+      });
     } catch (error) {
       await transaction.rollback();
       throw error;
