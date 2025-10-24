@@ -65,7 +65,7 @@ export class PlannedActivityService {
         {
           planned_activity_id: plannedActivityId,
           start: recurrance.start,
-          end: recurrance.end,
+          end: recurrance.end ?? null,
           sun: recurrance.recurring_days.includes('sun'),
           mon: recurrance.recurring_days.includes('mon'),
           tue: recurrance.recurring_days.includes('tue'),
@@ -318,7 +318,10 @@ export class PlannedActivityService {
     const recurringCondition: Record<string, any> = {
       '$recurrence_patterns.id$': { [Op.ne]: null }, // Has recurrence pattern
       '$recurrence_patterns.start$': { [Op.lte]: endDate }, // Recurrence started before or on this day
-      '$recurrence_patterns.end$': { [Op.gte]: startDate }, // Recurrence ends after or on this day
+      [Op.or]: [
+        { '$recurrence_patterns.end$': { [Op.gte]: startDate } }, // Recurrence ends after or on this day
+        { '$recurrence_patterns.end$': { [Op.is]: null } }, // Recurrence has no end date (continues indefinitely)
+      ],
     };
     // Only add day of week condition if dayOfWeek is defined
     if (dayOfWeek !== undefined) {
