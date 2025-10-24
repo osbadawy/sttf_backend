@@ -333,18 +333,21 @@ export class PlannedActivityService {
     const plannedActivities = await this.plannedActivityModel.findAll({
       where: {
         [Op.or]: whereConditions,
+        // Use a subquery to filter activities where the specified players are assigned
+        id: {
+          [Op.in]: this.plannedActivityAssignmentModel.sequelize!.literal(`(
+            SELECT DISTINCT activity_id 
+            FROM planned_activity_assignment 
+            WHERE assigned_to IN (${assignedPlayerIds.map(() => '?').join(',')})
+            AND (removed_at IS NULL OR removed_at > ?)
+          )`),
+        },
       },
+      replacements: [...assignedPlayerIds, endDate],
       include: [
         {
           model: PlannedActivityAssignment,
-          where: {
-            assigned_to: { [Op.in]: assignedPlayerIds },
-            [Op.or]: [
-              { removed_at: { [Op.is]: null } }, // Not removed
-              { removed_at: { [Op.gt]: endDate } }, // Removed after the queried day
-            ],
-          },
-          required: true, // Always require assignments since users_assigned is mandatory
+          // Remove the where clause to get ALL assignments for each activity
           include: [
             {
               model: User,
