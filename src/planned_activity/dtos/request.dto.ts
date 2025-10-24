@@ -24,7 +24,8 @@ export class PlannedActivityRecurranceDTO {
   @ApiProperty()
   @IsDate()
   @Transform(({ value }) => new Date(value))
-  end: Date;
+  @IsOptional()
+  end?: Date;
 
   @ApiProperty()
   @IsArray()

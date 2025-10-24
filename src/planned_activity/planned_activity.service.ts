@@ -65,7 +65,7 @@ export class PlannedActivityService {
         {
           planned_activity_id: plannedActivityId,
           start: recurrance.start,
-          end: recurrance.end,
+          end: recurrance.end ?? null,
           sun: recurrance.recurring_days.includes('sun'),
           mon: recurrance.recurring_days.includes('mon'),
           tue: recurrance.recurring_days.includes('tue'),
@@ -155,7 +155,22 @@ export class PlannedActivityService {
       );
 
       await transaction.commit();
-      return plannedActivity;
+
+      // Return the created activity with all related data
+      return await this.plannedActivityModel.findByPk(plannedActivity.id, {
+        include: [
+          {
+            model: PlannedActivityAssignment,
+            include: [
+              {
+                model: User,
+                attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+              },
+            ],
+          },
+          { model: PlannedActivityRecurrence },
+        ],
+      });
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -233,7 +248,22 @@ export class PlannedActivityService {
       );
 
       await transaction.commit();
-      return newActivity;
+
+      // Return the created activity with all related data
+      return await this.plannedActivityModel.findByPk(newActivity.id, {
+        include: [
+          {
+            model: PlannedActivityAssignment,
+            include: [
+              {
+                model: User,
+                attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+              },
+            ],
+          },
+          { model: PlannedActivityRecurrence },
+        ],
+      });
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -288,7 +318,10 @@ export class PlannedActivityService {
     const recurringCondition: Record<string, any> = {
       '$recurrence_patterns.id$': { [Op.ne]: null }, // Has recurrence pattern
       '$recurrence_patterns.start$': { [Op.lte]: endDate }, // Recurrence started before or on this day
-      '$recurrence_patterns.end$': { [Op.gte]: startDate }, // Recurrence ends after or on this day
+      [Op.or]: [
+        { '$recurrence_patterns.end$': { [Op.gte]: startDate } }, // Recurrence ends after or on this day
+        { '$recurrence_patterns.end$': { [Op.is]: null } }, // Recurrence has no end date (continues indefinitely)
+      ],
     };
     // Only add day of week condition if dayOfWeek is defined
     if (dayOfWeek !== undefined) {
@@ -300,18 +333,21 @@ export class PlannedActivityService {
     const plannedActivities = await this.plannedActivityModel.findAll({
       where: {
         [Op.or]: whereConditions,
+        // Use a subquery to filter activities where the specified players are assigned
+        id: {
+          [Op.in]: this.plannedActivityAssignmentModel.sequelize!.literal(`(
+            SELECT DISTINCT activity_id 
+            FROM planned_activity_assignment 
+            WHERE assigned_to IN (${assignedPlayerIds.map(() => '?').join(',')})
+            AND (removed_at IS NULL OR removed_at > ?)
+          )`),
+        },
       },
+      replacements: [...assignedPlayerIds, endDate],
       include: [
         {
           model: PlannedActivityAssignment,
-          where: {
-            assigned_to: { [Op.in]: assignedPlayerIds },
-            [Op.or]: [
-              { removed_at: { [Op.is]: null } }, // Not removed
-              { removed_at: { [Op.gt]: endDate } }, // Removed after the queried day
-            ],
-          },
-          required: true, // Always require assignments since users_assigned is mandatory
+          // Remove the where clause to get ALL assignments for each activity
           include: [
             {
               model: User,
