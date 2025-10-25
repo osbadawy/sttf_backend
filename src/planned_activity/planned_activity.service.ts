@@ -166,6 +166,10 @@ export class PlannedActivityService {
                 model: User,
                 attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
               },
+              {
+                model: PlannedActivityPerformance,
+                required: false,
+              },
             ],
           },
           { model: PlannedActivityRecurrence },
@@ -258,6 +262,10 @@ export class PlannedActivityService {
               {
                 model: User,
                 attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+              },
+              {
+                model: PlannedActivityPerformance,
+                required: false,
               },
             ],
           },
@@ -352,6 +360,10 @@ export class PlannedActivityService {
             {
               model: User,
               attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+            },
+            {
+              model: PlannedActivityPerformance,
+              required: false,
             },
           ],
         },
