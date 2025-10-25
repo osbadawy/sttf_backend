@@ -116,6 +116,7 @@ export class MealService {
       fat,
       is_planned,
       recurrance,
+      grams,
     }: CreateMealBodyRequest,
     uid: string,
   ) {
@@ -136,6 +137,7 @@ export class MealService {
           carbohydrates: carbohydrates,
           fat: fat,
           is_planned: is_planned,
+          grams: grams,
           assigned_by: coach.id,
         } as Meal,
         { transaction },
@@ -144,7 +146,26 @@ export class MealService {
       await this.createMealRecords(meal, assignments, recurrance, transaction);
 
       await transaction.commit();
-      return meal;
+
+      // Return the created meal with all related data
+      return await this.mealModel.findByPk(meal.id, {
+        include: [
+          {
+            model: MealAssignment,
+            include: [
+              {
+                model: User,
+                attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+              },
+              {
+                model: MealResults,
+                required: false,
+              },
+            ],
+          },
+          { model: MealRecurrence },
+        ],
+      });
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -165,6 +186,7 @@ export class MealService {
       is_planned,
       recurrance,
       day,
+      grams,
     }: UpdateMealBodyRequest,
     uid: string,
   ) {
@@ -211,6 +233,7 @@ export class MealService {
           carbohydrates: carbohydrates,
           fat: fat,
           is_planned: is_planned,
+          grams: grams,
           assigned_by: coach.id,
         } as Meal,
         { transaction },
@@ -224,7 +247,25 @@ export class MealService {
       );
 
       await transaction.commit();
-      return newActivity;
+      // Return the created meal with all related data
+      return await this.mealModel.findByPk(newActivity.id, {
+        include: [
+          {
+            model: MealAssignment,
+            include: [
+              {
+                model: User,
+                attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+              },
+              {
+                model: MealResults,
+                required: false,
+              },
+            ],
+          },
+          { model: MealRecurrence },
+        ],
+      });
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -279,7 +320,10 @@ export class MealService {
     const recurringCondition: Record<string, any> = {
       '$recurrence_patterns.id$': { [Op.ne]: null }, // Has recurrence pattern
       '$recurrence_patterns.start$': { [Op.lte]: endDate }, // Recurrence started before or on this day
-      '$recurrence_patterns.end$': { [Op.gte]: startDate }, // Recurrence ends after or on this day
+      [Op.or]: [
+        { '$recurrence_patterns.end$': { [Op.gte]: startDate } }, // Recurrence ends after or on this day
+        { '$recurrence_patterns.end$': { [Op.is]: null } }, // Recurrence has no end date (continues indefinitely)
+      ],
     };
     // Only add day of week condition if dayOfWeek is defined
     if (dayOfWeek !== undefined) {
@@ -290,22 +334,28 @@ export class MealService {
     const meals = await this.mealModel.findAll({
       where: {
         [Op.or]: whereConditions,
+        // Use a subquery to filter meals where the specified players are assigned
+        id: {
+          [Op.in]: this.mealAssignmentModel.sequelize!.literal(`(
+            SELECT DISTINCT meal_id 
+            FROM meal_assignment 
+            WHERE assigned_to IN (${assignedPlayerIds.map(() => '?').join(',')})
+            AND (removed_at IS NULL OR removed_at > ?)
+          )`),
+        },
       },
+      replacements: [...assignedPlayerIds, endDate],
       include: [
         {
           model: MealAssignment,
-          where: {
-            assigned_to: { [Op.in]: assignedPlayerIds },
-            [Op.or]: [
-              { removed_at: { [Op.is]: null } }, // Not removed
-              { removed_at: { [Op.gt]: endDate } }, // Removed after the queried day
-            ],
-          },
-          required: true, // Always require assignments since users_assigned is mandatory
           include: [
             {
               model: User,
               attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+            },
+            {
+              model: MealResults,
+              required: false,
             },
           ],
         },

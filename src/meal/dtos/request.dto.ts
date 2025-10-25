@@ -23,7 +23,8 @@ export class MealRecurrenceDTO {
   @ApiProperty()
   @IsDate()
   @Transform(({ value }) => new Date(value))
-  end: Date;
+  @IsOptional()
+  end?: Date;
 
   @ApiProperty()
   @IsArray()
@@ -61,6 +62,11 @@ export class CreateMealBodyRequest {
   @IsNumber()
   @IsNotEmpty()
   kilojoule: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  grams: number;
 
   @ApiProperty()
   @IsNumber()

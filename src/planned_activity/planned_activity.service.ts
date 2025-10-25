@@ -355,7 +355,6 @@ export class PlannedActivityService {
       include: [
         {
           model: PlannedActivityAssignment,
-          // Remove the where clause to get ALL assignments for each activity
           include: [
             {
               model: User,

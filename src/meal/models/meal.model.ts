@@ -31,6 +31,7 @@ export class Meal extends Model<Meal> {
   @Column(DataType.STRING) declare name: string;
 
   @Column(DataType.DOUBLE) declare kilojoule: number;
+  @Column(DataType.DOUBLE) declare grams: number;
   @Column(DataType.DOUBLE) declare protein: number;
   @Column(DataType.DOUBLE) declare carbohydrates: number;
   @Column(DataType.DOUBLE) declare fat: number;
