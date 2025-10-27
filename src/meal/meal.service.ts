@@ -7,6 +7,7 @@ import {
   CompleteMealRequest,
   CreateMealBodyRequest,
   GetMealsParams,
+  MealCompletionDTO,
   MealRecurrenceDTO,
   UnassignMealBodyRequest,
   UpdateMealBodyRequest,
@@ -19,12 +20,12 @@ import { DailyPointsService } from 'src/user/services/daily_points.service';
 
 @Injectable()
 export class MealService {
-  private async validateCoach(uid: string) {
-    const coach = await this.userModel.findOne({ where: { firebase_id: uid } });
-    if (!coach) {
-      throw new NotFoundException('Coach not found');
+  private async validateUser(uid: string) {
+    const user = await this.userModel.findOne({ where: { firebase_id: uid } });
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
-    return coach;
+    return user;
   }
 
   private async validatePlayers(users_assigned: string[]) {
@@ -75,19 +76,41 @@ export class MealService {
   private async createMealRecords(
     meal: Meal,
     assignments: MealAssignment[],
-    recurrance: MealRecurrenceDTO | undefined,
     transaction: Transaction,
+    recurrance?: MealRecurrenceDTO,
+    completion?: MealCompletionDTO,
+    completion_firebase_id?: string,
   ) {
     // Create recurrence patterns if recurring
     await this.createRecurrencePattern(meal.id, recurrance, transaction);
     // Create assignments
-    await this.mealAssignmentModel.bulkCreate(
+    const mealAssignments = await this.mealAssignmentModel.bulkCreate(
       assignments.map((assignment) => ({
         ...assignment,
         meal_id: meal.id,
       })) as MealAssignment[],
       { transaction },
     );
+
+    if (completion && completion.is_completed && completion_firebase_id) {
+      await this.mealResultsModel.bulkCreate(
+        mealAssignments.map((ma) => {
+          return {
+            assignment_id: ma.id,
+            img_url: completion.img_url,
+            points_assigned: 20,
+          } as MealResults;
+        }),
+        { transaction },
+      );
+
+      await this.dailyPointsService.updateDailyPointsForUser(
+        completion_firebase_id,
+        20,
+        new Date(),
+        transaction,
+      );
+    }
   }
 
   constructor(
@@ -118,10 +141,11 @@ export class MealService {
       recurrance,
       amount,
       amount_unit,
+      completion,
     }: CreateMealBodyRequest,
     uid: string,
   ) {
-    const coach = await this.validateCoach(uid);
+    const assigned_by_user = await this.validateUser(uid);
     const assigned_players = await this.validatePlayers(users_assigned);
 
     const assignments = this.prepareAssignments(assigned_players);
@@ -140,12 +164,19 @@ export class MealService {
           is_planned: is_planned,
           amount: amount,
           amount_unit: amount_unit,
-          assigned_by: coach.id,
+          assigned_by: assigned_by_user.id,
         } as Meal,
         { transaction },
       );
 
-      await this.createMealRecords(meal, assignments, recurrance, transaction);
+      await this.createMealRecords(
+        meal,
+        assignments,
+        transaction,
+        recurrance,
+        completion,
+        assigned_by_user.firebase_id,
+      );
 
       await transaction.commit();
 
@@ -190,10 +221,11 @@ export class MealService {
       day,
       amount,
       amount_unit,
+      completion,
     }: UpdateMealBodyRequest,
     uid: string,
   ) {
-    const coach = await this.validateCoach(uid);
+    const assigned_by_user = await this.validateUser(uid);
 
     // Find the existing activity
     const existingActivity = await this.mealModel.findByPk(id, {
@@ -238,7 +270,7 @@ export class MealService {
           is_planned: is_planned,
           amount: amount,
           amount_unit: amount_unit,
-          assigned_by: coach.id,
+          assigned_by: assigned_by_user.id,
         } as Meal,
         { transaction },
       );
@@ -246,8 +278,10 @@ export class MealService {
       await this.createMealRecords(
         newActivity,
         assignments,
-        recurrance,
         transaction,
+        recurrance,
+        completion,
+        assigned_by_user.firebase_id,
       );
 
       await transaction.commit();
@@ -360,6 +394,7 @@ export class MealService {
             {
               model: MealResults,
               required: false,
+              where: { createdAt: { [Op.gte]: startDate, [Op.lte]: endDate } },
             },
           ],
         },
@@ -404,7 +439,13 @@ export class MealService {
         assigned_to: players[0].id,
         meal_id: id,
       },
-      include: [{ model: MealResults, required: false, where: { createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay } } }],
+      include: [
+        {
+          model: MealResults,
+          required: false,
+          where: { createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay } },
+        },
+      ],
     });
     if (!assignment) {
       throw new NotFoundException('Assignment not found');

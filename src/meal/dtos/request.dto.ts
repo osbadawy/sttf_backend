@@ -36,6 +36,18 @@ export class MealRecurrenceDTO {
   recurring_days: string[]; // Array of day names (automatically converted to lowercase)
 }
 
+export class MealCompletionDTO {
+  @ApiProperty()
+  @IsUrl()
+  @IsOptional()
+  img_url?: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  @IsNotEmpty()
+  is_completed: boolean;
+}
+
 export class CreateMealBodyRequest {
   @ApiProperty()
   @IsArray()
@@ -98,6 +110,12 @@ export class CreateMealBodyRequest {
   @ValidateNested()
   @IsOptional()
   recurrance?: MealRecurrenceDTO;
+
+  @ApiProperty()
+  @Type(() => MealCompletionDTO)
+  @ValidateNested()
+  @IsOptional()
+  completion?: MealCompletionDTO;
 }
 
 export class UpdateMealBodyRequest extends CreateMealBodyRequest {
@@ -175,4 +193,11 @@ export class CompleteMealRequest {
   @IsUUID()
   @IsNotEmpty()
   id: string;
+}
+
+export class CreateInstantMealBodyRequest extends CreateMealBodyRequest {
+  @ApiProperty()
+  @IsUrl()
+  @IsOptional()
+  img_url?: string;
 }

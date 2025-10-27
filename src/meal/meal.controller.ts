@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Delete,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { MealService } from './meal.service';
 import {
@@ -16,6 +17,7 @@ import {
   UnassignMealBodyRequest,
   UpdateMealBodyRequest,
   CompleteMealRequest,
+  CreateInstantMealBodyRequest,
 } from './dtos/request.dto';
 import { UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';

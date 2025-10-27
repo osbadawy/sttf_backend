@@ -403,13 +403,18 @@ export class PlannedActivityService {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-
     const assignment = await this.plannedActivityAssignmentModel.findOne({
       where: {
         assigned_to: players[0].id,
         activity_id: id,
       },
-      include: [{ model: PlannedActivityPerformance, required: false, where: { createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay } } }],
+      include: [
+        {
+          model: PlannedActivityPerformance,
+          required: false,
+          where: { createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay } },
+        },
+      ],
     });
     if (!assignment) {
       throw new NotFoundException('Assignment not found');
