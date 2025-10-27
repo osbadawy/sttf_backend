@@ -39,6 +39,10 @@ export class WhoopUserService {
     return user;
   }
 
+  async getAllWhoopUsers() {
+    return await this.whoopUserModel.findAll();
+  }
+
   async createWhoopUser({
     id,
     user_filter,

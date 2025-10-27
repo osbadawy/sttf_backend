@@ -4,6 +4,7 @@ import type { Request } from 'express';
 import { WhoopWebhookService } from 'src/whoop/services';
 import { WhoopWebhookAccessTokenGuard } from 'src/whoop/guards';
 import { WhoopAccessTokens } from 'src/whoop/dtos/whoop_user.dto';
+import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 
 interface RequestWithWhoopAccess extends Request {
   whoop_access: WhoopAccessTokens;
@@ -21,5 +22,11 @@ export class WhoopWebhookController {
       req.whoop_access.access_token,
     );
     return { ok: true };
+  }
+
+  @Post('/all')
+  @UseGuards(FirebaseAuthGuard)
+  async updateAllWhoopData(@Req() req: Request & { user: { uid: string } }) {
+    return await this.whoopWebhookService.updateAllWhoopData();
   }
 }
