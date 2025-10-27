@@ -5,7 +5,7 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  HasOne,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from 'src/user/models';
 import { Meal } from './meal.model';
@@ -37,6 +37,6 @@ export class MealAssignment extends Model<MealAssignment> {
 
   @BelongsTo(() => User)
   declare assigned_to_user?: User;
-  @HasOne(() => MealResults)
-  declare performance?: MealResults;
+  @HasMany(() => MealResults)
+  declare completions?: MealResults[];
 }

@@ -73,8 +73,7 @@ export type coachAssessmentResponse = {
 ////////////////////////////////////////////////////////// Player With Plans ///////////////////////////////////////////////////////////
 export type playerWithPlansData = {
   id: string;
-  first_name: string | null;
-  last_name: string | null;
+  display_name: string | null;
   age: number | null;
   readiness: number | null;
   meal: boolean;

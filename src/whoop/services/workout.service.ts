@@ -412,7 +412,7 @@ export class WhoopWorkoutService {
     });
 
     if (!whoopUser) {
-      throw new Error('User or Whoop user not found');
+      return [];
     }
 
     return whoopUser.workouts || [];
@@ -532,8 +532,12 @@ export class WhoopWorkoutService {
         },
       ],
     });
-    if (!user || !user.whoop_user) {
-      throw new Error('User or Whoop user not found');
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.whoop_user) {
+      return [];
     }
 
     if (user.whoop_user.workouts && user.whoop_user.workouts.length > 0) {

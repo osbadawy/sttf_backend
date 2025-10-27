@@ -5,7 +5,7 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  HasOne,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from 'src/user/models';
 import { PlannedActivity } from './planned_activity.model';
@@ -37,6 +37,6 @@ export class PlannedActivityAssignment extends Model<PlannedActivityAssignment> 
 
   @BelongsTo(() => User)
   declare assigned_to_user?: User;
-  @HasOne(() => PlannedActivityPerformance)
-  declare performance?: PlannedActivityPerformance;
+  @HasMany(() => PlannedActivityPerformance)
+  declare completions?: PlannedActivityPerformance[];
 }

@@ -363,6 +363,7 @@ export class PlannedActivityService {
             {
               model: PlannedActivityPerformance,
               required: false,
+              where: { createdAt: { [Op.gte]: startDate, [Op.lte]: endDate } },
             },
           ],
         },
@@ -396,20 +397,25 @@ export class PlannedActivityService {
     console.log('firebase_id', firebase_id);
     const players = await this.validatePlayers([firebase_id]);
     console.log('player', players[0]);
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+
     const assignment = await this.plannedActivityAssignmentModel.findOne({
       where: {
         assigned_to: players[0].id,
         activity_id: id,
       },
-      include: [{ model: PlannedActivityPerformance, required: false }],
+      include: [{ model: PlannedActivityPerformance, required: false, where: { createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay } } }],
     });
     if (!assignment) {
       throw new NotFoundException('Assignment not found');
     }
-    if (assignment.performance) {
-      throw new BadRequestException(
-        'Planned activity performance already exists',
-      );
+    if (assignment.completions && assignment.completions.length > 0) {
+      throw new BadRequestException('Planned activity already reviewed today');
     }
 
     const points_assigned = 20;

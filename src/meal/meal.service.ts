@@ -116,7 +116,8 @@ export class MealService {
       fat,
       is_planned,
       recurrance,
-      grams,
+      amount,
+      amount_unit,
     }: CreateMealBodyRequest,
     uid: string,
   ) {
@@ -137,7 +138,8 @@ export class MealService {
           carbohydrates: carbohydrates,
           fat: fat,
           is_planned: is_planned,
-          grams: grams,
+          amount: amount,
+          amount_unit: amount_unit,
           assigned_by: coach.id,
         } as Meal,
         { transaction },
@@ -186,7 +188,8 @@ export class MealService {
       is_planned,
       recurrance,
       day,
-      grams,
+      amount,
+      amount_unit,
     }: UpdateMealBodyRequest,
     uid: string,
   ) {
@@ -233,7 +236,8 @@ export class MealService {
           carbohydrates: carbohydrates,
           fat: fat,
           is_planned: is_planned,
-          grams: grams,
+          amount: amount,
+          amount_unit: amount_unit,
           assigned_by: coach.id,
         } as Meal,
         { transaction },
@@ -389,18 +393,24 @@ export class MealService {
     console.log('firebase_id', firebase_id);
     const players = await this.validatePlayers([firebase_id]);
     console.log('player', players[0]);
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
     const assignment = await this.mealAssignmentModel.findOne({
       where: {
         assigned_to: players[0].id,
         meal_id: id,
       },
-      include: [{ model: MealResults, required: false }],
+      include: [{ model: MealResults, required: false, where: { createdAt: { [Op.gte]: startOfDay, [Op.lte]: endOfDay } } }],
     });
     if (!assignment) {
       throw new NotFoundException('Assignment not found');
     }
-    if (assignment.performance) {
-      throw new BadRequestException('meal performance already exists');
+    if (assignment.completions && assignment.completions.length > 0) {
+      throw new BadRequestException('Meal already reviewed today');
     }
 
     const points_assigned = 20;

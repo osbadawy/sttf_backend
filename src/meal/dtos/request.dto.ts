@@ -60,28 +60,33 @@ export class CreateMealBodyRequest {
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  kilojoule: number;
+  @IsOptional()
+  kilojoule?: number;
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  grams: number;
+  @IsOptional()
+  amount: number;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  amount_unit: string;
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  protein: number;
+  @IsOptional()
+  protein?: number;
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  carbohydrates: number;
+  @IsOptional()
+  carbohydrates?: number;
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  fat: number;
+  @IsOptional()
+  fat?: number;
 
   @ApiProperty()
   @IsBoolean()
