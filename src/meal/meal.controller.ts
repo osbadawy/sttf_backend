@@ -8,16 +8,15 @@ import {
   Param,
   Query,
   Delete,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { MealService } from './meal.service';
 import {
   CreateMealBodyRequest,
   GetMealsQuery,
+  GetMealsByDateRangeQuery,
   UnassignMealBodyRequest,
   UpdateMealBodyRequest,
   CompleteMealRequest,
-  CreateInstantMealBodyRequest,
 } from './dtos/request.dto';
 import { UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
@@ -68,6 +67,11 @@ export class MealController {
       dayOfWeek,
       users_assigned: query.users_assigned,
     });
+  }
+
+  @Get('/completed')
+  async getCompletedMealsByDateRange(@Query() query: GetMealsByDateRangeQuery) {
+    return this.mealService.getCompletedMealsByDateRange(query);
   }
 
   //Gets a meal by id

@@ -111,8 +111,8 @@ export class WhoopWebhookService {
   async updateAllWhoopData() {
     {
       const allWhoopUsers = await this.whoopUserService.getAllWhoopUsers();
-      let successUsers: WhoopUser[] = [];
-      let errorUsers: WhoopUser[] = [];
+      const successUsers: WhoopUser[] = [];
+      const errorUsers: WhoopUser[] = [];
 
       for (const whoopUser of allWhoopUsers) {
         try {

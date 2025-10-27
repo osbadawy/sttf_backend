@@ -26,7 +26,7 @@ export class WhoopWebhookController {
 
   @Post('/all')
   @UseGuards(FirebaseAuthGuard)
-  async updateAllWhoopData(@Req() req: Request & { user: { uid: string } }) {
+  async updateAllWhoopData() {
     return await this.whoopWebhookService.updateAllWhoopData();
   }
 }

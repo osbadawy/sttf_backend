@@ -159,6 +159,22 @@ export class GetMealsQuery {
   users_assigned: string[];
 }
 
+export class GetMealsByDateRangeQuery {
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  startDate: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  endDate: Date;
+
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+}
+
 export class GetMealsParams {
   @ApiProperty()
   @IsArray()

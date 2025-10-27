@@ -6,6 +6,7 @@ import {
 import {
   CompleteMealRequest,
   CreateMealBodyRequest,
+  GetMealsByDateRangeQuery,
   GetMealsParams,
   MealCompletionDTO,
   MealRecurrenceDTO,
@@ -480,5 +481,32 @@ export class MealService {
       await transaction.rollback();
       throw error;
     }
+  }
+
+  async getCompletedMealsByDateRange({
+    startDate,
+    endDate,
+    firebase_id,
+  }: GetMealsByDateRangeQuery) {
+    const assigned_player = await this.validateUser(firebase_id);
+    const meals = await this.mealModel.findAll({
+      include: [
+        {
+          model: MealAssignment,
+          where: {
+            assigned_to: assigned_player.id,
+          },
+          include: [
+            {
+              model: MealResults,
+              required: true,
+              where: { createdAt: { [Op.gte]: startDate, [Op.lte]: endDate } },
+              order: [['createdAt', 'DESC']],
+            },
+          ],
+        },
+      ],
+    });
+    return meals;
   }
 }
