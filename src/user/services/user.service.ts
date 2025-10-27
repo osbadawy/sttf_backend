@@ -234,13 +234,12 @@ export class UserService {
       );
 
       const age = player.birth_date
-        ? new Date().getFullYear() - player.birth_date.getFullYear()
+        ? new Date().getFullYear() - new Date(player.birth_date).getFullYear()
         : null;
 
       const playerData: playerWithPlansData = {
-        id: player.id,
-        first_name: player.display_name,
-        last_name: player.display_name,
+        id: player.firebase_id,
+        display_name: player.display_name,
         age: age,
         readiness: 0,
         meal: anyMeals ?? false,

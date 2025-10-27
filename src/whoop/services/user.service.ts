@@ -39,6 +39,10 @@ export class WhoopUserService {
     return user;
   }
 
+  async getAllWhoopUsers() {
+    return await this.whoopUserModel.findAll();
+  }
+
   async createWhoopUser({
     id,
     user_filter,
@@ -117,7 +121,7 @@ export class WhoopUserService {
         {
           model: this.whoopUserModel,
           as: 'whoop_user',
-          required: true,
+          required: false,
           include: [cycleFilter],
           attributes: ['email', 'first_name', 'last_name', 'user_id'],
           order: [['start', 'DESC']],
@@ -145,8 +149,12 @@ export class WhoopUserService {
       ...this.daySummaryFilter(startDate, endDate),
     });
 
-    if (!user || !user.whoop_user) {
-      throw new Error('User or Whoop user not found');
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.whoop_user) {
+      return {};
     }
 
     const dayCycles = this.whoopCycleService.getDayCycles(

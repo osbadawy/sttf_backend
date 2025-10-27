@@ -23,7 +23,8 @@ export class MealRecurrenceDTO {
   @ApiProperty()
   @IsDate()
   @Transform(({ value }) => new Date(value))
-  end: Date;
+  @IsOptional()
+  end?: Date;
 
   @ApiProperty()
   @IsArray()
@@ -33,6 +34,18 @@ export class MealRecurrenceDTO {
   )
   @IsIn(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], { each: true })
   recurring_days: string[]; // Array of day names (automatically converted to lowercase)
+}
+
+export class MealCompletionDTO {
+  @ApiProperty()
+  @IsUrl()
+  @IsOptional()
+  img_url?: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  @IsNotEmpty()
+  is_completed: boolean;
 }
 
 export class CreateMealBodyRequest {
@@ -59,23 +72,33 @@ export class CreateMealBodyRequest {
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  kilojoule: number;
+  @IsOptional()
+  kilojoule?: number;
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  protein: number;
+  @IsOptional()
+  amount: number;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  amount_unit: string;
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  carbohydrates: number;
+  @IsOptional()
+  protein?: number;
 
   @ApiProperty()
   @IsNumber()
-  @IsNotEmpty()
-  fat: number;
+  @IsOptional()
+  carbohydrates?: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  fat?: number;
 
   @ApiProperty()
   @IsBoolean()
@@ -87,6 +110,12 @@ export class CreateMealBodyRequest {
   @ValidateNested()
   @IsOptional()
   recurrance?: MealRecurrenceDTO;
+
+  @ApiProperty()
+  @Type(() => MealCompletionDTO)
+  @ValidateNested()
+  @IsOptional()
+  completion?: MealCompletionDTO;
 }
 
 export class UpdateMealBodyRequest extends CreateMealBodyRequest {
@@ -130,6 +159,22 @@ export class GetMealsQuery {
   users_assigned: string[];
 }
 
+export class GetMealsByDateRangeQuery {
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  startDate: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  endDate: Date;
+
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+}
+
 export class GetMealsParams {
   @ApiProperty()
   @IsArray()
@@ -164,4 +209,11 @@ export class CompleteMealRequest {
   @IsUUID()
   @IsNotEmpty()
   id: string;
+}
+
+export class CreateInstantMealBodyRequest extends CreateMealBodyRequest {
+  @ApiProperty()
+  @IsUrl()
+  @IsOptional()
+  img_url?: string;
 }
