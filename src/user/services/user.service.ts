@@ -298,34 +298,44 @@ export class UserService {
     // Organize data: readiness at start, meals/activities in order, tiredness at end
     const dayPlan: Array<
       | {
-          type: 'self_assessment';
+          type: 'assessment';
+          category: string;
           time: Date;
           isCompleted: boolean;
           data: PlayerSelfAssessment | null;
         }
-      | { type: 'meal'; time: Date; isCompleted: boolean; data: Meal }
+      | {
+          type: 'meal';
+          category: string;
+          time: Date;
+          isCompleted: boolean;
+          data: Meal;
+        }
       | {
           type: 'activity';
+          category: string;
           time: Date;
           isCompleted: boolean;
           data: PlannedActivity;
         }
     > = [];
 
-    // 1. Add readiness self assessment at time 0
-    const readinessAssessment = playerSelfAssessments.find(
-      (assessment) => assessment.assessment_type === 'readiness',
+    // 1. Add tiredness self assessment at the end
+    const tirednessAssessment = playerSelfAssessments.find(
+      (assessment) => assessment.assessment_type === 'tiredness',
     );
     dayPlan.push({
-      type: 'self_assessment' as const,
-      time: startOfDay,
-      isCompleted: readinessAssessment ? true : false,
-      data: readinessAssessment ?? null,
+      type: 'assessment' as const,
+      category: 'assessment',
+      time: endOfDay,
+      isCompleted: tirednessAssessment ? true : false,
+      data: tirednessAssessment ?? null,
     });
 
     // 2. Flatten and sort meals and activities by start time
     const mealsWithType = plannedMeals.map((meal) => ({
       type: 'meal' as const,
+      category: meal.category,
       time: new Date(meal.start),
       isCompleted: (meal.players_assigned?.[0]?.completions?.length ?? 0) > 0,
       data: meal,
@@ -333,27 +343,30 @@ export class UserService {
 
     const activitiesWithType = plannedActivities.map((activity) => ({
       type: 'activity' as const,
+      category: activity.category,
       time: new Date(activity.start),
       isCompleted:
         (activity.players_assigned?.[0]?.completions?.length ?? 0) > 0,
       data: activity,
     }));
 
+    // Sort time descending
     const combinedItems = [...mealsWithType, ...activitiesWithType].sort(
-      (a, b) => a.time.getTime() - b.time.getTime(),
+      (a, b) => b.time.getTime() - a.time.getTime(),
     );
 
     dayPlan.push(...combinedItems);
 
-    // 3. Add tiredness self assessment at the end
-    const tirednessAssessment = playerSelfAssessments.find(
-      (assessment) => assessment.assessment_type === 'tiredness',
+    // 3. Add readiness self assessment at time 0
+    const readinessAssessment = playerSelfAssessments.find(
+      (assessment) => assessment.assessment_type === 'readiness',
     );
     dayPlan.push({
-      type: 'self_assessment' as const,
-      time: endOfDay,
-      isCompleted: tirednessAssessment ? true : false,
-      data: tirednessAssessment ?? null,
+      type: 'assessment' as const,
+      category: 'assessment',
+      time: startOfDay,
+      isCompleted: readinessAssessment ? true : false,
+      data: readinessAssessment ?? null,
     });
 
     return dayPlan;
