@@ -326,7 +326,7 @@ export class UserService {
     );
     dayPlan.push({
       type: 'assessment' as const,
-      category: 'assessment',
+      category: 'tiredness',
       time: endOfDay,
       isCompleted: tirednessAssessment ? true : false,
       data: tirednessAssessment ?? null,
@@ -363,7 +363,7 @@ export class UserService {
     );
     dayPlan.push({
       type: 'assessment' as const,
-      category: 'assessment',
+      category: 'readiness',
       time: startOfDay,
       isCompleted: readinessAssessment ? true : false,
       data: readinessAssessment ?? null,

@@ -25,11 +25,10 @@ export class PlayerSelfAssessmentService {
     private readonly dailyPointsService: DailyPointsService,
   ) {}
 
-  async createSelfAssessment({
-    firebase_id,
-    score,
-    assessment_type,
-  }: PlayerCreateSelfAssessmentRequest) {
+  async createSelfAssessment(
+    { score, assessment_type }: PlayerCreateSelfAssessmentRequest,
+    firebase_id: string,
+  ) {
     const user = await this.userModel.findOne({
       where: { firebase_id: firebase_id },
       include: [

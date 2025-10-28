@@ -92,10 +92,6 @@ export type PatchUserBodyRequest = {
 
 export class PlayerCreateSelfAssessmentRequest {
   @ApiProperty()
-  @IsString()
-  firebase_id: string;
-
-  @ApiProperty()
   @IsNumber()
   @Min(0)
   @Max(1)

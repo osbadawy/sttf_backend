@@ -1,5 +1,13 @@
 // src/modules/player-self-assessment/player-self-assessment.controller.ts
-import { Body, Controller, Post, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 
 import {
@@ -19,8 +27,12 @@ export class PlayerSelfAssessmentController {
   @Post('/')
   async createPlayerSelfAssessment(
     @Body() body: PlayerCreateSelfAssessmentRequest,
+    @Req() req: Request & { user: { uid: string } },
   ): Promise<PlayerSelfAssessment> {
-    return this.playerSelfAssessmentService.createSelfAssessment(body);
+    return this.playerSelfAssessmentService.createSelfAssessment(
+      body,
+      req.user.uid,
+    );
   }
 
   @Get('/day')
