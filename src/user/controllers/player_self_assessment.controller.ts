@@ -1,5 +1,5 @@
 // src/modules/player-self-assessment/player-self-assessment.controller.ts
-import { Body, Controller, Post, Get, Query } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query, UseGuards } from '@nestjs/common';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 
 import {
@@ -7,9 +7,10 @@ import {
   GetPlayerSelfAssessmentsForDate,
 } from '../dtos/request.dtos';
 import { PlayerSelfAssessmentService } from '../services/player_self_assessment.service';
+import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 
 @Controller('player-self-assessment')
-// @UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard)
 export class PlayerSelfAssessmentController {
   constructor(
     private readonly playerSelfAssessmentService: PlayerSelfAssessmentService,

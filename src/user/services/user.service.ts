@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UniqueConstraintError } from 'sequelize';
 import { User } from '../models/user.model';
 import { PlayerStats } from '../models/player_stats.model';
+import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 import {
   SignUpResponse,
   getUserResponse,
@@ -13,9 +14,13 @@ import type {
   getUserPkRequest,
   PatchUserFieldsRequest,
   PatchUserBodyRequest,
+  GetPlayerDayPlanQuery,
 } from '../dtos/request.dtos';
 import { PlannedActivityService } from 'src/planned_activity/planned_activity.service';
+import { PlannedActivity } from 'src/planned_activity/models/planned_activity.model';
 import { MealService } from 'src/meal/meal.service';
+import { Meal } from 'src/meal/models/meal.model';
+import { PlayerSelfAssessmentService } from './player_self_assessment.service';
 
 @Injectable()
 export class UserService {
@@ -25,6 +30,7 @@ export class UserService {
     private readonly playerStatsModel: typeof PlayerStats,
     private readonly plannedActivityService: PlannedActivityService,
     private readonly mealService: MealService,
+    private readonly playerSelfAssessmentService: PlayerSelfAssessmentService,
   ) {}
 
   async getUserByPk(body: getUserPkRequest): Promise<getUserResponse> {
@@ -252,5 +258,104 @@ export class UserService {
     }
 
     return data;
+  }
+
+  async getPlayerDayPlans({ firebase_id, day }: GetPlayerDayPlanQuery) {
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const startOfDay = new Date(day);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(day);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const playerSelfAssessments =
+      await this.playerSelfAssessmentService.getPlayerSelfAssessmentsForDate({
+        firebase_id,
+        date: day,
+      });
+
+    const plannedMeals = await this.mealService.getMeals({
+      startDate: startOfDay,
+      endDate: endOfDay,
+      users_assigned: [firebase_id],
+      onlyMatchSelectedPlayers: true,
+    });
+
+    const plannedActivities =
+      await this.plannedActivityService.getPlannedActivities({
+        startDate: startOfDay,
+        endDate: endOfDay,
+        users_assigned: [firebase_id],
+        onlyMatchSelectedPlayers: true,
+      });
+
+    // Organize data: readiness at start, meals/activities in order, tiredness at end
+    const dayPlan: Array<
+      | {
+          type: 'self_assessment';
+          time: Date;
+          isCompleted: boolean;
+          data: PlayerSelfAssessment | null;
+        }
+      | { type: 'meal'; time: Date; isCompleted: boolean; data: Meal }
+      | {
+          type: 'activity';
+          time: Date;
+          isCompleted: boolean;
+          data: PlannedActivity;
+        }
+    > = [];
+
+    // 1. Add readiness self assessment at time 0
+    const readinessAssessment = playerSelfAssessments.find(
+      (assessment) => assessment.assessment_type === 'readiness',
+    );
+    dayPlan.push({
+      type: 'self_assessment' as const,
+      time: startOfDay,
+      isCompleted: readinessAssessment ? true : false,
+      data: readinessAssessment ?? null,
+    });
+
+    // 2. Flatten and sort meals and activities by start time
+    const mealsWithType = plannedMeals.map((meal) => ({
+      type: 'meal' as const,
+      time: new Date(meal.start),
+      isCompleted: (meal.players_assigned?.[0]?.completions?.length ?? 0) > 0,
+      data: meal,
+    }));
+
+    const activitiesWithType = plannedActivities.map((activity) => ({
+      type: 'activity' as const,
+      time: new Date(activity.start),
+      isCompleted:
+        (activity.players_assigned?.[0]?.completions?.length ?? 0) > 0,
+      data: activity,
+    }));
+
+    const combinedItems = [...mealsWithType, ...activitiesWithType].sort(
+      (a, b) => a.time.getTime() - b.time.getTime(),
+    );
+
+    dayPlan.push(...combinedItems);
+
+    // 3. Add tiredness self assessment at the end
+    const tirednessAssessment = playerSelfAssessments.find(
+      (assessment) => assessment.assessment_type === 'tiredness',
+    );
+    dayPlan.push({
+      type: 'self_assessment' as const,
+      time: endOfDay,
+      isCompleted: tirednessAssessment ? true : false,
+      data: tirednessAssessment ?? null,
+    });
+
+    return dayPlan;
   }
 }

@@ -342,6 +342,7 @@ export class MealService {
     endDate,
     dayOfWeek,
     users_assigned,
+    onlyMatchSelectedPlayers = false,
   }: GetMealsParams) {
     const assignedPlayers = await this.validatePlayers(users_assigned);
     const assignedPlayerIds = assignedPlayers.map((player) => player.id);
@@ -387,6 +388,9 @@ export class MealService {
       include: [
         {
           model: MealAssignment,
+          where: onlyMatchSelectedPlayers
+            ? { assigned_to: { [Op.in]: assignedPlayerIds } }
+            : undefined,
           include: [
             {
               model: User,

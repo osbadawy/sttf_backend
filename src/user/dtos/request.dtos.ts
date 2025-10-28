@@ -8,11 +8,25 @@ import {
   Max,
   IsOptional,
   IsIn,
+  IsNotEmpty,
 } from 'class-validator';
 import {
   SelfAssessmentOptions,
   type SelfAssessmentType,
 } from '../models/player_self_assessment.model';
+
+export class GetPlayerDayPlanQuery {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsNotEmpty()
+  day: Date;
+}
 
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
 export type postBodyCompositionRequest = {
