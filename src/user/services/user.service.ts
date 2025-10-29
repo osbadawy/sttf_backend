@@ -273,6 +273,9 @@ export class UserService {
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(day);
     endOfDay.setHours(23, 59, 59, 999);
+    const dayOfWeek = startOfDay
+      .toLocaleDateString('en-US', { weekday: 'short' })
+      .toLowerCase();
 
     const playerSelfAssessments =
       await this.playerSelfAssessmentService.getPlayerSelfAssessmentsForDate({
@@ -285,6 +288,7 @@ export class UserService {
       endDate: endOfDay,
       users_assigned: [firebase_id],
       onlyMatchSelectedPlayers: true,
+      dayOfWeek,
     });
 
     const plannedActivities =
@@ -293,6 +297,7 @@ export class UserService {
         endDate: endOfDay,
         users_assigned: [firebase_id],
         onlyMatchSelectedPlayers: true,
+        dayOfWeek,
       });
 
     // Organize data: readiness at start, meals/activities in order, tiredness at end
@@ -324,10 +329,13 @@ export class UserService {
     const tirednessAssessment = playerSelfAssessments.find(
       (assessment) => assessment.assessment_type === 'tiredness',
     );
+
+    const tirednessAssessmentTime = new Date(day);
+    tirednessAssessmentTime.setHours(19, 0, 0, 0);
     dayPlan.push({
       type: 'assessment' as const,
       category: 'tiredness',
-      time: endOfDay,
+      time: tirednessAssessmentTime,
       isCompleted: tirednessAssessment ? true : false,
       data: tirednessAssessment ?? null,
     });
@@ -350,9 +358,15 @@ export class UserService {
       data: activity,
     }));
 
+    const getTimeInDay = (time: Date) => {
+      return (
+        time.getHours() * 3600 + time.getMinutes() * 60 + time.getSeconds()
+      );
+    };
+
     // Sort time descending
     const combinedItems = [...mealsWithType, ...activitiesWithType].sort(
-      (a, b) => b.time.getTime() - a.time.getTime(),
+      (a, b) => getTimeInDay(b.time) - getTimeInDay(a.time),
     );
 
     dayPlan.push(...combinedItems);
@@ -361,10 +375,13 @@ export class UserService {
     const readinessAssessment = playerSelfAssessments.find(
       (assessment) => assessment.assessment_type === 'readiness',
     );
+
+    const readinessAssessmentTime = new Date(day);
+    readinessAssessmentTime.setHours(7, 0, 0, 0);
     dayPlan.push({
       type: 'assessment' as const,
       category: 'readiness',
-      time: startOfDay,
+      time: readinessAssessmentTime,
       isCompleted: readinessAssessment ? true : false,
       data: readinessAssessment ?? null,
     });
