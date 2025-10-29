@@ -32,6 +32,7 @@ const playerStatsAttributesToReturn = [
   'serve_win_percentage',
   'third_ball_conversion_percentage',
   'receive_win_percentage',
+  'height_cm',
 ];
 
 @Injectable()
@@ -84,6 +85,7 @@ export class UserService {
       nationality,
       display_name,
       dominant_hand,
+      height_cm,
     }: PatchUserBodyRequest,
     firebase_id: string,
   ) {
@@ -108,8 +110,9 @@ export class UserService {
     });
 
     if (user.player_stats) {
-      const updatedPlayerStats = await user.player_stats.update({
+      await user.player_stats.update({
         dominant_hand: dominant_hand,
+        height_cm: height_cm,
       });
     }
 

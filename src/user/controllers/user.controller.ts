@@ -9,7 +9,6 @@ import {
   UnauthorizedException,
   Query,
   Req,
-  Param,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { SignUpResponse, playerWithPlansResponse } from '../dtos/response.dtos';

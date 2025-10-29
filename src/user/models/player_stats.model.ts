@@ -46,6 +46,8 @@ export class PlayerStats extends Model<PlayerStats> {
   @Column(DataType.DECIMAL(5, 2)) declare stats_rating?: string;
   @Column(DataType.DECIMAL(5, 2)) declare physical_rating?: string;
   @Column(DataType.DECIMAL(5, 2)) declare health_rating?: string;
+  @Column({ type: DataType.DECIMAL(5, 2), defaultValue: 180.0 })
+  declare height_cm?: number;
 
   @BelongsTo(() => User) declare user?: User;
   @HasMany(() => BodyComposition, { as: 'body_compositions' })

@@ -32,6 +32,43 @@ export class GetPlayerDayPlanQuery {
 }
 
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
+
+export class GetBodyCompositionsQuery {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  limit: number;
+}
+
+export class CreateBodyCompositionRequest {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  weight_kg?: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  body_fat_percentage?: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  muscle_mass_percentage?: number;
+}
+
 export type postBodyCompositionRequest = {
   player_stats_id: string;
   weight?: string | number;
@@ -112,6 +149,13 @@ export class PatchUserBodyRequest {
   @IsIn(['left', 'right'])
   @IsOptional()
   dominant_hand?: 'left' | 'right';
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  @Min(100)
+  @Max(250)
+  height_cm?: number;
 }
 ////////////////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ////////////////////////////////////////////////////////
 
