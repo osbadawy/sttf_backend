@@ -31,6 +31,6 @@ export class BodyComposition extends Model<BodyComposition> {
   @Column(DataType.DECIMAL(4, 1)) bmi?: number;
   @Column(DataType.DECIMAL(5, 2)) body_fat_percentage?: number;
   @Column(DataType.DECIMAL(5, 2)) muscle_mass_percentage?: number;
-
+  @Column(DataType.DATEONLY) day?: Date;
   @BelongsTo(() => PlayerStats) player_stats?: PlayerStats;
 }

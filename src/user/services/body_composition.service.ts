@@ -41,7 +41,9 @@ export class BodyCompositionService {
       throw new Error('Player stats not found for user');
     }
 
-    const bodyCompositions = user.player_stats.body_compositions || [];
+    const bodyCompositions = (user.player_stats.body_compositions || []).map(
+      (bc) => bc.get({ plain: true }),
+    );
 
     if (bodyCompositions.length === 0) {
       return {
@@ -53,21 +55,34 @@ export class BodyCompositionService {
     }
 
     const latestBmi =
-      bodyCompositions.find((bc) => bc.bmi !== null)?.bmi ?? null;
+      bodyCompositions.find((bc) => bc.bmi !== null && bc.bmi !== undefined)
+        ?.bmi ?? null;
     const latestBodyFatPercentage =
-      bodyCompositions.find((bc) => bc.body_fat_percentage !== null)
-        ?.body_fat_percentage ?? null;
+      bodyCompositions.find(
+        (bc) =>
+          bc.body_fat_percentage !== null &&
+          bc.body_fat_percentage !== undefined,
+      )?.body_fat_percentage ?? null;
     const latestMuscleMassPercentage =
-      bodyCompositions.find((bc) => bc.muscle_mass_percentage !== null)
-        ?.muscle_mass_percentage ?? null;
+      bodyCompositions.find(
+        (bc) =>
+          bc.muscle_mass_percentage !== null &&
+          bc.muscle_mass_percentage !== undefined,
+      )?.muscle_mass_percentage ?? null;
     const latestWeightKg =
-      bodyCompositions.find((bc) => bc.weight_kg !== null)?.weight_kg ?? null;
+      bodyCompositions.find(
+        (bc) => bc.weight_kg !== null && bc.weight_kg !== undefined,
+      )?.weight_kg ?? null;
 
     return {
-      bmi: latestBmi,
-      body_fat_percentage: latestBodyFatPercentage,
-      muscle_mass_percentage: latestMuscleMassPercentage,
-      weight_kg: latestWeightKg,
+      bmi: parseFloat(latestBmi?.toString() ?? '0'),
+      body_fat_percentage: parseFloat(
+        latestBodyFatPercentage?.toString() ?? '0',
+      ),
+      muscle_mass_percentage: parseFloat(
+        latestMuscleMassPercentage?.toString() ?? '0',
+      ),
+      weight_kg: parseFloat(latestWeightKg?.toString() ?? '0'),
     };
   }
 
@@ -82,7 +97,7 @@ export class BodyCompositionService {
               model: BodyComposition,
               required: false,
               limit: limit,
-              order: [['createdAt', 'DESC']],
+              order: [['day', 'DESC']],
             },
           ],
         },
@@ -92,11 +107,20 @@ export class BodyCompositionService {
   }
 
   async createBodyComposition({
+    day,
     firebase_id,
     weight_kg,
     body_fat_percentage,
     muscle_mass_percentage,
   }: CreateBodyCompositionRequest) {
+    console.log({
+      day,
+      firebase_id,
+      weight_kg,
+      body_fat_percentage,
+      muscle_mass_percentage,
+    });
+
     const user = await this.userModel.findOne({
       where: { firebase_id },
       include: [
@@ -123,6 +147,7 @@ export class BodyCompositionService {
       bmi: bmi,
       body_fat_percentage: body_fat_percentage,
       muscle_mass_percentage: muscle_mass_percentage,
+      day: day,
     } as BodyComposition);
     return bodyComposition;
   }

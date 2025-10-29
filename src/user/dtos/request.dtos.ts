@@ -40,7 +40,7 @@ export class GetBodyCompositionsQuery {
   firebase_id: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   @Min(1)
   @Max(100)
@@ -48,6 +48,12 @@ export class GetBodyCompositionsQuery {
 }
 
 export class CreateBodyCompositionRequest {
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsOptional()
+  day?: Date;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
