@@ -25,11 +25,10 @@ export class PlayerSelfAssessmentService {
     private readonly dailyPointsService: DailyPointsService,
   ) {}
 
-  async createSelfAssessment({
-    firebase_id,
-    score,
-    assessment_type,
-  }: PlayerCreateSelfAssessmentRequest) {
+  async createSelfAssessment(
+    { score, assessment_type }: PlayerCreateSelfAssessmentRequest,
+    firebase_id: string,
+  ) {
     const user = await this.userModel.findOne({
       where: { firebase_id: firebase_id },
       include: [
@@ -99,6 +98,8 @@ export class PlayerSelfAssessmentService {
     const endDate = new Date(date);
     endDate.setHours(23, 59, 59, 999);
 
+    console.log({ date, startDate, endDate });
+
     const user = await this.userModel.findOne({
       where: { firebase_id: firebase_id },
       include: [
@@ -110,7 +111,7 @@ export class PlayerSelfAssessmentService {
               as: 'self_assessments',
               required: false,
               where: {
-                created_at: {
+                createdAt: {
                   [Op.between]: [startDate, endDate],
                 },
               },

@@ -309,6 +309,7 @@ export class PlannedActivityService {
     endDate,
     dayOfWeek,
     users_assigned,
+    onlyMatchSelectedPlayers = false,
   }: GetPlannedActivitiesParams) {
     const assignedPlayers = await this.validatePlayers(users_assigned);
     const assignedPlayerIds = assignedPlayers.map((player) => player.id);
@@ -355,6 +356,9 @@ export class PlannedActivityService {
       include: [
         {
           model: PlannedActivityAssignment,
+          where: onlyMatchSelectedPlayers
+            ? { assigned_to: { [Op.in]: assignedPlayerIds } }
+            : undefined,
           include: [
             {
               model: User,

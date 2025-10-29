@@ -9,6 +9,7 @@ import {
   Patch,
   UseGuards,
   UnauthorizedException,
+  Query,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import {
@@ -24,6 +25,7 @@ import type {
   getUserPkRequest,
   PatchUserBodyRequest,
 } from '../dtos/request.dtos';
+import { GetPlayerDayPlanQuery } from '../dtos/request.dtos';
 
 @Controller('user')
 @UseGuards(FirebaseAuthGuard)
@@ -82,6 +84,11 @@ export class UserController {
   async getPlayersWeekPlans(): Promise<playerWithPlansResponse> {
     const data = await this.userService.getPlayersWeekPlans();
     return { ok: true, data: data };
+  }
+
+  @Get('/player/day')
+  async getPlayerDayPlans(@Query() query: GetPlayerDayPlanQuery) {
+    return await this.userService.getPlayerDayPlans(query);
   }
 
   @Post('signup')

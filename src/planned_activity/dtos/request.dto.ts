@@ -139,6 +139,11 @@ export class GetPlannedActivitiesParams {
   @IsOptional()
   @IsIn(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], { each: true })
   dayOfWeek?: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  @IsOptional()
+  onlyMatchSelectedPlayers?: boolean;
 }
 
 export class CompletePlannedActivityRequest {
