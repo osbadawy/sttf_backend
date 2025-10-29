@@ -157,6 +157,12 @@ export class GetMealsQuery {
   @IsString({ each: true })
   @Transform(({ value }): string[] => (Array.isArray(value) ? value : [value]))
   users_assigned: string[];
+
+  @ApiProperty()
+  @IsBoolean()
+  @IsOptional()
+  @Transform(({ value }) => Boolean(value))
+  onlyMatchSelectedPlayers?: boolean;
 }
 
 export class GetMealsByDateRangeQuery {

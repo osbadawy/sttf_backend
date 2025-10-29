@@ -66,6 +66,7 @@ export class MealController {
       endDate,
       dayOfWeek,
       users_assigned: query.users_assigned,
+      onlyMatchSelectedPlayers: query.onlyMatchSelectedPlayers,
     });
   }
 
