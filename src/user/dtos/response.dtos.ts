@@ -47,6 +47,19 @@ export interface getUserResponse {
   };
 }
 
+export interface getUserResponse {
+  ok: boolean;
+  data: {
+    email: string;
+    avatar_url?: string;
+    access?: string;
+    birth_date?: Date;
+    phone?: string;
+    nationality?: string;
+    display_name?: string;
+  };
+}
+
 ///////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ///////////////////////////////////////////////////
 export type playerSelfAssessmentResponse = {
   ok: boolean;

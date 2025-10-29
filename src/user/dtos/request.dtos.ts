@@ -9,6 +9,9 @@ import {
   IsOptional,
   IsIn,
   IsNotEmpty,
+  IsEmail,
+  IsUrl,
+  IsPhoneNumber,
 } from 'class-validator';
 import {
   SelfAssessmentOptions,
@@ -70,24 +73,46 @@ export type SignUpBodyRequest = {
   access: string;
 };
 
-export type getUserPkRequest = {
-  id: string;
-};
-
-export type PatchUserFieldsRequest = {
+export class PatchUserBodyRequest {
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsEmail()
   email?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsUrl()
   avatar_url?: string;
-  age?: number;
-  phone?: number;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsOptional()
+  birth_date?: Date;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsPhoneNumber()
+  phone?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   nationality?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   display_name?: string;
-};
 
-export type PatchUserBodyRequest = {
-  id: string;
-  data?: PatchUserFieldsRequest;
-} & PatchUserFieldsRequest;
-
+  @ApiProperty()
+  @IsIn(['left', 'right'])
+  @IsOptional()
+  dominant_hand?: 'left' | 'right';
+}
 ////////////////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ////////////////////////////////////////////////////////
 
 export class PlayerCreateSelfAssessmentRequest {

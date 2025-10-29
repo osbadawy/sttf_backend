@@ -1,7 +1,5 @@
 import {
   BadRequestException,
-  NotFoundException,
-  ConflictException,
   Body,
   Controller,
   Post,
@@ -10,22 +8,18 @@ import {
   UseGuards,
   UnauthorizedException,
   Query,
+  Req,
+  Param,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
-import {
-  SignUpResponse,
-  getUserResponse,
-  playerWithPlansResponse,
-} from '../dtos/response.dtos';
-import { Session } from '@nestjs/common';
+import { SignUpResponse, playerWithPlansResponse } from '../dtos/response.dtos';
 import { UserService } from '../services/user.service';
 
-import type {
-  SignUpBodyRequest,
-  getUserPkRequest,
+import type { SignUpBodyRequest } from '../dtos/request.dtos';
+import {
+  GetPlayerDayPlanQuery,
   PatchUserBodyRequest,
 } from '../dtos/request.dtos';
-import { GetPlayerDayPlanQuery } from '../dtos/request.dtos';
 
 @Controller('user')
 @UseGuards(FirebaseAuthGuard)
@@ -33,20 +27,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  async getUserByPk(@Body() body: getUserPkRequest): Promise<getUserResponse> {
-    try {
-      return await this.userService.getUserByPk(body);
-    } catch (e: any) {
-      const errorMessage =
-        e instanceof Error ? e.message : 'Failed to get user.';
-      if (errorMessage.includes('id is required')) {
-        throw new BadRequestException(errorMessage);
-      }
-      if (errorMessage.includes('user not found')) {
-        throw new NotFoundException(errorMessage);
-      }
-      throw new UnauthorizedException(errorMessage);
-    }
+  async getUserByPk(@Req() req: Request & { user: { uid: string } }) {
+    return await this.userService.getUser(req.user.uid);
   }
 
   @Get('/players')
@@ -57,27 +39,9 @@ export class UserController {
   @Patch()
   async patchUserByPk(
     @Body() body: PatchUserBodyRequest,
-  ): Promise<getUserResponse> {
-    try {
-      return await this.userService.patchUserByPk(body);
-    } catch (e: any) {
-      const errorMessage =
-        e instanceof Error ? e.message : 'Failed to update user.';
-      if (
-        errorMessage.includes('id is required') ||
-        errorMessage.includes('email cannot be empty') ||
-        errorMessage.includes('age must be a non-negative number')
-      ) {
-        throw new BadRequestException(errorMessage);
-      }
-      if (errorMessage.includes('user not found')) {
-        throw new NotFoundException(errorMessage);
-      }
-      if (errorMessage.includes('Email already in use')) {
-        throw new ConflictException(errorMessage);
-      }
-      throw new UnauthorizedException(errorMessage);
-    }
+    @Req() req: Request & { user: { uid: string } },
+  ) {
+    return await this.userService.patchUserByPk(body, req.user.uid);
   }
 
   @Get('/players/week')
@@ -99,27 +63,6 @@ export class UserController {
       const errorMessage =
         e instanceof Error ? e.message : 'Failed to save user.';
       if (errorMessage.includes('required')) {
-        throw new BadRequestException(errorMessage);
-      }
-      throw new UnauthorizedException(errorMessage);
-    }
-  }
-
-  @Post('/login')
-  async logIn(
-    @Body() body: SignUpBodyRequest,
-    @Session() session: { user?: { access?: unknown } },
-  ): Promise<getUserResponse> {
-    try {
-      return await this.userService.logIn(body, session);
-    } catch (e: any) {
-      const errorMessage =
-        e instanceof Error ? e.message : 'Failed to save user.';
-      if (
-        errorMessage.includes('email is required') ||
-        errorMessage.includes('user not found') ||
-        errorMessage.includes('access not found')
-      ) {
         throw new BadRequestException(errorMessage);
       }
       throw new UnauthorizedException(errorMessage);
