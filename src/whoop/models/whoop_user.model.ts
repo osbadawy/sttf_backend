@@ -9,6 +9,7 @@ import {
 import { User } from 'src/user/models/user.model';
 import type { InferAttributes, InferCreationAttributes } from 'sequelize';
 import { WhoopWorkout, WhoopCycle, WhoopSleep, WhoopRecovery } from './';
+import { WhoopAccess } from './whoop_access.model';
 
 @Table({
   tableName: 'whoop_user',
@@ -24,6 +25,10 @@ export class WhoopUser extends Model<
   @ForeignKey(() => User)
   @Column({ type: DataType.UUID })
   declare user_id: string;
+
+  @ForeignKey(() => WhoopAccess)
+  @Column({ type: DataType.BIGINT })
+  declare whoop_access_id: number;
 
   @Column({ type: DataType.STRING }) declare email: string;
   @Column({ type: DataType.STRING }) declare first_name: string;

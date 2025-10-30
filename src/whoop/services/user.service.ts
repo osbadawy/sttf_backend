@@ -53,6 +53,7 @@ export class WhoopUserService {
     refresh_token,
     scope,
     expires_at,
+    whoop_access_id,
   }: CreateWhoopUserParams) {
     const user = await this.userModel.findOne({
       where: user_filter,
@@ -76,6 +77,7 @@ export class WhoopUserService {
       refresh_token_encrypted: encryptedRefreshToken,
       scope: scope,
       expires_at: expires_at,
+      whoop_access_id: whoop_access_id,
     } as WhoopUser;
 
     if (email) {

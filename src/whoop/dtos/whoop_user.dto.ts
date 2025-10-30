@@ -55,6 +55,10 @@ export class WhoopTokens {
   @ApiProperty()
   @IsString()
   scope: string;
+
+  @ApiProperty()
+  @IsNumber()
+  whoop_access_id: number;
 }
 
 export class CreateWhoopUserParams {
@@ -96,6 +100,10 @@ export class CreateWhoopUserParams {
   @ApiProperty()
   @IsString()
   expires_at: Date;
+
+  @ApiProperty()
+  @IsNumber()
+  whoop_access_id: number;
 }
 
 export class WhoopAccessTokens {
@@ -164,4 +172,5 @@ export class WhoopUserResponse {
 export interface OAuthState {
   user_id: string;
   redirect_url: string;
+  whoop_access_id: number;
 }

@@ -2,6 +2,8 @@
 import {
   Controller,
   Get,
+  Post,
+  Body,
   Req,
   Res,
   UseGuards,
@@ -14,13 +16,14 @@ import {
   WhoopCallbackGuard,
   ExtractFromUrlGuard,
 } from 'src/whoop/guards';
-import type { WhoopCallbackRequest } from 'src/whoop/dtos';
+import { WhoopCallbackRequest, AddWhoopAccessDto } from 'src/whoop/dtos';
 import {
   WhoopCycleService,
   WhoopUserService,
   WhoopSleepService,
   WhoopRecoveryService,
   WhoopWorkoutService,
+  WhoopAccessService,
 } from 'src/whoop/services';
 
 @Controller('whoop/auth')
@@ -31,12 +34,20 @@ export class WhoopAuthController {
     private readonly whoopSleepService: WhoopSleepService,
     private readonly whoopRecoveryService: WhoopRecoveryService,
     private readonly whoopWorkoutService: WhoopWorkoutService,
+    private readonly whoopAccessService: WhoopAccessService,
   ) {}
 
   @Get('/')
   @UseGuards(FirebaseAuthGuard)
   async getWhoopUser(@Req() req: Request & { user: { uid: string } }) {
     return await this.whoopUserService.getWhoopUser(req.user.uid);
+  }
+
+  @Post('/add-access')
+  @UseGuards(FirebaseAuthGuard)
+  async addWhoopAccess(@Body() body: AddWhoopAccessDto) {
+    console.log(body);
+    return await this.whoopAccessService.addAccess(body);
   }
 
   // Step 1: kick off OAuth
@@ -69,6 +80,7 @@ export class WhoopAuthController {
         email: req.whoopUserProfile.email,
         first_name: req.whoopUserProfile.first_name,
         last_name: req.whoopUserProfile.last_name,
+        whoop_access_id: req.whoopTokens.whoop_access_id,
       });
 
       await this.whoopCycleService.createCycles(req.whoopUserProfile.user_id);
