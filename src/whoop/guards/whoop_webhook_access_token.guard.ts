@@ -8,6 +8,7 @@ import { WhoopUserService } from '../services/user.service';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/sequelize';
 import { WhoopUser } from '../models/whoop_user.model';
+import { WhoopAccess } from '../models/whoop_access.model';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
 import { firstValueFrom } from 'rxjs';
@@ -25,6 +26,8 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
   constructor(
     private readonly httpService: HttpService,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
+    @InjectModel(WhoopAccess)
+    private readonly whoopAccessModel: typeof WhoopAccess,
     @InjectModel(User) private readonly userModel: typeof User,
     @Inject(WhoopUserService)
     private readonly whoopUserService: WhoopUserService,
@@ -33,16 +36,39 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<Request>();
-    this.verifySignature(req);
 
     const { user_id: whoop_user_id } = req.body as { user_id: string };
+    const { client_id } = req.params as { client_id: string };
+
+    // Find whoop_access by unencrypted client_id
+    const whoopAccessId = await this.findWhoopAccessByClientId(client_id);
+    if (!whoopAccessId) {
+      throw new Error('Invalid client_id');
+    }
+
+    // Get whoop user to validate
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { id: whoop_user_id },
+    });
+
+    if (!whoopUser) {
+      throw new Error('Whoop user not found');
+    }
+
+    // Verify that the user belongs to this whoop_access
+    if (whoopUser.whoop_access_id !== whoopAccessId) {
+      throw new Error('User does not belong to this client');
+    }
+
+    // Verify signature using the whoop_access credentials
+    await this.verifySignature(req, whoopAccessId);
 
     const access = await this.getAccessFromDatabase(whoop_user_id);
 
     const now = new Date();
     // If access token expires less than 5 minuts from now
     if (access && access.expires_at < new Date(now.getTime() + 5 * 60 * 1000)) {
-      await this.refreshAccessToken(access, access.user_id);
+      await this.refreshAccessToken(access, access.user_id, whoopAccessId);
     }
 
     // access = await this.refreshAccessToken(access!, access!.user_id);
@@ -51,6 +77,26 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
       access;
 
     return true;
+  }
+
+  private async findWhoopAccessByClientId(
+    client_id: string,
+  ): Promise<number | null> {
+    // Get all whoop_access records
+    const allWhoopAccesses = await this.whoopAccessModel.findAll();
+
+    // Decrypt and compare each client_id
+    for (const whoopAccess of allWhoopAccesses) {
+      const decryptedClientId = this.cryptoUtil.simpleDecrypt(
+        whoopAccess.client_id_encrypted,
+      );
+
+      if (decryptedClientId === client_id) {
+        return whoopAccess.id as number;
+      }
+    }
+
+    return null;
   }
 
   async getAccessFromDatabase(
@@ -87,17 +133,31 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
   async refreshAccessToken(
     access: WhoopAccessTokens,
     user_id: string,
+    whoop_access_id: number,
   ): Promise<WhoopAccessTokens> {
     const { refresh_token } = access;
     try {
+      // Get credentials from database
+      const whoopAccess = await this.whoopAccessModel.findByPk(whoop_access_id);
+      if (!whoopAccess) {
+        throw new Error('Whoop access credentials not found');
+      }
+
+      const client_id = this.cryptoUtil.simpleDecrypt(
+        whoopAccess.client_id_encrypted,
+      );
+      const client_secret = this.cryptoUtil.simpleDecrypt(
+        whoopAccess.client_secret_encrypted,
+      );
+
       const response = await firstValueFrom(
         this.httpService.post<WhoopTokenResponse>(
           process.env.WHOOP_TOKEN_URL!,
           {
             grant_type: 'refresh_token',
             refresh_token: refresh_token,
-            client_id: process.env.WHOOP_CLIENT_ID,
-            client_secret: process.env.WHOOP_CLIENT_SECRET,
+            client_id: client_id,
+            client_secret: client_secret,
             scope:
               'read:profile read:body_measurement read:cycles read:workout read:sleep read:recovery offline',
           },
@@ -118,11 +178,12 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
         refresh_token: response.data.refresh_token,
         scope: response.data.scope,
         expires_at: new Date(Date.now() + response.data.expires_in * 1000),
+        whoop_access_id: whoop_access_id,
       });
 
       console.log('Two');
 
-      const whoopAccess: WhoopAccessTokens = {
+      const whoopAccessTokens: WhoopAccessTokens = {
         access_token: response.data.access_token,
         refresh_token: response.data.refresh_token,
         expires_at: new Date(Date.now() + response.data.expires_in * 1000),
@@ -132,14 +193,14 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
 
       console.log('Three');
 
-      return whoopAccess;
+      return whoopAccessTokens;
     } catch (error) {
       console.error('Error refreshing access token:', error);
       throw new Error('Failed to refresh access token');
     }
   }
 
-  verifySignature(req: Request) {
+  async verifySignature(req: Request, whoop_access_id: number) {
     if (
       !req.headers['x-whoop-signature'] ||
       !req.headers['x-whoop-signature-timestamp']
@@ -154,11 +215,21 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
       'x-whoop-signature-timestamp'
     ] as string;
 
+    // Get credentials from database
+    const whoopAccess = await this.whoopAccessModel.findByPk(whoop_access_id);
+    if (!whoopAccess) {
+      throw new Error('Whoop access credentials not found');
+    }
+
+    const client_secret = this.cryptoUtil.simpleDecrypt(
+      whoopAccess.client_secret_encrypted,
+    );
+
     // calculated_signature_string = base64Encode(HMACSHA256(timestamp_header + raw_http_request_body, client_secret))
     const payload = signatureTimestamp + JSON.stringify(req.body);
     const calculatedSignatureString = this.cryptoUtil.hmac(
       payload,
-      process.env.WHOOP_CLIENT_SECRET!,
+      client_secret,
       'sha256',
       'base64',
     );

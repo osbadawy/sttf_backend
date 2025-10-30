@@ -1,5 +1,5 @@
 // whoop.controller.ts
-import { Controller, UseGuards, Post, Body, Req } from '@nestjs/common';
+import { Controller, UseGuards, Post, Body, Req, Param } from '@nestjs/common';
 import type { Request } from 'express';
 import { WhoopWebhookService } from 'src/whoop/services';
 import { WhoopWebhookAccessTokenGuard } from 'src/whoop/guards';
@@ -10,13 +10,17 @@ interface RequestWithWhoopAccess extends Request {
   whoop_access: WhoopAccessTokens;
 }
 
-@Controller('whoop/webhook')
+@Controller('whoop')
 export class WhoopWebhookController {
   constructor(private readonly whoopWebhookService: WhoopWebhookService) {}
 
   @UseGuards(WhoopWebhookAccessTokenGuard)
-  @Post('/')
-  async whoopWebhook(@Body() body: any, @Req() req: RequestWithWhoopAccess) {
+  @Post('/workout/:client_id')
+  async whoopWebhook(
+    @Param('client_id') client_id: string,
+    @Body() body: any,
+    @Req() req: RequestWithWhoopAccess,
+  ) {
     await this.whoopWebhookService.handleWebhook(
       body,
       req.whoop_access.access_token,
@@ -24,7 +28,7 @@ export class WhoopWebhookController {
     return { ok: true };
   }
 
-  @Post('/all')
+  @Post('/webhook/all')
   @UseGuards(FirebaseAuthGuard)
   async updateAllWhoopData() {
     return await this.whoopWebhookService.updateAllWhoopData();

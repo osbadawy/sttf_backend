@@ -131,6 +131,7 @@ export class WhoopWebhookService {
             await this.whoopWebhookAccessTokenGuard.refreshAccessToken(
               access,
               access.user_id,
+              whoopUser.whoop_access_id,
             );
           }
 

@@ -16,7 +16,7 @@ import {
   WhoopCallbackGuard,
   ExtractFromUrlGuard,
 } from 'src/whoop/guards';
-import type { WhoopCallbackRequest, AddWhoopAccessDto } from 'src/whoop/dtos';
+import { WhoopCallbackRequest, AddWhoopAccessDto } from 'src/whoop/dtos';
 import {
   WhoopCycleService,
   WhoopUserService,
@@ -46,6 +46,7 @@ export class WhoopAuthController {
   @Post('/add-access')
   @UseGuards(FirebaseAuthGuard)
   async addWhoopAccess(@Body() body: AddWhoopAccessDto) {
+    console.log(body);
     return await this.whoopAccessService.addAccess(body);
   }
 
@@ -79,6 +80,7 @@ export class WhoopAuthController {
         email: req.whoopUserProfile.email,
         first_name: req.whoopUserProfile.first_name,
         last_name: req.whoopUserProfile.last_name,
+        whoop_access_id: req.whoopTokens.whoop_access_id,
       });
 
       await this.whoopCycleService.createCycles(req.whoopUserProfile.user_id);

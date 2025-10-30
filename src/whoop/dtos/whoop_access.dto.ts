@@ -10,4 +10,3 @@ export class AddWhoopAccessDto {
   @IsString()
   client_secret: string;
 }
-
