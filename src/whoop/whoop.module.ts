@@ -6,6 +6,7 @@ import {
   WhoopRecoveryService,
   WhoopWorkoutService,
   WhoopWebhookService,
+  WhoopAccessService,
 } from './services';
 import {
   WhoopAuthController,
@@ -38,6 +39,7 @@ import { CryptoUtil } from 'src/utils';
     WhoopRecoveryService,
     WhoopWorkoutService,
     WhoopWebhookService,
+    WhoopAccessService,
     FirebaseAuthGuard,
     WhoopOAuthGuard,
     WhoopCallbackGuard,
