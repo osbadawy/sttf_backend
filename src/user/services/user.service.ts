@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { UniqueConstraintError } from 'sequelize';
 import { User } from '../models/user.model';
 import { PlayerStats } from '../models/player_stats.model';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
-import {
-  SignUpResponse,
-  getUserResponse,
-  playerWithPlansData,
-} from '../dtos/response.dtos';
+import { SignUpResponse, playerWithPlansData } from '../dtos/response.dtos';
 import type {
   SignUpBodyRequest,
-  getUserPkRequest,
-  PatchUserFieldsRequest,
-  PatchUserBodyRequest,
   GetPlayerDayPlanQuery,
 } from '../dtos/request.dtos';
+import { PatchUserBodyRequest } from '../dtos/request.dtos';
 import { PlannedActivityService } from 'src/planned_activity/planned_activity.service';
 import { PlannedActivity } from 'src/planned_activity/models/planned_activity.model';
 import { MealService } from 'src/meal/meal.service';
 import { Meal } from 'src/meal/models/meal.model';
 import { PlayerSelfAssessmentService } from './player_self_assessment.service';
+
+const userAttributesToReturn = [
+  'email',
+  'avatar_url',
+  'access',
+  'birth_date',
+  'phone',
+  'nationality',
+  'display_name',
+];
+
+const playerStatsAttributesToReturn = [
+  'dominant_hand',
+  'win_rate',
+  'matches_played',
+  'serve_win_percentage',
+  'third_ball_conversion_percentage',
+  'receive_win_percentage',
+  'height_cm',
+];
 
 @Injectable()
 export class UserService {
@@ -33,89 +46,80 @@ export class UserService {
     private readonly playerSelfAssessmentService: PlayerSelfAssessmentService,
   ) {}
 
-  async getUserByPk(body: getUserPkRequest): Promise<getUserResponse> {
-    const id = body.id;
-
-    if (!id) throw new Error('id is required');
-
-    const user = await this.userModel.findByPk(id);
+  async getUser(firebase_id: string) {
+    console.log('firebase_id', firebase_id);
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+      attributes: userAttributesToReturn,
+      include: [
+        {
+          model: PlayerStats,
+          attributes: playerStatsAttributesToReturn,
+        },
+      ],
+    });
     if (!user) throw new Error('user not found!');
-
-    const data: getUserResponse['data'] = {
-      email: user.email,
-      avatar_url: user.avatar_url ?? undefined,
-      access: user.access ?? 'player',
-      birth_date: user.birth_date ?? undefined,
-      phone: user.phone ?? undefined,
-      nationality: user.nationality ?? undefined,
-      display_name: user.display_name ?? undefined,
-    };
-
-    return { ok: true, data };
+    return user;
   }
 
   async getPlayers() {
     const players = await this.userModel.findAll({
       where: { access: 'player' },
+      attributes: userAttributesToReturn,
+      include: [
+        {
+          model: PlayerStats,
+          attributes: playerStatsAttributesToReturn,
+        },
+      ],
     });
     return players;
   }
 
-  async patchUserByPk(body: PatchUserBodyRequest): Promise<getUserResponse> {
-    const id = String(body?.id ?? '').trim();
-    if (!id) throw new Error('id is required');
+  async patchUserByPk(
+    {
+      email,
+      avatar_url,
+      birth_date,
+      phone,
+      nationality,
+      display_name,
+      dominant_hand,
+      height_cm,
+    }: PatchUserBodyRequest,
+    firebase_id: string,
+  ) {
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+      include: [
+        {
+          model: PlayerStats,
+          required: true,
+        },
+      ],
+    });
+    if (!user) throw new Error('User not found');
 
-    const user = await this.userModel.findByPk(id);
-    if (!user) throw new Error('user not found!');
+    const updatedUser = await user.update({
+      email: email,
+      avatar_url: avatar_url,
+      birth_date: birth_date,
+      phone: phone,
+      nationality: nationality,
+      display_name: display_name,
+    });
 
-    const src: PatchUserFieldsRequest =
-      body && typeof body.data === 'object' ? body.data : body;
-
-    const updates: Record<string, any> = {};
-
-    if ('email' in src) {
-      const email = (src.email ?? '').trim().toLowerCase();
-      if (!email) throw new Error('email cannot be empty');
-      updates.email = email;
-    }
-    if ('avatar_url' in src) updates.avatar_url = src.avatar_url ?? null;
-    if ('display_name' in src) updates.display_name = src.display_name ?? null;
-    if ('nationality' in src) updates.nationality = src.nationality ?? null;
-
-    if ('age' in src) {
-      const ageNum = Number(src.age);
-      if (!Number.isFinite(ageNum) || ageNum < 0)
-        throw new Error('age must be a non-negative number');
-      updates.age = Math.floor(ageNum);
-    }
-
-    if ('phone' in src) {
-      const digits = src.phone ?? '';
-      updates.phone = digits ? Number(digits) : null;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      try {
-        await user.update(updates);
-      } catch (err: any) {
-        if (err instanceof UniqueConstraintError) {
-          throw new Error('Email already in use.');
-        }
-        throw err;
-      }
+    if (user.player_stats) {
+      await user.player_stats.update({
+        dominant_hand: dominant_hand,
+        height_cm: height_cm,
+      });
     }
 
-    const data: getUserResponse['data'] = {
-      email: user.email,
-      avatar_url: user.avatar_url ?? undefined,
-      birth_date: user.birth_date ?? undefined,
-      access: user.access ?? 'player',
-      phone: user.phone ?? undefined,
-      nationality: user.nationality ?? undefined,
-      display_name: user.display_name ?? undefined,
+    return {
+      ...updatedUser.get({ plain: true }),
+      ...(user.player_stats ? user.player_stats.get({ plain: true }) : {}),
     };
-
-    return { ok: true, data };
   }
 
   async signUp(body: SignUpBodyRequest): Promise<SignUpResponse> {
@@ -164,38 +168,6 @@ export class UserService {
         access: user.access ?? 'player',
       },
     };
-  }
-
-  async logIn(
-    body: SignUpBodyRequest,
-    session: { user?: { access?: unknown } },
-  ): Promise<getUserResponse> {
-    const email = (body?.email ?? '').trim().toLowerCase();
-
-    if (!email) throw new Error('email is required');
-
-    const user = await this.userModel.findOne({ where: { email } });
-
-    if (!user) {
-      throw new Error('user not found');
-    }
-    if (!user.access) {
-      throw new Error('access not found');
-    }
-
-    // avoid .access on an `any` by using a typed local
-    session.user = { access: user.access };
-
-    const data: getUserResponse['data'] = {
-      email: user.email,
-      avatar_url: user.avatar_url ?? undefined,
-      access: user.access ?? 'player',
-      birth_date: user.birth_date ?? undefined,
-      phone: user.phone ?? undefined,
-      nationality: user.nationality ?? undefined,
-      display_name: user.display_name ?? undefined,
-    };
-    return { ok: false, data };
   }
 
   async getPlayersWeekPlans(): Promise<playerWithPlansData[]> {

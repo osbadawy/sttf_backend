@@ -50,7 +50,8 @@ export class User extends Model<
   >;
   @Column(DataType.DATEONLY) declare birth_date: CreationOptional<Date | null>;
   @Column(DataType.STRING) declare phone: CreationOptional<string | null>;
-  @Column(DataType.STRING) declare nationality: CreationOptional<string | null>;
+  @Column({ type: DataType.STRING, defaultValue: 'SA' })
+  declare nationality: CreationOptional<string | null>;
   @Column(DataType.STRING) declare access: CreationOptional<string | null>;
   @Column(DataType.STRING) declare avatar_url: CreationOptional<string | null>;
   @Column(DataType.STRING) declare timezone: CreationOptional<string | null>;

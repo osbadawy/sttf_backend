@@ -9,6 +9,9 @@ import {
   IsOptional,
   IsIn,
   IsNotEmpty,
+  IsEmail,
+  IsUrl,
+  IsPhoneNumber,
 } from 'class-validator';
 import {
   SelfAssessmentOptions,
@@ -29,6 +32,49 @@ export class GetPlayerDayPlanQuery {
 }
 
 ///////////////////////////////////////////////////// BODY COMPOSITION ///////////////////////////////////////////////////
+
+export class GetBodyCompositionsQuery {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+
+  @ApiProperty()
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  limit: number;
+}
+
+export class CreateBodyCompositionRequest {
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsOptional()
+  day?: Date;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  weight_kg?: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  body_fat_percentage?: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  muscle_mass_percentage?: number;
+}
+
 export type postBodyCompositionRequest = {
   player_stats_id: string;
   weight?: string | number;
@@ -70,24 +116,53 @@ export type SignUpBodyRequest = {
   access: string;
 };
 
-export type getUserPkRequest = {
-  id: string;
-};
-
-export type PatchUserFieldsRequest = {
+export class PatchUserBodyRequest {
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsEmail()
   email?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsUrl()
   avatar_url?: string;
-  age?: number;
-  phone?: number;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsOptional()
+  birth_date?: Date;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  @IsPhoneNumber()
+  phone?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   nationality?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   display_name?: string;
-};
 
-export type PatchUserBodyRequest = {
-  id: string;
-  data?: PatchUserFieldsRequest;
-} & PatchUserFieldsRequest;
+  @ApiProperty()
+  @IsIn(['left', 'right'])
+  @IsOptional()
+  dominant_hand?: 'left' | 'right';
 
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  @Min(100)
+  @Max(250)
+  height_cm?: number;
+}
 ////////////////////////////////////////////////////////////// PLAYER SELF ASSESSMENT ////////////////////////////////////////////////////////
 
 export class PlayerCreateSelfAssessmentRequest {

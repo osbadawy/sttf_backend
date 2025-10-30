@@ -19,6 +19,7 @@ import { MealService } from 'src/meal/meal.service';
 import { PlannedActivityService } from 'src/planned_activity/planned_activity.service';
 import * as MealModels from 'src/meal/models';
 import * as PlannedActivityModels from 'src/planned_activity/models';
+import { BodyCompositionService } from './services/body_composition.service';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import * as PlannedActivityModels from 'src/planned_activity/models';
     UserService,
     PlannedActivityService,
     MealService,
+    BodyCompositionService,
   ],
 })
 export class UserModule {}
