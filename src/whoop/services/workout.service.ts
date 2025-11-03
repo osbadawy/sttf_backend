@@ -522,7 +522,11 @@ export class WhoopWorkoutService {
     firebase_id: string,
     start_date: Date,
     end_date: Date,
-  ): Promise<WhoopWorkout[]> {
+  ): Promise<{
+    workouts: WhoopWorkout[];
+    hasWorkoutsBefore: boolean;
+    hasWorkoutsAfter: boolean;
+  }> {
     const user = await this.userModel.findOne({
       where: { firebase_id },
       include: [
@@ -537,14 +541,49 @@ export class WhoopWorkoutService {
     }
 
     if (!user.whoop_user) {
-      return [];
+      return {
+        workouts: [],
+        hasWorkoutsBefore: false,
+        hasWorkoutsAfter: false,
+      };
     }
 
-    if (user.whoop_user.workouts && user.whoop_user.workouts.length > 0) {
-      return user.whoop_user.workouts;
-    }
+    const workouts =
+      user.whoop_user.workouts && user.whoop_user.workouts.length > 0
+        ? user.whoop_user.workouts
+        : [];
 
-    return [];
+    // Check if there are workouts before the start_date
+    const expandedStartDay = new Date(
+      start_date.getTime() - 6 * 60 * 60 * 1000,
+    );
+    const workoutBefore = await this.whoopWorkoutModel.findOne({
+      where: {
+        user_id: user.whoop_user.id,
+        end: {
+          [Op.lt]: expandedStartDay,
+        },
+      },
+      limit: 1,
+    });
+
+    // Check if there are workouts after the end_date
+    const expandedEndDay = new Date(end_date.getTime() + 6 * 60 * 60 * 1000);
+    const workoutAfter = await this.whoopWorkoutModel.findOne({
+      where: {
+        user_id: user.whoop_user.id,
+        start: {
+          [Op.gt]: expandedEndDay,
+        },
+      },
+      limit: 1,
+    });
+
+    return {
+      workouts,
+      hasWorkoutsBefore: !!workoutBefore,
+      hasWorkoutsAfter: !!workoutAfter,
+    };
   }
 
   async getWorkoutById(id: string): Promise<WhoopWorkout> {

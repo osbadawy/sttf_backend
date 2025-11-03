@@ -11,11 +11,17 @@ export class WhoopWorkoutController {
 
   @Get('/')
   async getWorkouts(@Query() query: WhoopWorkoutRequestQuery) {
-    return this.whoopWorkoutService.getWorkouts(
-      query.firebase_id,
-      query.start_date,
-      query.end_date,
-    );
+    const { workouts, hasWorkoutsBefore, hasWorkoutsAfter } =
+      await this.whoopWorkoutService.getWorkouts(
+        query.firebase_id,
+        query.start_date,
+        query.end_date,
+      );
+    return {
+      workouts,
+      hasWorkoutsBefore,
+      hasWorkoutsAfter,
+    };
   }
 
   @Get('/:id')
