@@ -10,7 +10,7 @@ interface RequestWithWhoopAccess extends Request {
   whoop_access: WhoopAccessTokens;
 }
 
-@Controller('whoop')
+@Controller('whoop/webhook')
 export class WhoopWebhookController {
   constructor(private readonly whoopWebhookService: WhoopWebhookService) {}
 
