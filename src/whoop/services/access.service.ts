@@ -25,6 +25,6 @@ export class WhoopAccessService {
       client_secret_encrypted: encryptedClientSecret,
     } as WhoopAccess);
 
-    return { ok: true, id: whoopAccess.id as number };
+    return { ok: true, id: whoopAccess.id };
   }
 }

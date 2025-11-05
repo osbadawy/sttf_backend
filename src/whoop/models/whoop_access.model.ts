@@ -7,6 +7,8 @@ import { WhoopUser } from './whoop_user.model';
   underscored: true,
 })
 export class WhoopAccess extends Model<WhoopAccess> {
+  @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
+  declare id: number;
   @Column({ type: DataType.STRING }) declare client_id_encrypted: string;
   @Column({ type: DataType.STRING }) declare client_secret_encrypted: string;
 

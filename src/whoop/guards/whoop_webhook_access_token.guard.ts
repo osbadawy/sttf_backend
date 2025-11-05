@@ -48,7 +48,7 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
 
     // Get whoop user to validate
     const whoopUser = await this.whoopUserModel.findOne({
-      where: { id: whoop_user_id },
+      where: { user_id: whoop_user_id },
     });
 
     if (!whoopUser) {
@@ -56,7 +56,7 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
     }
 
     // Verify that the user belongs to this whoop_access
-    if (whoopUser.whoop_access_id !== whoopAccessId) {
+    if (String(whoopUser.whoop_access_id) !== String(whoopAccessId)) {
       throw new Error('User does not belong to this client');
     }
 
@@ -92,7 +92,7 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
       );
 
       if (decryptedClientId === client_id) {
-        return whoopAccess.id as number;
+        return whoopAccess.id;
       }
     }
 
