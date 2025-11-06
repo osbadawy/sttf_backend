@@ -5,6 +5,9 @@ import { WhoopWebhookService } from 'src/whoop/services';
 import { WhoopWebhookAccessTokenGuard } from 'src/whoop/guards';
 import { WhoopAccessTokens } from 'src/whoop/dtos/whoop_user.dto';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
+import { UserAccessGuard } from 'src/auth/user-access.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 interface RequestWithWhoopAccess extends Request {
   whoop_access: WhoopAccessTokens;
@@ -15,7 +18,8 @@ export class WhoopWebhookController {
   constructor(private readonly whoopWebhookService: WhoopWebhookService) {}
 
   @Post('/all')
-  @UseGuards(FirebaseAuthGuard)
+  @Roles('admin')
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
   async updateAllWhoopData() {
     return await this.whoopWebhookService.updateAllWhoopData();
   }

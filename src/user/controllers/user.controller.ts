@@ -27,16 +27,17 @@ import { User } from '../models/user.model';
 import { validatePlayerFirebaseId } from 'src/auth/auth.utils';
 
 @Controller('user')
-@UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
   async getUserByPk(@Req() req: Request & { user: { uid: string } }) {
     return await this.userService.getUser(req.user.uid);
   }
 
   // Only staff can get all players
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
   @IgnoreRoles('player')
   @Get('/players')
   async getPlayers() {
@@ -44,6 +45,7 @@ export class UserController {
   }
 
   @Patch()
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
   async patchUserByPk(
     @Body() body: PatchUserBodyRequest,
     @Req() req: Request & { user: { uid: string } },
@@ -54,12 +56,14 @@ export class UserController {
   // Only staff can get all players week plans
   @IgnoreRoles('player')
   @Get('/players/week')
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
   async getPlayersWeekPlans(): Promise<playerWithPlansResponse> {
     const data = await this.userService.getPlayersWeekPlans();
     return { ok: true, data: data };
   }
 
   @Get('/player/day')
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
   async getPlayerDayPlans(
     @Query() query: GetPlayerDayPlanQuery,
     @DbUser() user: User,
@@ -74,6 +78,7 @@ export class UserController {
   }
 
   @Post('signup')
+  @UseGuards(FirebaseAuthGuard)
   async signUp(
     @Body() body: SignUpBodyRequest,
     @Req() req: Request & { user: { uid: string; email: string } },
