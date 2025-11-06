@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Delete,
+  ForbiddenException,
 } from '@nestjs/common';
 import { MealService } from './meal.service';
 import {
@@ -20,38 +21,101 @@ import {
 } from './dtos/request.dto';
 import { UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
+import { UserAccessGuard } from 'src/auth/user-access.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { DbUser } from 'src/auth/db-user.decorator';
+import { Roles } from 'src/auth/roles.decorator';
+import { User } from 'src/user/models/user.model';
 
 @Controller('meal')
-@UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
 export class MealController {
   constructor(private readonly mealService: MealService) {}
 
-  //Coach creates a meal for selected players
-  @Post()
-  async createMeal(
-    @Body() body: CreateMealBodyRequest,
-    @Req() req: Request & { user: { uid: string } },
-  ) {
-    return this.mealService.createMeal(body, req.user.uid);
+  /**
+   * Validates that players can only access their own data
+   * @throws ForbiddenException if player tries to access other users' data
+   */
+  private validatePlayerSelfAccess(
+    user: User,
+    users_assigned: string[],
+    errorMessage: string,
+  ): void {
+    if (user.access === 'player') {
+      if (
+        users_assigned.length !== 1 ||
+        users_assigned[0] !== user.firebase_id
+      ) {
+        throw new ForbiddenException(errorMessage);
+      }
+    }
   }
 
-  //Coach updates a  meal
+  /**
+   * Validates that players can only access their own firebase_id
+   * @throws ForbiddenException if player tries to access other user's data
+   */
+  private validatePlayerFirebaseId(
+    user: User,
+    firebase_id: string,
+    errorMessage: string,
+  ): void {
+    if (user.access === 'player' && firebase_id !== user.firebase_id) {
+      throw new ForbiddenException(errorMessage);
+    }
+  }
+
+  //Coach creates a meal for selected players
+  //If user is a player, they can only create meals for themselves
+  @Post()
+  async createMeal(@Body() body: CreateMealBodyRequest, @DbUser() user: User) {
+    this.validatePlayerSelfAccess(
+      user,
+      body.users_assigned,
+      'Players can only create meals for themselves',
+    );
+
+    return this.mealService.createMeal(body, user.firebase_id);
+  }
+
+  //Coach updates a meal
+  //If user is a player, they can only update meals assigned to themselves
   @Patch()
-  async updateMeal(
-    @Body() body: UpdateMealBodyRequest,
-    @Req() req: Request & { user: { uid: string } },
-  ) {
-    return this.mealService.updateMeal(body, req.user.uid);
+  async updateMeal(@Body() body: UpdateMealBodyRequest, @DbUser() user: User) {
+    this.validatePlayerSelfAccess(
+      user,
+      body.users_assigned,
+      'Players can only update meals for themselves',
+    );
+
+    return this.mealService.updateMeal(body, user.firebase_id);
   }
 
   @Delete()
-  async unassignPlayersFromMeal(@Body() body: UnassignMealBodyRequest) {
+  async unassignPlayersFromMeal(
+    @Body() body: UnassignMealBodyRequest,
+    @DbUser() user: User,
+  ) {
+    this.validatePlayerSelfAccess(
+      user,
+      body.users_assigned,
+      'Players can only unassign themselves from meals',
+    );
+
     return this.mealService.unassignPlayersFromMeal(body);
   }
 
   //Get meal based on players and day
+  //If user is a player, they can only view their own meals
   @Get()
-  async getMeals(@Query() query: GetMealsQuery) {
+  async getMeals(@Query() query: GetMealsQuery, @DbUser() user: User) {
+    console.log("I get here")
+    this.validatePlayerSelfAccess(
+      user,
+      query.users_assigned,
+      'Players can only view their own meals',
+    );
+
     const startDate = new Date(query.day);
     startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(query.day);
@@ -71,7 +135,16 @@ export class MealController {
   }
 
   @Get('/completed')
-  async getCompletedMealsByDateRange(@Query() query: GetMealsByDateRangeQuery) {
+  async getCompletedMealsByDateRange(
+    @Query() query: GetMealsByDateRangeQuery,
+    @DbUser() user: User,
+  ) {
+    this.validatePlayerFirebaseId(
+      user,
+      query.firebase_id,
+      'Players can only view their own completed meals',
+    );
+
     return this.mealService.getCompletedMealsByDateRange(query);
   }
 
@@ -83,10 +156,7 @@ export class MealController {
 
   //Player completes a meal
   @Post('/complete')
-  async completeMeal(
-    @Body() body: CompleteMealRequest,
-    @Req() req: Request & { user: { uid: string } },
-  ) {
-    return this.mealService.completeMeal(body, req.user.uid);
+  async completeMeal(@Body() body: CompleteMealRequest, @DbUser() user: User) {
+    return this.mealService.completeMeal(body, user.firebase_id);
   }
 }

@@ -108,49 +108,49 @@ export class WhoopWebhookService {
   }
 
   async updateAllWhoopData() {
-      const allWhoopUsers = await this.whoopUserService.getAllWhoopUsers();
-      const successUsers: WhoopUser[] = [];
-      const errorUsers: WhoopUser[] = [];
+    const allWhoopUsers = await this.whoopUserService.getAllWhoopUsers();
+    const successUsers: WhoopUser[] = [];
+    const errorUsers: WhoopUser[] = [];
 
-      for (const whoopUser of allWhoopUsers) {
-        try {
-          // Get access tokens from database
-          const access =
-            await this.whoopWebhookAccessTokenGuard.getAccessFromDatabase(
-              whoopUser.id.toString(),
-            );
-
-          // Check if token needs refresh (expires within 5 minutes)
-          const now = new Date();
-          if (
-            access &&
-            access.expires_at < new Date(now.getTime() + 5 * 60 * 1000)
-          ) {
-            await this.whoopWebhookAccessTokenGuard.refreshAccessToken(
-              access,
-              access.user_id,
-              whoopUser.whoop_access_id,
-            );
-          }
-
-          // Now fetch the data for this user
-          await this.whoopCycleService.createCycles(whoopUser.id);
-          await this.whoopSleepService.createSleep(whoopUser.id);
-          await this.whoopRecoveryService.createRecovery(whoopUser.id);
-          await this.whoopWorkoutService.createWorkout(whoopUser.id);
-          successUsers.push(whoopUser);
-        } catch (error) {
-          console.error(
-            `Error updating Whoop data for user ${whoopUser.id}:`,
-            error,
+    for (const whoopUser of allWhoopUsers) {
+      try {
+        // Get access tokens from database
+        const access =
+          await this.whoopWebhookAccessTokenGuard.getAccessFromDatabase(
+            whoopUser.id.toString(),
           );
-          errorUsers.push(whoopUser);
-        }
-      }
 
-      return {
-        successUsers,
-        errorUsers,
-      };
+        // Check if token needs refresh (expires within 5 minutes)
+        const now = new Date();
+        if (
+          access &&
+          access.expires_at < new Date(now.getTime() + 5 * 60 * 1000)
+        ) {
+          await this.whoopWebhookAccessTokenGuard.refreshAccessToken(
+            access,
+            access.user_id,
+            whoopUser.whoop_access_id,
+          );
+        }
+
+        // Now fetch the data for this user
+        await this.whoopCycleService.createCycles(whoopUser.id);
+        await this.whoopSleepService.createSleep(whoopUser.id);
+        await this.whoopRecoveryService.createRecovery(whoopUser.id);
+        await this.whoopWorkoutService.createWorkout(whoopUser.id);
+        successUsers.push(whoopUser);
+      } catch (error) {
+        console.error(
+          `Error updating Whoop data for user ${whoopUser.id}:`,
+          error,
+        );
+        errorUsers.push(whoopUser);
+      }
     }
+
+    return {
+      successUsers,
+      errorUsers,
+    };
+  }
 }

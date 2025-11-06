@@ -21,7 +21,7 @@ import type {
 import { PlannedActivity } from 'src/planned_activity/models/planned_activity.model';
 import { PlannedActivityAssignment } from 'src/planned_activity/models/planned_activity_assignment.model';
 
-export type UserAccess = 'player' | 'coach' | 'nutritionist' |'admin';
+export type UserAccess = 'player' | 'coach' | 'nutritionist' | 'admin';
 
 @Table({
   tableName: 'users',

@@ -55,7 +55,14 @@ export class UserController {
   }
 
   @Post('signup')
-  async signUp(@Body() body: SignUpBodyRequest, @Req() req: Request & { user: { uid: string, email: string } }) {
-    return await this.userService.signUp(req.user.uid, req.user.email, body.access);
+  async signUp(
+    @Body() body: SignUpBodyRequest,
+    @Req() req: Request & { user: { uid: string; email: string } },
+  ) {
+    return await this.userService.signUp(
+      req.user.uid,
+      req.user.email,
+      body.access,
+    );
   }
 }
