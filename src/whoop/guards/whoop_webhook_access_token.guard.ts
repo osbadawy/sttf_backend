@@ -48,7 +48,7 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
 
     // Get whoop user to validate
     const whoopUser = await this.whoopUserModel.findOne({
-      where: { user_id: whoop_user_id },
+      where: { id: whoop_user_id },
     });
 
     if (!whoopUser) {
@@ -70,8 +70,6 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
     if (access && access.expires_at < new Date(now.getTime() + 5 * 60 * 1000)) {
       await this.refreshAccessToken(access, access.user_id, whoopAccessId);
     }
-
-    // access = await this.refreshAccessToken(access!, access!.user_id);
 
     (req as Request & { whoop_access: WhoopAccessTokens }).whoop_access =
       access;

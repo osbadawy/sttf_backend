@@ -39,7 +39,6 @@ export class WhoopWebhookService {
 
   async handleWebhook(webhook: Webhook, access_token: string) {
     const domain = webhook.type.split('.')[0] as WebhookDomain;
-
     try {
       switch (domain) {
         case WebhookDomain.WORKOUT: {
@@ -109,7 +108,6 @@ export class WhoopWebhookService {
   }
 
   async updateAllWhoopData() {
-    {
       const allWhoopUsers = await this.whoopUserService.getAllWhoopUsers();
       const successUsers: WhoopUser[] = [];
       const errorUsers: WhoopUser[] = [];
@@ -155,5 +153,4 @@ export class WhoopWebhookService {
         errorUsers,
       };
     }
-  }
 }

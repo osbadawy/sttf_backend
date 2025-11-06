@@ -14,8 +14,8 @@ import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
 import { SignUpResponse, playerWithPlansResponse } from '../dtos/response.dtos';
 import { UserService } from '../services/user.service';
 
-import type { SignUpBodyRequest } from '../dtos/request.dtos';
 import {
+  SignUpBodyRequest,
   GetPlayerDayPlanQuery,
   PatchUserBodyRequest,
 } from '../dtos/request.dtos';
@@ -55,16 +55,7 @@ export class UserController {
   }
 
   @Post('signup')
-  async signUp(@Body() body: SignUpBodyRequest): Promise<SignUpResponse> {
-    try {
-      return await this.userService.signUp(body);
-    } catch (e: any) {
-      const errorMessage =
-        e instanceof Error ? e.message : 'Failed to save user.';
-      if (errorMessage.includes('required')) {
-        throw new BadRequestException(errorMessage);
-      }
-      throw new UnauthorizedException(errorMessage);
-    }
+  async signUp(@Body() body: SignUpBodyRequest, @Req() req: Request & { user: { uid: string, email: string } }) {
+    return await this.userService.signUp(req.user.uid, req.user.email, body.access);
   }
 }

@@ -17,6 +17,7 @@ import {
   SelfAssessmentOptions,
   type SelfAssessmentType,
 } from '../models/player_self_assessment.model';
+import type { UserAccess } from '../models/user.model';
 
 export class GetPlayerDayPlanQuery {
   @ApiProperty()
@@ -110,12 +111,12 @@ export type PatchFields = { [key: string]: any };
 export type PatchBodyRequest = { id: string; data?: PatchFields } & PatchFields;
 
 ///////////////////////////////////////////////////// USER //////////////////////////////////////////////////////////////////////////////////
-export type SignUpBodyRequest = {
-  firebase_id: string;
-  email: string;
-  access: string;
-};
-
+export class SignUpBodyRequest {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  access: UserAccess;
+}
 export class PatchUserBodyRequest {
   @ApiProperty()
   @IsString()

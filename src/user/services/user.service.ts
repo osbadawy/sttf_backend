@@ -14,6 +14,7 @@ import { PlannedActivity } from 'src/planned_activity/models/planned_activity.mo
 import { MealService } from 'src/meal/meal.service';
 import { Meal } from 'src/meal/models/meal.model';
 import { PlayerSelfAssessmentService } from './player_self_assessment.service';
+import type { UserAccess } from '../models/user.model';
 
 const userAttributesToReturn = [
   'email',
@@ -39,8 +40,6 @@ const playerStatsAttributesToReturn = [
 export class UserService {
   constructor(
     @InjectModel(User) private readonly userModel: typeof User,
-    @InjectModel(PlayerStats)
-    private readonly playerStatsModel: typeof PlayerStats,
     private readonly plannedActivityService: PlannedActivityService,
     private readonly mealService: MealService,
     private readonly playerSelfAssessmentService: PlayerSelfAssessmentService,
@@ -122,52 +121,12 @@ export class UserService {
     };
   }
 
-  async signUp(body: SignUpBodyRequest): Promise<SignUpResponse> {
-    const firebase_id = (body?.firebase_id ?? '').trim();
-    const email = (body?.email ?? '').trim().toLowerCase();
-    const access = (body?.access ?? 'player').trim().toLowerCase();
-
-    if (!firebase_id) throw new Error('firebase_id is required');
-    if (!email) throw new Error('email is required');
-    if (!access) throw new Error('access is required');
-
+  async signUp(firebase_id: string, email: string, access: UserAccess) {
     let user = await this.userModel.findOne({ where: { firebase_id } });
+    if (user) throw new Error('User already exists');
 
-    if (!user) {
-      const createData: {
-        firebase_id: string;
-        email: string;
-        access: string;
-        player_stats?: PlayerStats;
-      } = { firebase_id, email, access };
-
-      // Include player_stats creation for players
-      if (access === 'player') {
-        createData.player_stats = {} as PlayerStats;
-      }
-
-      user = await this.userModel.create(createData, {
-        include: access === 'player' ? [{ model: PlayerStats }] : undefined,
-      });
-
-      return {
-        created: true,
-        user: { firebase_id, email: user.email, access },
-      };
-    }
-
-    if (user.email !== email) {
-      await user.update({ email });
-    }
-
-    return {
-      created: false,
-      user: {
-        firebase_id: user.firebase_id,
-        email: user.email,
-        access: user.access ?? 'player',
-      },
-    };
+    user = await this.userModel.create({ firebase_id, email, access } as User);
+    return user;
   }
 
   async getPlayersWeekPlans(): Promise<playerWithPlansData[]> {

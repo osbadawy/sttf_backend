@@ -14,6 +14,12 @@ interface RequestWithWhoopAccess extends Request {
 export class WhoopWebhookController {
   constructor(private readonly whoopWebhookService: WhoopWebhookService) {}
 
+  @Post('/all')
+  @UseGuards(FirebaseAuthGuard)
+  async updateAllWhoopData() {
+    return await this.whoopWebhookService.updateAllWhoopData();
+  }
+
   @UseGuards(WhoopWebhookAccessTokenGuard)
   @Post('/:client_id')
   async whoopWebhook(@Body() body: any, @Req() req: RequestWithWhoopAccess) {
@@ -22,11 +28,5 @@ export class WhoopWebhookController {
       req.whoop_access.access_token,
     );
     return { ok: true };
-  }
-
-  @Post('/all')
-  @UseGuards(FirebaseAuthGuard)
-  async updateAllWhoopData() {
-    return await this.whoopWebhookService.updateAllWhoopData();
   }
 }
