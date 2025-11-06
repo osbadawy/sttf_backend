@@ -21,6 +21,8 @@ import type {
 import { PlannedActivity } from 'src/planned_activity/models/planned_activity.model';
 import { PlannedActivityAssignment } from 'src/planned_activity/models/planned_activity_assignment.model';
 
+export type UserAccess = 'player' | 'coach' | 'nutritionist' | 'admin';
+
 @Table({
   tableName: 'users',
   timestamps: true,
@@ -52,7 +54,7 @@ export class User extends Model<
   @Column(DataType.STRING) declare phone: CreationOptional<string | null>;
   @Column({ type: DataType.STRING, defaultValue: 'SA' })
   declare nationality: CreationOptional<string | null>;
-  @Column(DataType.STRING) declare access: CreationOptional<string | null>;
+  @Column(DataType.STRING) declare access: CreationOptional<UserAccess>;
   @Column(DataType.STRING) declare avatar_url: CreationOptional<string | null>;
   @Column(DataType.STRING) declare timezone: CreationOptional<string | null>;
   @Column(DataType.DATE) declare last_login_at: CreationOptional<Date | null>;

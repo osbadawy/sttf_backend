@@ -25,6 +25,9 @@ import {
   WhoopWorkoutService,
   WhoopAccessService,
 } from 'src/whoop/services';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { UserAccessGuard } from 'src/auth/user-access.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('whoop/auth')
 export class WhoopAuthController {
@@ -43,8 +46,10 @@ export class WhoopAuthController {
     return await this.whoopUserService.getWhoopUser(req.user.uid);
   }
 
+  // Only admins can add whoop access
+  @Roles('admin')
   @Post('/add-access')
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
   async addWhoopAccess(@Body() body: AddWhoopAccessDto) {
     console.log(body);
     return await this.whoopAccessService.addAccess(body);
