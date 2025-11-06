@@ -7,18 +7,18 @@ export const ALLOW_SELF_ACCESS_KEY = 'allowSelfAccess';
 
 /**
  * Decorator to specify which user roles can access a route.
- * 
- * **Default Behavior:** If RolesGuard is used without @Roles() or @IgnoreRoles(), 
+ *
+ * **Default Behavior:** If RolesGuard is used without @Roles() or @IgnoreRoles(),
  * ALL roles are allowed by default.
- * 
+ *
  * @param roles - Array of allowed user access types
- * 
+ *
  * @example
  * // Default: All roles can access
  * @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
  * @Get('/public-data')
  * async getPublicData() { ... }
- * 
+ *
  * @example
  * // Only admins and coaches can access
  * @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
@@ -31,19 +31,19 @@ export const Roles = (...roles: UserAccess[]) => SetMetadata(ROLES_KEY, roles);
 /**
  * Decorator to specify which user roles CANNOT access a route.
  * All other roles will be allowed.
- * 
+ *
  * **Note:** This takes precedence over @Roles(). If both are specified,
  * @IgnoreRoles() will be used.
- * 
+ *
  * @param roles - Array of user access types to exclude
- * 
+ *
  * @example
  * // All roles except players can access
  * @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
  * @IgnoreRoles('player')
  * @Get('/staff-dashboard')
  * async getStaffDashboard() { ... }
- * 
+ *
  * @example
  * // Only players can access (exclude all staff)
  * @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)

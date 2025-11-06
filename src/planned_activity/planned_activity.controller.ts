@@ -7,7 +7,6 @@ import {
   Param,
   Query,
   Delete,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PlannedActivityService } from './planned_activity.service';
 import {
@@ -22,6 +21,7 @@ import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 import { UserAccessGuard } from 'src/auth/user-access.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { DbUser } from 'src/auth/db-user.decorator';
+import { validatePlayerSelfAccess } from 'src/auth/auth.utils';
 import { User } from 'src/user/models/user.model';
 
 @Controller('planned-activity')
@@ -31,25 +31,6 @@ export class PlannedActivityController {
     private readonly plannedActivityService: PlannedActivityService,
   ) {}
 
-  /**
-   * Validates that players can only access their own data
-   * @throws ForbiddenException if player tries to access other users' data
-   */
-  private validatePlayerSelfAccess(
-    user: User,
-    users_assigned: string[],
-    errorMessage: string,
-  ): void {
-    if (user.access === 'player') {
-      if (
-        users_assigned.length !== 1 ||
-        users_assigned[0] !== user.firebase_id
-      ) {
-        throw new ForbiddenException(errorMessage);
-      }
-    }
-  }
-
   //Coach creates a planned activity for selected players
   //If user is a player, they can only create activities for themselves
   @Post()
@@ -57,7 +38,7 @@ export class PlannedActivityController {
     @Body() body: CreatePlannedActivityBodyRequest,
     @DbUser() user: User,
   ) {
-    this.validatePlayerSelfAccess(
+    validatePlayerSelfAccess(
       user,
       body.users_assigned,
       'Players can only create activities for themselves',
@@ -76,7 +57,7 @@ export class PlannedActivityController {
     @Body() body: UpdatePlannedActivityBodyRequest,
     @DbUser() user: User,
   ) {
-    this.validatePlayerSelfAccess(
+    validatePlayerSelfAccess(
       user,
       body.users_assigned,
       'Players can only update activities for themselves',
@@ -93,7 +74,7 @@ export class PlannedActivityController {
     @Body() body: UnassignPlannedActivityBodyRequest,
     @DbUser() user: User,
   ) {
-    this.validatePlayerSelfAccess(
+    validatePlayerSelfAccess(
       user,
       body.users_assigned,
       'Players can only unassign themselves from activities',
@@ -109,7 +90,7 @@ export class PlannedActivityController {
     @Query() query: GetPlannedActivitiesQuery,
     @DbUser() user: User,
   ) {
-    this.validatePlayerSelfAccess(
+    validatePlayerSelfAccess(
       user,
       query.users_assigned,
       'Players can only view their own activities',

@@ -51,7 +51,7 @@ export class RolesGuard implements CanActivate {
     // If allowedRoles is specified, check if user has one of those roles
     if (allowedRoles) {
       const hasRole = allowedRoles.includes(user.access);
-      
+
       if (hasRole && user.access !== 'player') {
         // Non-player with required role has access
         return true;
