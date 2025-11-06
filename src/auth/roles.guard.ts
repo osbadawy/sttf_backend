@@ -12,6 +12,7 @@ import {
 } from './roles.decorator';
 import { UserAccess } from 'src/user/models/user.model';
 import type { User } from 'src/user/models/user.model';
+import type { UserAccessRequest } from './auth.types';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -28,7 +29,7 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<UserAccessRequest>();
     const user: User = request.dbUser;
 
     if (!user) {
@@ -64,10 +65,10 @@ export class RolesGuard implements CanActivate {
       );
 
       if (hasRole && user.access === 'player' && allowSelfAccessParam) {
-        const paramValue =
-          request.params[allowSelfAccessParam] ||
-          request.query[allowSelfAccessParam] ||
-          request.body[allowSelfAccessParam];
+        const paramValue: string | undefined =
+          request.params?.[allowSelfAccessParam] ||
+          request.query?.[allowSelfAccessParam] ||
+          (request.body?.[allowSelfAccessParam] as string | undefined);
 
         // Allow access if the parameter matches the user's firebase_id or id
         if (paramValue === user.firebase_id || paramValue === user.id) {

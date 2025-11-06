@@ -1,17 +1,15 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Post,
   Get,
   Patch,
   UseGuards,
-  UnauthorizedException,
   Query,
   Req,
 } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../../auth/firebase-auth.guard';
-import { SignUpResponse, playerWithPlansResponse } from '../dtos/response.dtos';
+import { playerWithPlansResponse } from '../dtos/response.dtos';
 import { UserService } from '../services/user.service';
 
 import {

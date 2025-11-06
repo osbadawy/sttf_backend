@@ -27,9 +27,7 @@ import {
 } from 'src/whoop/services';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UserAccessGuard } from 'src/auth/user-access.guard';
-import { DbUser } from 'src/auth/db-user.decorator';
 import { Roles } from 'src/auth/roles.decorator';
-import { User } from 'src/user/models/user.model';
 
 @Controller('whoop/auth')
 export class WhoopAuthController {

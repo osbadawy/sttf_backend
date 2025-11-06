@@ -7,6 +7,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { UserAccessGuard } from 'src/auth/user-access.guard';
 import { DbUser } from 'src/auth/db-user.decorator';
 import { User } from 'src/user/models/user.model';
+import { validatePlayerFirebaseId } from 'src/auth/auth.utils';
 
 @Controller('whoop/workout')
 @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)

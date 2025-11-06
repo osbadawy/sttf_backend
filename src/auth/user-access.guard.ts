@@ -9,13 +9,16 @@ import { InjectModel } from '@nestjs/sequelize';
 import { User } from 'src/user/models/user.model';
 import { PlayerStats } from 'src/user/models/player_stats.model';
 import { WhoopUser } from 'src/whoop/models/whoop_user.model';
+import type { FirebaseAuthenticatedRequest } from './auth.types';
 
 @Injectable()
 export class UserAccessGuard implements CanActivate {
   constructor(@InjectModel(User) private readonly userModel: typeof User) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-    const req = ctx.switchToHttp().getRequest();
+    const req = ctx
+      .switchToHttp()
+      .getRequest<FirebaseAuthenticatedRequest & { dbUser?: User }>();
 
     // Ensure FirebaseAuthGuard has already run and set req.user
     if (!req.user || !req.user.uid) {

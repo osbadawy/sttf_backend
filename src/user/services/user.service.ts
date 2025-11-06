@@ -3,11 +3,8 @@ import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models/user.model';
 import { PlayerStats } from '../models/player_stats.model';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
-import { SignUpResponse, playerWithPlansData } from '../dtos/response.dtos';
-import type {
-  SignUpBodyRequest,
-  GetPlayerDayPlanQuery,
-} from '../dtos/request.dtos';
+import { playerWithPlansData } from '../dtos/response.dtos';
+import type { GetPlayerDayPlanQuery } from '../dtos/request.dtos';
 import { PatchUserBodyRequest } from '../dtos/request.dtos';
 import { PlannedActivityService } from 'src/planned_activity/planned_activity.service';
 import { PlannedActivity } from 'src/planned_activity/models/planned_activity.model';
