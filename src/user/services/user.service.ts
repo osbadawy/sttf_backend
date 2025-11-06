@@ -12,6 +12,7 @@ import { MealService } from 'src/meal/meal.service';
 import { Meal } from 'src/meal/models/meal.model';
 import { PlayerSelfAssessmentService } from './player_self_assessment.service';
 import type { UserAccess } from '../models/user.model';
+import { CoachAssessmentService } from './coach_assessment.service';
 
 const userAttributesToReturn = [
   'email',
@@ -40,6 +41,7 @@ export class UserService {
     private readonly plannedActivityService: PlannedActivityService,
     private readonly mealService: MealService,
     private readonly playerSelfAssessmentService: PlayerSelfAssessmentService,
+    private readonly coachAssessmentService: CoachAssessmentService,
   ) {}
 
   async getUser(firebase_id: string) {

@@ -194,6 +194,11 @@ export class GetPlayerSelfAssessmentsForDate {
 ///////////////////////////////////////////////////////////// COACH ASSESSMENT /////////////////////////////////////////////////////////////////////
 export class CoachAssessmentRequest {
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+
+  @ApiProperty()
   @IsNumber()
   @Min(0)
   @Max(1)
@@ -204,10 +209,6 @@ export class CoachAssessmentRequest {
   @Min(0)
   @Max(1)
   readiness_score: number;
-
-  @ApiProperty()
-  @IsString()
-  firebase_id: string;
 }
 
 export class GetCoachAssessmentsForDate {
@@ -221,4 +222,12 @@ export class GetCoachAssessmentsForDate {
   @Transform(({ value }) => new Date(value))
   @IsOptional()
   date?: Date;
+}
+
+export class GetCoachAssessmentsForAllPlayersOnDayQuery {
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsNotEmpty()
+  day: Date;
 }

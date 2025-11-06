@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models/user.model';
-import { GetCoachAssessmentsForDate } from '../dtos/request.dtos';
+import {
+  GetCoachAssessmentsForDate,
+  GetCoachAssessmentsForAllPlayersOnDayQuery,
+} from '../dtos/request.dtos';
 import { PlayerStats } from '../models/player_stats.model';
 import { Op } from 'sequelize';
 import { DailyPointsService } from './daily_points.service';
@@ -19,8 +22,8 @@ export class CoachAssessmentService {
   ) {}
 
   async createCoachAssessment(
-    { fitness_score, readiness_score }: CoachAssessmentRequest,
-    firebase_id: string,
+    { firebase_id, fitness_score, readiness_score }: CoachAssessmentRequest,
+    assigned_by: string,
   ) {
     const user = await this.userModel.findOne({
       where: { firebase_id: firebase_id },
@@ -28,12 +31,6 @@ export class CoachAssessmentService {
         {
           model: PlayerStats,
           required: true,
-          include: [
-            {
-              model: PlayerSelfAssessment,
-              as: 'self_assessments',
-            },
-          ],
         },
       ],
     });
@@ -45,38 +42,41 @@ export class CoachAssessmentService {
       throw new Error('Player stats not found');
     }
 
-    const points_assigned = 50 * fitness_score + 50 * readiness_score;
+    const points_assigned = (50 * fitness_score) + (50 * readiness_score);
 
     const data = {
       player_stats_id: user.player_stats.id,
       fitness_score: fitness_score,
       readiness_score: readiness_score,
       points_assigned: points_assigned,
+      assigned_by: assigned_by,
+      day: new Date(),
     } as CoachAssessment;
 
-    console.log('data', data);
+    const transaction = await this.coachAssessmentModel.sequelize!.transaction();
 
-    const coachAssessment = await this.coachAssessmentModel.create(data);
-
-    // Update daily points for self assessment
     try {
+      const coachAssessment = await this.coachAssessmentModel.create(data, {
+        transaction,
+      });
+
+      // Update daily points for coach assessment
       await this.dailyPointsService.updateDailyPointsForUser(
         firebase_id,
-        20,
+        points_assigned,
         new Date(),
+        transaction,
       );
       console.log(
-        `Updated daily points for self assessment: +${data.points_assigned} points`,
+        `Updated daily points for coach assessment: +${points_assigned} points`,
       );
-    } catch (error) {
-      console.error(
-        `Failed to update daily points for self assessment:`,
-        error,
-      );
-      // Don't throw error to avoid breaking the main workflow
-    }
 
-    return coachAssessment;
+      await transaction.commit();
+      return coachAssessment;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async getCoachAssessmentsForDate({
@@ -105,7 +105,7 @@ export class CoachAssessmentService {
               as: 'self_assessments',
               required: false,
               where: {
-                createdAt: {
+                day: {
                   [Op.between]: [startDate, endDate],
                 },
               },
@@ -123,5 +123,37 @@ export class CoachAssessmentService {
     }
 
     return [];
+  }
+
+  async getCoachAssessmentsForAllPlayersOnDay({day}: GetCoachAssessmentsForAllPlayersOnDayQuery) {
+    const startDay = new Date(day);
+    startDay.setHours(0, 0, 0, 0);
+    const endDay = new Date(day);
+    endDay.setHours(23, 59, 59, 999);
+
+    const users = await this.userModel.findAll({
+      where: {
+        access: 'player',
+      },
+      include: [
+        {
+          model: PlayerStats,
+          required: true,
+          include: [
+            {
+              model: CoachAssessment,
+              required: true,
+              where: {
+                day: {
+                  [Op.between]: [startDay, endDay],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    return users;
   }
 }

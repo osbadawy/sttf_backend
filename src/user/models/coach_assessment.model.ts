@@ -8,6 +8,7 @@ import {
   BelongsTo,
 } from 'sequelize-typescript';
 import { PlayerStats } from './player_stats.model';
+import { User } from './user.model';
 
 @Table({
   tableName: 'coach_assessments',
@@ -25,6 +26,12 @@ export class CoachAssessment extends Model<CoachAssessment> {
   @ForeignKey(() => PlayerStats)
   @Column({ type: DataType.UUID, allowNull: false })
   declare player_stats_id: string;
+
+  @ForeignKey(() => User)
+  @Column({ type: DataType.UUID, allowNull: false })
+  declare assigned_by: string;
+
+  @Column(DataType.DATEONLY) declare day: Date;
 
   @Column(DataType.FLOAT) declare fitness_score?: number;
   @Column(DataType.FLOAT) declare readiness_score?: number;
