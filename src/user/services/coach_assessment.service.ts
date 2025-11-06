@@ -42,7 +42,7 @@ export class CoachAssessmentService {
       throw new Error('Player stats not found');
     }
 
-    const points_assigned = (50 * fitness_score) + (50 * readiness_score);
+    const points_assigned = 50 * fitness_score + 50 * readiness_score;
 
     const data = {
       player_stats_id: user.player_stats.id,
@@ -53,7 +53,8 @@ export class CoachAssessmentService {
       day: new Date(),
     } as CoachAssessment;
 
-    const transaction = await this.coachAssessmentModel.sequelize!.transaction();
+    const transaction =
+      await this.coachAssessmentModel.sequelize!.transaction();
 
     try {
       const coachAssessment = await this.coachAssessmentModel.create(data, {
@@ -125,7 +126,9 @@ export class CoachAssessmentService {
     return [];
   }
 
-  async getCoachAssessmentsForAllPlayersOnDay({day}: GetCoachAssessmentsForAllPlayersOnDayQuery) {
+  async getCoachAssessmentsForAllPlayersOnDay({
+    day,
+  }: GetCoachAssessmentsForAllPlayersOnDayQuery) {
     const startDay = new Date(day);
     startDay.setHours(0, 0, 0, 0);
     const endDay = new Date(day);

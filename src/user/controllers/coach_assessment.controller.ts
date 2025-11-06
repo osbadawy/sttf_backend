@@ -8,7 +8,7 @@ import { User } from '../models/user.model';
 import {
   CoachAssessmentRequest,
   GetCoachAssessmentsForDate,
-  GetCoachAssessmentsForAllPlayersOnDayQuery
+  GetCoachAssessmentsForAllPlayersOnDayQuery,
 } from '../dtos/request.dtos';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserAccessGuard } from 'src/auth/user-access.guard';
@@ -28,10 +28,7 @@ export class CoachAssessmentController {
     @Body() body: CoachAssessmentRequest,
     @DbUser() user: User,
   ) {
-    return this.coachAssessmentService.createCoachAssessment(
-      body,
-      user.id,
-    );
+    return this.coachAssessmentService.createCoachAssessment(body, user.id);
   }
 
   @Get('/day')
@@ -53,6 +50,8 @@ export class CoachAssessmentController {
   async getCoachAssessmentsForAllPlayersOnDay(
     @Query() query: GetCoachAssessmentsForAllPlayersOnDayQuery,
   ) {
-    return this.coachAssessmentService.getCoachAssessmentsForAllPlayersOnDay(query);
+    return this.coachAssessmentService.getCoachAssessmentsForAllPlayersOnDay(
+      query,
+    );
   }
 }
