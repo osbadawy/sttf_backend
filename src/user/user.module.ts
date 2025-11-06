@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UserController } from './controllers/user.controller';
-import { PlayerStatsController } from './controllers/player_stats.controller';
 import { BodyCompositionController } from './controllers/body_composition.controller';
 import { PlayerSelfAssessmentController } from './controllers/player_self_assessment.controller';
 import { CoachAssessmentController } from './controllers/coach_assessment.controller';
@@ -36,7 +35,6 @@ import { BodyCompositionService } from './services/body_composition.service';
   exports: [SequelizeModule, DailyPointsService],
   controllers: [
     UserController,
-    PlayerStatsController,
     BodyCompositionController,
     PlayerSelfAssessmentController,
     CoachAssessmentController,

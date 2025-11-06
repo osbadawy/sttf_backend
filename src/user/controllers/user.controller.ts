@@ -19,9 +19,15 @@ import {
   GetPlayerDayPlanQuery,
   PatchUserBodyRequest,
 } from '../dtos/request.dtos';
+import { UserAccessGuard } from 'src/auth/user-access.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { IgnoreRoles } from 'src/auth/roles.decorator';
+import { DbUser } from 'src/auth/db-user.decorator';
+import { User } from '../models/user.model';
+import { validatePlayerFirebaseId } from 'src/auth/auth.utils';
 
 @Controller('user')
-@UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -30,6 +36,8 @@ export class UserController {
     return await this.userService.getUser(req.user.uid);
   }
 
+  // Only staff can get all players
+  @IgnoreRoles('player')
   @Get('/players')
   async getPlayers() {
     return await this.userService.getPlayers();
@@ -43,6 +51,8 @@ export class UserController {
     return await this.userService.patchUserByPk(body, req.user.uid);
   }
 
+  // Only staff can get all players week plans
+  @IgnoreRoles('player')
   @Get('/players/week')
   async getPlayersWeekPlans(): Promise<playerWithPlansResponse> {
     const data = await this.userService.getPlayersWeekPlans();
@@ -50,7 +60,16 @@ export class UserController {
   }
 
   @Get('/player/day')
-  async getPlayerDayPlans(@Query() query: GetPlayerDayPlanQuery) {
+  async getPlayerDayPlans(
+    @Query() query: GetPlayerDayPlanQuery,
+    @DbUser() user: User,
+  ) {
+    validatePlayerFirebaseId(
+      user,
+      query.firebase_id,
+      'Players can only view their own day plans',
+    );
+
     return await this.userService.getPlayerDayPlans(query);
   }
 
