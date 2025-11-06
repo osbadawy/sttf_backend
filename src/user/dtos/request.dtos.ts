@@ -192,22 +192,42 @@ export class GetPlayerSelfAssessmentsForDate {
 }
 
 ///////////////////////////////////////////////////////////// COACH ASSESSMENT /////////////////////////////////////////////////////////////////////
-export type coachAssessmentRequest = {
-  player_stats_id: string;
-  satisfaction_of_training_level: number | string;
-  progress_made_level: number | string;
-  improvements_needed_level: number | string;
-};
+export class CoachAssessmentRequest {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
 
-export type patchCoachAssessmentRequest = {
-  id: string;
-  data?: {
-    satisfaction_of_training_level?: number | string;
-    progress_made_level?: number | string;
-    improvements_needed_level?: number | string;
-  };
-} & {
-  satisfaction_of_training_level?: number | string;
-  progress_made_level?: number | string;
-  improvements_needed_level?: number | string;
-};
+  @ApiProperty()
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  fitness_score: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  readiness_score: number;
+}
+
+export class GetCoachAssessmentsForDate {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  firebase_id: string;
+
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsOptional()
+  date?: Date;
+}
+
+export class GetCoachAssessmentsForAllPlayersOnDayQuery {
+  @ApiProperty()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsNotEmpty()
+  day: Date;
+}

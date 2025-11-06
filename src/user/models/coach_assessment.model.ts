@@ -6,9 +6,9 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-  Index,
 } from 'sequelize-typescript';
 import { PlayerStats } from './player_stats.model';
+import { User } from './user.model';
 
 @Table({
   tableName: 'coach_assessments',
@@ -23,31 +23,20 @@ export class CoachAssessment extends Model<CoachAssessment> {
   })
   declare id: string;
 
-  @Index('coach_assessment_player_stats_id')
   @ForeignKey(() => PlayerStats)
   @Column({ type: DataType.UUID, allowNull: false })
-  player_stats_id!: string;
+  declare player_stats_id: string;
 
-  @Column({
-    type: DataType.FLOAT,
-    allowNull: false,
-    validate: { min: 1, max: 10 },
-  })
-  satisfaction_of_training_level!: number;
+  @ForeignKey(() => User)
+  @Column({ type: DataType.UUID, allowNull: false })
+  declare assigned_by: string;
 
-  @Column({
-    type: DataType.FLOAT,
-    allowNull: false,
-    validate: { min: 1, max: 10 },
-  })
-  progress_made_level!: number;
+  @Column(DataType.DATEONLY) declare day: Date;
 
-  @Column({
-    type: DataType.FLOAT,
-    allowNull: false,
-    validate: { min: 1, max: 10 },
-  })
-  improvements_needed_level!: number;
+  @Column(DataType.FLOAT) declare fitness_score?: number;
+  @Column(DataType.FLOAT) declare readiness_score?: number;
+
+  @Column(DataType.INTEGER) declare points_assigned: number;
 
   @BelongsTo(() => PlayerStats) player_stats?: PlayerStats;
 }

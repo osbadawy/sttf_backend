@@ -19,6 +19,7 @@ import { PlannedActivityService } from 'src/planned_activity/planned_activity.se
 import * as MealModels from 'src/meal/models';
 import * as PlannedActivityModels from 'src/planned_activity/models';
 import { BodyCompositionService } from './services/body_composition.service';
+import { CoachAssessmentService } from './services/coach_assessment.service';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { BodyCompositionService } from './services/body_composition.service';
     PlannedActivityService,
     MealService,
     BodyCompositionService,
+    CoachAssessmentService,
   ],
 })
 export class UserModule {}
