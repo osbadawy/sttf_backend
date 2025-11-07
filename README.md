@@ -2,6 +2,12 @@
 
 A NestJS-based backend API for the **Saudi Table Tennis Federation (STTF)** sports training and fitness tracking platform. Built by the **Covelant** team, this system provides comprehensive athlete management with Whoop integration, Firebase authentication, and role-based access control.
 
+## Database Schema
+
+![Database ERD](./erd.png)
+
+> **Note:** This ERD diagram was generated using PgAdmin 4.
+
 ## Prerequisites
 
 - Node.js 18+ and npm
