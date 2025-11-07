@@ -63,12 +63,12 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
     // Verify signature using the whoop_access credentials
     // await this.verifySignature(req, whoopAccessId); //TODO: FIX verification. Currently not working.
 
-    const access = await this.getAccessFromDatabase(whoop_user_id);
+    let access = await this.getAccessFromDatabase(whoop_user_id);
 
     const now = new Date();
     // If access token expires less than 5 minuts from now
     if (access && access.expires_at < new Date(now.getTime() + 5 * 60 * 1000)) {
-      await this.refreshAccessToken(access, access.user_id, whoopAccessId);
+      access = await this.refreshAccessToken(access, access.user_id, whoopAccessId);
     }
 
     (req as Request & { whoop_access: WhoopAccessTokens }).whoop_access =
