@@ -4,7 +4,7 @@ import { User } from '../models/user.model';
 import { PlayerStats } from '../models/player_stats.model';
 import { DailyPoints } from '../models/daily_points.model';
 import { WhoopUser } from '../../whoop/models/whoop_user.model';
-import { Transaction } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 
 @Injectable()
 export class DailyPointsService {
@@ -214,5 +214,166 @@ export class DailyPointsService {
       day,
       transaction,
     );
+  }
+
+  async getLeaderboardForWeek(): Promise<
+    Array<{
+      user: {
+        id: string;
+        firebase_id: string;
+        display_name: string | null;
+        avatar_url: string | null;
+      };
+      points: number;
+      rank: number;
+      lastWeekPoints: number;
+      lastWeekRank: number | null;
+    }>
+  > {
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    const endOfWeek = new Date();
+    endOfWeek.setHours(23, 59, 59, 999);
+    endOfWeek.setDate(endOfWeek.getDate() - endOfWeek.getDay() + 6);
+
+    // Calculate last week's date range
+    const startOfLastWeek = new Date(startOfWeek);
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+    const endOfLastWeek = new Date(endOfWeek);
+    endOfLastWeek.setDate(endOfLastWeek.getDate() - 7);
+
+    // Fetch all users with access to 'player' and all their daily points
+    const users = await this.userModel.findAll({
+      where: {
+        access: 'player',
+      },
+      attributes: ['id', 'firebase_id', 'display_name', 'avatar_url'],
+      include: [
+        {
+          model: PlayerStats,
+          required: true,
+          include: [
+            {
+              model: DailyPoints,
+              required: false,
+              where: {
+                day: {
+                  [Op.between]: [startOfLastWeek, endOfWeek],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    // Calculate current week points and last week points for each user
+    const usersWithPoints: {
+      user: User;
+      points: number;
+      lastWeekPoints: number;
+    }[] = users.map((user) => {
+      let currentWeekPoints = 0;
+      let lastWeekPoints = 0;
+
+      if (
+        user.player_stats &&
+        user.player_stats.daily_points &&
+        user.player_stats.daily_points.length > 0
+      ) {
+        // Separate current week and last week points
+        user.player_stats.daily_points.forEach((dailyPoint) => {
+          // Convert day to Date object and normalize to midnight for comparison
+          const pointDay = new Date(dailyPoint.day);
+          pointDay.setHours(0, 0, 0, 0);
+
+          if (pointDay >= startOfWeek && pointDay <= endOfWeek) {
+            currentWeekPoints += dailyPoint.points;
+          } else if (pointDay >= startOfLastWeek && pointDay <= endOfLastWeek) {
+            lastWeekPoints += dailyPoint.points;
+          }
+        });
+      }
+
+      return {
+        user: user,
+        points: currentWeekPoints,
+        lastWeekPoints: lastWeekPoints,
+      };
+    });
+
+    // Calculate last week's ranks
+    const lastWeekSorted = [...usersWithPoints].sort(
+      (a, b) => b.lastWeekPoints - a.lastWeekPoints,
+    );
+
+    const lastWeekRanks = new Map<string, number>();
+    lastWeekSorted.forEach((userWithPoints, index) => {
+      lastWeekRanks.set(userWithPoints.user.firebase_id, index + 1);
+    });
+
+    // Sort by current week points and add rank information
+    const currentWeekSorted = usersWithPoints
+      .sort((a, b) => b.points - a.points)
+      .map((userWithPoints, index) => ({
+        user: {
+          id: userWithPoints.user.id,
+          firebase_id: userWithPoints.user.firebase_id,
+          display_name: userWithPoints.user.display_name,
+          avatar_url: userWithPoints.user.avatar_url,
+        },
+        points: userWithPoints.points,
+        rank: index + 1,
+        lastWeekPoints: userWithPoints.lastWeekPoints,
+        lastWeekRank:
+          lastWeekRanks.get(userWithPoints.user.firebase_id) || null,
+      }));
+
+    return currentWeekSorted;
+  }
+
+  async getPointsThisWeek(firebase_id: string) {
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    const endOfWeek = new Date();
+    endOfWeek.setHours(23, 59, 59, 999);
+    endOfWeek.setDate(endOfWeek.getDate() - endOfWeek.getDay() + 6);
+
+    const user = await this.userModel.findOne({
+      where: { firebase_id },
+      include: [
+        {
+          model: PlayerStats,
+          required: true,
+        },
+      ],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.player_stats) {
+      throw new Error('Player stats not found');
+    }
+
+    if (
+      !user.player_stats.daily_points ||
+      user.player_stats.daily_points.length === 0
+    ) {
+      return 0;
+    }
+
+    return user.player_stats.daily_points
+      .filter(
+        (dailyPoint) =>
+          dailyPoint.day >= startOfWeek && dailyPoint.day <= endOfWeek,
+      )
+      .reduce((acc, curr) => acc + curr.points, 0);
   }
 }
