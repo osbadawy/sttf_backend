@@ -20,6 +20,7 @@ import * as MealModels from 'src/meal/models';
 import * as PlannedActivityModels from 'src/planned_activity/models';
 import { BodyCompositionService } from './services/body_composition.service';
 import { CoachAssessmentService } from './services/coach_assessment.service';
+import { PointsController } from './controllers/points.controller';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CoachAssessmentService } from './services/coach_assessment.service';
     BodyCompositionController,
     PlayerSelfAssessmentController,
     CoachAssessmentController,
+    PointsController,
   ],
   providers: [
     PlayerSelfAssessmentService,
