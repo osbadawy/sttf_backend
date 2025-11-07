@@ -8,6 +8,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import session from 'express-session';
 import * as fs from 'fs';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -43,6 +44,33 @@ async function bootstrap() {
     ],
     credentials: true,
   });
+
+  // Setup Swagger Documentation (only in non-production environments)
+  if (!isProduction) {
+    const config = new DocumentBuilder()
+      .setTitle('STTF Backend API')
+      .setDescription('API documentation for STTF Backend')
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'Authorization',
+          description: 'Enter Firebase JWT token',
+          in: 'header',
+        },
+        'firebase-auth',
+      )
+      .build();
+    const document = SwaggerModule.createDocument(httpApp, config);
+    SwaggerModule.setup('api', httpApp, document);
+    console.log(
+      `Swagger documentation available at http://localhost:${process.env.APP_PORT || 5000}/api`,
+    );
+  } else {
+    console.log('Production mode: Swagger documentation is disabled');
+  }
 
   // Start HTTP server
   await httpApp.listen(process.env.APP_PORT || 5000, '0.0.0.0');
