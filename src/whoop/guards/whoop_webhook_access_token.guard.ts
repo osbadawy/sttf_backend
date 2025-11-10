@@ -68,7 +68,11 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
     const now = new Date();
     // If access token expires less than 5 minuts from now
     if (access && access.expires_at < new Date(now.getTime() + 5 * 60 * 1000)) {
-      access = await this.refreshAccessToken(access, access.user_id, whoopAccessId);
+      access = await this.refreshAccessToken(
+        access,
+        access.user_id,
+        whoopAccessId,
+      );
     }
 
     (req as Request & { whoop_access: WhoopAccessTokens }).whoop_access =
