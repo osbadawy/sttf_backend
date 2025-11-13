@@ -7,6 +7,8 @@ import {
   UseGuards,
   Query,
   Req,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,10 +24,11 @@ import {
   SignUpBodyRequest,
   GetPlayerDayPlanQuery,
   PatchUserBodyRequest,
+  CreatePlayerBodyRequest,
 } from '../dtos/request.dtos';
 import { UserAccessGuard } from 'src/auth/user-access.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { IgnoreRoles } from 'src/auth/roles.decorator';
+import { IgnoreRoles, Roles } from 'src/auth/roles.decorator';
 import { DbUser } from 'src/auth/db-user.decorator';
 import { User } from '../models/user.model';
 import { validatePlayerFirebaseId } from 'src/auth/auth.utils';
@@ -164,5 +167,37 @@ export class UserController {
       req.user.email,
       body.access,
     );
+  }
+
+  @Post('/player/create')
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
+  @Roles('admin', 'coach')
+  @ApiOperation({
+    summary: 'Create a new player',
+    description:
+      '**Roles:** All authenticated users (admin, coach)\n\n' +
+      '**Access:** Admin can create a new player by specifying their firebase_id',
+  })
+  @ApiResponse({ status: 200, description: 'Player created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Player not found' })
+  async createPlayer(@Body() body: CreatePlayerBodyRequest) {
+    return await this.userService.createPlayer(body);
+  }
+
+  @Delete('/:firebase_id')
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
+  @Roles('admin', 'coach')
+  @ApiOperation({
+    summary: 'Delete user by Firebase UID',
+    description:
+      '**Roles:** All authenticated users (admin)\n\n' +
+      '**Access:** Admin can delete any user by specifying their firebase_id',
+  })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async deleteUser(@Param('firebase_id') firebase_id: string) {
+    return await this.userService.deleteUser(firebase_id);
   }
 }

@@ -11,10 +11,9 @@ import { WhoopUser } from '../models/whoop_user.model';
 import { WhoopAccess } from '../models/whoop_access.model';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
-import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
 
-import { WhoopAccessTokens, WhoopTokenResponse } from '../dtos/whoop_user.dto';
+import { WhoopAccessTokens } from '../dtos/whoop_user.dto';
 
 /**
 #1 if session.whoop_access_token exists, use session to get access token information
@@ -139,63 +138,26 @@ export class WhoopWebhookAccessTokenGuard implements CanActivate {
   ): Promise<WhoopAccessTokens> {
     const { refresh_token } = access;
     try {
-      // Get credentials from database
-      const whoopAccess = await this.whoopAccessModel.findByPk(whoop_access_id);
-      if (!whoopAccess) {
-        throw new Error('Whoop access credentials not found');
+      // Use the utility method from WhoopUserService to refresh the token
+      await this.whoopUserService.refreshWhoopAccessToken(
+        refresh_token,
+        user_id,
+        whoop_access_id,
+      );
+
+      // Get the updated token information from database
+      const whoopUser = await this.whoopUserModel.findOne({
+        where: { user_id },
+      });
+      if (!whoopUser) {
+        throw new Error('Whoop user not found');
       }
 
-      const client_id = this.cryptoUtil.simpleDecrypt(
-        whoopAccess.client_id_encrypted,
-      );
-      const client_secret = this.cryptoUtil.simpleDecrypt(
-        whoopAccess.client_secret_encrypted,
+      const updatedAccess = await this.getAccessFromDatabase(
+        whoopUser.id.toString(),
       );
 
-      const response = await firstValueFrom(
-        this.httpService.post<WhoopTokenResponse>(
-          process.env.WHOOP_TOKEN_URL!,
-          {
-            grant_type: 'refresh_token',
-            refresh_token: refresh_token,
-            client_id: client_id,
-            client_secret: client_secret,
-            scope:
-              'read:profile read:body_measurement read:cycles read:workout read:sleep read:recovery offline',
-          },
-          {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          },
-        ),
-      );
-
-      console.log('One');
-
-      await this.whoopUserService.createWhoopUser({
-        id: response.data.user_id,
-        user_filter: { id: user_id },
-        access_token: response.data.access_token,
-        refresh_token: response.data.refresh_token,
-        scope: response.data.scope,
-        expires_at: new Date(Date.now() + response.data.expires_in * 1000),
-        whoop_access_id: whoop_access_id,
-      });
-
-      console.log('Two');
-
-      const whoopAccessTokens: WhoopAccessTokens = {
-        access_token: response.data.access_token,
-        refresh_token: response.data.refresh_token,
-        expires_at: new Date(Date.now() + response.data.expires_in * 1000),
-        scope: response.data.scope,
-        user_id: user_id,
-      };
-
-      console.log('Three');
-
-      return whoopAccessTokens;
+      return updatedAccess;
     } catch (error) {
       console.error('Error refreshing access token:', error);
       throw new Error('Failed to refresh access token');

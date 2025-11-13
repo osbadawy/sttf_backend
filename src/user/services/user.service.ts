@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import { User } from '../models/user.model';
 import { PlayerStats } from '../models/player_stats.model';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 import { playerWithPlansData } from '../dtos/response.dtos';
-import type { GetPlayerDayPlanQuery } from '../dtos/request.dtos';
+import type {
+  CreatePlayerBodyRequest,
+  GetPlayerDayPlanQuery,
+} from '../dtos/request.dtos';
 import { PatchUserBodyRequest } from '../dtos/request.dtos';
 import { PlannedActivityService } from 'src/planned_activity/planned_activity.service';
 import { PlannedActivity } from 'src/planned_activity/models/planned_activity.model';
@@ -13,8 +18,13 @@ import { Meal } from 'src/meal/models/meal.model';
 import { PlayerSelfAssessmentService } from './player_self_assessment.service';
 import type { UserAccess } from '../models/user.model';
 import { CoachAssessmentService } from './coach_assessment.service';
+import { WhoopUser } from 'src/whoop/models/whoop_user.model';
+import { WhoopUserService } from 'src/whoop/services/user.service';
+import type * as admin from 'firebase-admin';
+import { FIREBASE_ADMIN } from 'src/auth/firebase-admin.provider';
 
 const userAttributesToReturn = [
+  'firebase_id',
   'email',
   'avatar_url',
   'access',
@@ -34,10 +44,17 @@ const playerStatsAttributesToReturn = [
   'height_cm',
 ];
 
+const whoopUserAttributesToReturn = ['id', 'email', 'first_name', 'last_name'];
+
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User) private readonly userModel: typeof User,
+    @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
+    @Inject(forwardRef(() => WhoopUserService))
+    private readonly whoopUserService: WhoopUserService,
+    @Inject(FIREBASE_ADMIN) private readonly firebaseAdmin: typeof admin,
+    private readonly httpService: HttpService,
     private readonly plannedActivityService: PlannedActivityService,
     private readonly mealService: MealService,
     private readonly playerSelfAssessmentService: PlayerSelfAssessmentService,
@@ -68,6 +85,12 @@ export class UserService {
         {
           model: PlayerStats,
           attributes: playerStatsAttributesToReturn,
+        },
+        {
+          model: WhoopUser,
+          as: 'whoop_user',
+          required: false,
+          attributes: whoopUserAttributesToReturn,
         },
       ],
     });
@@ -175,6 +198,7 @@ export class UserService {
 
       const playerData: playerWithPlansData = {
         id: player.firebase_id,
+        email: player.email,
         display_name: player.display_name,
         age: age,
         readiness: 0,
@@ -317,5 +341,139 @@ export class UserService {
     });
 
     return dayPlan;
+  }
+
+  async createPlayer({ email, password }: CreatePlayerBodyRequest) {
+    // Check if user with this email already exists in database
+    const existingUser = await this.userModel.findOne({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new Error('User with this email already exists in database');
+    }
+
+    let firebaseUser: admin.auth.UserRecord | undefined;
+    let userWasCreated = false;
+
+    try {
+      // First, create a Firebase user with the provided email and password
+      firebaseUser = await this.firebaseAdmin.auth().createUser({
+        email,
+        password,
+        emailVerified: false,
+      });
+      userWasCreated = true;
+    } catch (error: unknown) {
+      // If user already exists in Firebase, get the existing user instead
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'auth/email-already-exists'
+      ) {
+        try {
+          firebaseUser = await this.firebaseAdmin.auth().getUserByEmail(email);
+        } catch (getUserError) {
+          const errorMessage =
+            getUserError instanceof Error
+              ? getUserError.message
+              : 'Failed to get existing Firebase user';
+          throw new Error(
+            `Failed to get existing Firebase user: ${errorMessage}`,
+          );
+        }
+      } else {
+        // Handle other Firebase errors
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to create Firebase user';
+        throw new Error(`Firebase user creation failed: ${errorMessage}`);
+      }
+    }
+
+    if (!firebaseUser) {
+      throw new Error('Firebase user was not created or retrieved');
+    }
+
+    try {
+      // Then, add the user to the database with the Firebase UID
+      const user = await this.userModel.create({
+        firebase_id: firebaseUser.uid,
+        email,
+        access: 'player' as UserAccess,
+      } as User);
+
+      // Send password reset email to the user
+      try {
+        await this.sendPasswordResetEmail(email);
+      } catch (emailError) {
+        // Log the error but don't fail the user creation
+        console.error('Failed to send password reset email:', emailError);
+        // User is still created successfully, just the email failed
+      }
+
+      return user;
+    } catch (error) {
+      // If database creation fails, clean up the Firebase user only if we created it
+      if (userWasCreated && firebaseUser) {
+        try {
+          await this.firebaseAdmin.auth().deleteUser(firebaseUser.uid);
+        } catch (deleteError) {
+          // Log but don't throw - the main error is more important
+          console.error('Failed to clean up Firebase user:', deleteError);
+        }
+      }
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create database user';
+      throw new Error(`Database user creation failed: ${errorMessage}`);
+    }
+  }
+
+  private async sendPasswordResetEmail(email: string): Promise<void> {
+    const apiKey = process.env.FIREBASE_API_KEY;
+    if (!apiKey) {
+      throw new Error('FIREBASE_API_KEY is not configured');
+    }
+
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(url, {
+          requestType: 'PASSWORD_RESET',
+          email: email,
+        }),
+      );
+
+      if (!response.data) {
+        throw new Error('Failed to send password reset email');
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Password reset email failed: ${errorMessage}`);
+    }
+  }
+
+  async deleteUser(firebase_id: string) {
+    const user = await this.userModel.findOne({ where: { firebase_id } });
+    if (!user) throw new Error('User not found');
+
+    // Delete WhoopUser if it exists
+    const whoopUser = await this.whoopUserModel.findOne({
+      where: { user_id: user.id },
+    });
+    if (whoopUser) {
+      // Revoke access from Whoop OAuth servers
+      await this.whoopUserService.revokeWhoopUserAccess(whoopUser);
+      // Delete the local WhoopUser record
+      await whoopUser.destroy();
+    }
+
+    await user.destroy();
+    return { message: 'User deleted successfully' };
   }
 }

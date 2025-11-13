@@ -12,6 +12,7 @@ import {
   IsEmail,
   IsUrl,
   IsPhoneNumber,
+  MinLength,
 } from 'class-validator';
 import {
   SelfAssessmentOptions,
@@ -117,6 +118,20 @@ export class SignUpBodyRequest {
   @IsNotEmpty()
   access: UserAccess;
 }
+
+export class CreatePlayerBodyRequest {
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  password: string;
+}
+
 export class PatchUserBodyRequest {
   @ApiProperty()
   @IsString()

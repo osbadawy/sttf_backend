@@ -3,8 +3,11 @@ import { InjectModel } from '@nestjs/sequelize';
 import { WhoopUser } from 'src/whoop/models';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
-import { CreateWhoopUserParams } from 'src/whoop/dtos';
+import { CreateWhoopUserParams, WhoopTokenResponse } from 'src/whoop/dtos';
 import { WhoopCycleService, WhoopSleepService, WhoopRecoveryService } from './';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { WhoopAccess } from 'src/whoop/models/whoop_access.model';
 
 @Injectable()
 export class WhoopUserService {
@@ -18,6 +21,9 @@ export class WhoopUserService {
     @Inject(forwardRef(() => WhoopCycleService))
     private readonly whoopCycleService: WhoopCycleService,
     @InjectModel(User) private readonly userModel: typeof User,
+    private readonly httpService: HttpService,
+    @InjectModel(WhoopAccess)
+    private readonly whoopAccessModel: typeof WhoopAccess,
   ) {}
 
   async getWhoopUser(firebase_id: string) {
@@ -200,5 +206,104 @@ export class WhoopUserService {
     );
 
     return results;
+  }
+
+  /**
+   * Utility method to refresh a Whoop access token.
+   * Can be used by guards, services, or any other component that needs to refresh tokens.
+   *
+   * @param refresh_token - The refresh token to use for getting a new access token
+   * @param user_id - The user ID (UUID) to update in the database
+   * @param whoop_access_id - The WhoopAccess ID to get OAuth credentials from
+   * @returns The new access token string
+   */
+  async refreshWhoopAccessToken(
+    refresh_token: string,
+    user_id: string,
+    whoop_access_id: number,
+  ): Promise<string> {
+    // Get credentials from database
+    const whoopAccess = await this.whoopAccessModel.findByPk(whoop_access_id);
+    if (!whoopAccess) {
+      throw new Error('Whoop access credentials not found');
+    }
+
+    const client_id = this.cryptoUtil.simpleDecrypt(
+      whoopAccess.client_id_encrypted,
+    );
+    const client_secret = this.cryptoUtil.simpleDecrypt(
+      whoopAccess.client_secret_encrypted,
+    );
+
+    const response = await firstValueFrom(
+      this.httpService.post<WhoopTokenResponse>(
+        process.env.WHOOP_TOKEN_URL!,
+        {
+          grant_type: 'refresh_token',
+          refresh_token: refresh_token,
+          client_id: client_id,
+          client_secret: client_secret,
+          scope:
+            'read:profile read:body_measurement read:cycles read:workout read:sleep read:recovery offline',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
+      ),
+    );
+
+    // Update the whoopUser with new tokens
+    await this.createWhoopUser({
+      id: response.data.user_id,
+      user_filter: { id: user_id },
+      access_token: response.data.access_token,
+      refresh_token: response.data.refresh_token,
+      scope: response.data.scope,
+      expires_at: new Date(Date.now() + response.data.expires_in * 1000),
+      whoop_access_id: whoop_access_id,
+    });
+
+    return response.data.access_token;
+  }
+
+  async revokeWhoopUserAccess(whoopUser: WhoopUser): Promise<void> {
+    try {
+      let access_token = this.cryptoUtil.simpleDecrypt(
+        whoopUser.access_token_encrypted,
+      );
+
+      // Check if token is valid (not expired or expiring within 5 minutes)
+      const now = new Date();
+      if (
+        !whoopUser.expires_at ||
+        whoopUser.expires_at < new Date(now.getTime() + 5 * 60 * 1000)
+      ) {
+        // Token is expired or about to expire, refresh it
+        const refresh_token = this.cryptoUtil.simpleDecrypt(
+          whoopUser.refresh_token_encrypted,
+        );
+        access_token = await this.refreshWhoopAccessToken(
+          refresh_token,
+          whoopUser.user_id,
+          whoopUser.whoop_access_id,
+        );
+      }
+
+      // Make DELETE request to revoke access with valid token
+      await firstValueFrom(
+        this.httpService.delete(
+          'https://api.prod.whoop.com/developer/v2/user/access',
+          {
+            headers: { Authorization: `Bearer ${access_token}` },
+          },
+        ),
+      );
+    } catch (error) {
+      console.error('Error revoking Whoop user access:', error);
+      // Don't throw - we still want to delete the local record even if API call fails
+      // Log the error but continue with deletion
+    }
   }
 }
