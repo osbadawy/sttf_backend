@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import {
   WhoopUserService,
   WhoopCycleService,
@@ -30,8 +30,12 @@ const ALL_MODELS = Array.from(new Set([...Object.values(Models)])) as any[];
 import { CryptoUtil } from 'src/utils';
 
 @Module({
-  imports: [SequelizeModule.forFeature(ALL_MODELS), HttpModule, UserModule],
-  exports: [SequelizeModule],
+  imports: [
+    SequelizeModule.forFeature(ALL_MODELS),
+    HttpModule,
+    forwardRef(() => UserModule),
+  ],
+  exports: [SequelizeModule, WhoopUserService],
   providers: [
     WhoopUserService,
     WhoopCycleService,

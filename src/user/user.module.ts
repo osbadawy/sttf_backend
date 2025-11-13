@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import * as Models from './models';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { HttpModule } from '@nestjs/axios';
 import { UserController } from './controllers/user.controller';
 import { BodyCompositionController } from './controllers/body_composition.controller';
 import { PlayerSelfAssessmentController } from './controllers/player_self_assessment.controller';
@@ -21,6 +22,7 @@ import * as PlannedActivityModels from 'src/planned_activity/models';
 import { BodyCompositionService } from './services/body_composition.service';
 import { CoachAssessmentService } from './services/coach_assessment.service';
 import { PointsController } from './controllers/points.controller';
+import { WhoopModule } from 'src/whoop/whoop.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { PointsController } from './controllers/points.controller';
       WhoopWorkoutZoneDurations,
       WhoopUser,
     ]),
+    HttpModule,
+    forwardRef(() => WhoopModule),
   ],
   exports: [SequelizeModule, DailyPointsService],
   controllers: [
