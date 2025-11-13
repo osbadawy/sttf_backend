@@ -24,6 +24,7 @@ import type * as admin from 'firebase-admin';
 import { FIREBASE_ADMIN } from 'src/auth/firebase-admin.provider';
 
 const userAttributesToReturn = [
+  'firebase_id',
   'email',
   'avatar_url',
   'access',
@@ -42,6 +43,8 @@ const playerStatsAttributesToReturn = [
   'receive_win_percentage',
   'height_cm',
 ];
+
+const whoopUserAttributesToReturn = ['id', 'email', 'first_name', 'last_name'];
 
 @Injectable()
 export class UserService {
@@ -82,6 +85,12 @@ export class UserService {
         {
           model: PlayerStats,
           attributes: playerStatsAttributesToReturn,
+        },
+        {
+          model: WhoopUser,
+          as: 'whoop_user',
+          required: false,
+          attributes: whoopUserAttributesToReturn,
         },
       ],
     });
@@ -189,6 +198,7 @@ export class UserService {
 
       const playerData: playerWithPlansData = {
         id: player.firebase_id,
+        email: player.email,
         display_name: player.display_name,
         age: age,
         readiness: 0,
@@ -342,7 +352,8 @@ export class UserService {
       throw new Error('User with this email already exists in database');
     }
 
-    let firebaseUser;
+    let firebaseUser: admin.auth.UserRecord | undefined;
+    let userWasCreated = false;
 
     try {
       // First, create a Firebase user with the provided email and password
@@ -351,13 +362,38 @@ export class UserService {
         password,
         emailVerified: false,
       });
-    } catch (error) {
-      // Handle Firebase errors (e.g., email already exists in Firebase)
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create Firebase user';
-      throw new Error(`Firebase user creation failed: ${errorMessage}`);
+      userWasCreated = true;
+    } catch (error: unknown) {
+      // If user already exists in Firebase, get the existing user instead
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'auth/email-already-exists'
+      ) {
+        try {
+          firebaseUser = await this.firebaseAdmin.auth().getUserByEmail(email);
+        } catch (getUserError) {
+          const errorMessage =
+            getUserError instanceof Error
+              ? getUserError.message
+              : 'Failed to get existing Firebase user';
+          throw new Error(
+            `Failed to get existing Firebase user: ${errorMessage}`,
+          );
+        }
+      } else {
+        // Handle other Firebase errors
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to create Firebase user';
+        throw new Error(`Firebase user creation failed: ${errorMessage}`);
+      }
+    }
+
+    if (!firebaseUser) {
+      throw new Error('Firebase user was not created or retrieved');
     }
 
     try {
@@ -379,8 +415,15 @@ export class UserService {
 
       return user;
     } catch (error) {
-      // If database creation fails, clean up the Firebase user
-      await this.firebaseAdmin.auth().deleteUser(firebaseUser.uid);
+      // If database creation fails, clean up the Firebase user only if we created it
+      if (userWasCreated && firebaseUser) {
+        try {
+          await this.firebaseAdmin.auth().deleteUser(firebaseUser.uid);
+        } catch (deleteError) {
+          // Log but don't throw - the main error is more important
+          console.error('Failed to clean up Firebase user:', deleteError);
+        }
+      }
       const errorMessage =
         error instanceof Error
           ? error.message
