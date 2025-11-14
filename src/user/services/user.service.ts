@@ -50,6 +50,8 @@ const whoopUserAttributesToReturn = ['id', 'email', 'first_name', 'last_name'];
 export class UserService {
   constructor(
     @InjectModel(User) private readonly userModel: typeof User,
+    @InjectModel(PlayerStats)
+    private readonly playerStatsModel: typeof PlayerStats,
     @InjectModel(WhoopUser) private readonly whoopUserModel: typeof WhoopUser,
     @Inject(forwardRef(() => WhoopUserService))
     private readonly whoopUserService: WhoopUserService,
@@ -148,6 +150,14 @@ export class UserService {
     if (user) throw new Error('User already exists');
 
     user = await this.userModel.create({ firebase_id, email, access } as User);
+
+    // Create empty player stats entry if user is a player
+    if (access === 'player') {
+      await this.playerStatsModel.create({
+        user_id: user.id,
+      } as PlayerStats);
+    }
+
     return user;
   }
 
@@ -403,6 +413,11 @@ export class UserService {
         email,
         access: 'player' as UserAccess,
       } as User);
+
+      // Create empty player stats entry for the new player
+      await this.playerStatsModel.create({
+        user_id: user.id,
+      } as PlayerStats);
 
       // Send password reset email to the user
       try {
