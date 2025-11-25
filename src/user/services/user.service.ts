@@ -64,7 +64,6 @@ export class UserService {
   ) {}
 
   async getUser(firebase_id: string) {
-    console.log('firebase_id', firebase_id);
     const user = await this.userModel.findOne({
       where: { firebase_id },
       attributes: userAttributesToReturn,
@@ -161,6 +160,115 @@ export class UserService {
     return user;
   }
 
+  private async calculatePlayerReadiness(
+    player: User,
+    mealsYesterday: Meal[],
+    coachAssessmentsUsers: User[],
+  ): Promise<number> {
+    // [value (0-1), weight]
+    const readinessScoreParts: [number, number][] = [];
+
+    const cycleData = await this.whoopUserService.getSummaryForDateRange(
+      player.firebase_id,
+      new Date(),
+      1,
+    );
+
+    if (Object.keys(cycleData).length > 0) {
+      const d = Object.values(cycleData)[0];
+
+      const sleepScore = d.sleep.score;
+      const stressScore = 1 - d.basic.stress;
+      const idealStrain = 0.75;
+      const strainScore = 1 - Math.abs(d.basic.strain - idealStrain);
+
+      readinessScoreParts.push([sleepScore, 1]);
+      readinessScoreParts.push([stressScore, 1]);
+      readinessScoreParts.push([strainScore, 1]);
+    }
+
+    const mealsAssignedYesterday = mealsYesterday.filter((meal) =>
+      meal.players_assigned?.some(
+        (assignment) => assignment.assigned_to === player.id,
+      ),
+    );
+
+    const mealsCompletedYesterday = mealsAssignedYesterday.filter((meal) =>
+      meal.players_assigned?.some(
+        (assignment) => (assignment.completions?.length || 0) > 0,
+      ),
+    ).length;
+
+    const mealsCompletionRatio =
+      mealsCompletedYesterday / (mealsAssignedYesterday.length || 1);
+
+    readinessScoreParts.push([mealsCompletionRatio, 1]);
+
+    // Get yesterday's date for tiredness assessment
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const playerSelfAssessmentsYesterday =
+      await this.playerSelfAssessmentService.getPlayerSelfAssessmentsForDate({
+        firebase_id: player.firebase_id,
+        date: yesterday,
+      });
+
+    const tirednessAssessment = playerSelfAssessmentsYesterday.find(
+      (assessment) => assessment.assessment_type === 'tiredness',
+    );
+
+    if (tirednessAssessment && tirednessAssessment.score !== undefined) {
+      // Tiredness is inverse - lower tiredness means higher readiness
+      const tirednessScore = 1 - tirednessAssessment.score;
+      readinessScoreParts.push([tirednessScore, 1]);
+    }
+
+    // Get today's assessments for readiness assessment
+    const playerSelfAssessmentsToday =
+      await this.playerSelfAssessmentService.getPlayerSelfAssessmentsForDate({
+        firebase_id: player.firebase_id,
+        date: new Date(),
+      });
+
+    const readinessAssessment = playerSelfAssessmentsToday.find(
+      (assessment) => assessment.assessment_type === 'readiness',
+    );
+    if (readinessAssessment && readinessAssessment.score !== undefined) {
+      readinessScoreParts.push([readinessAssessment.score, 1]);
+    }
+
+    // Get coach assessment for this player
+    const coachAssessmentUser = coachAssessmentsUsers.find(
+      (user) => user.firebase_id === player.firebase_id,
+    );
+
+    if (coachAssessmentUser?.player_stats?.coach_assessments) {
+      const coachAssessments =
+        coachAssessmentUser.player_stats.coach_assessments;
+
+      if (coachAssessments.length > 0) {
+        const coachAssessment = coachAssessments[0]; // Get the first assessment
+        if (coachAssessment?.readiness_score !== undefined) {
+          readinessScoreParts.push([coachAssessment.readiness_score, 1]);
+        }
+      }
+    }
+
+    const totalWeightedScore = readinessScoreParts.reduce(
+      (acc, [value, weight]) => acc + value * weight,
+      0,
+    );
+    const totalWeight = readinessScoreParts.reduce(
+      (acc, [, weight]) => acc + weight,
+      0,
+    );
+    const finalReadiness =
+      totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
+
+    return finalReadiness;
+  }
+
   async getPlayersWeekPlans(): Promise<playerWithPlansData[]> {
     const players = await this.userModel.findAll({
       where: { access: 'player' },
@@ -189,8 +297,34 @@ export class UserService {
       users_assigned: players.map((player) => player.firebase_id),
     });
 
+    const startOfYesterday = new Date();
+    startOfYesterday.setHours(0, 0, 0, 0);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    const endOfYesterday = new Date();
+    endOfYesterday.setHours(23, 59, 59, 999);
+    endOfYesterday.setDate(endOfYesterday.getDate() - 1);
+
+    const mealsYesterday = await this.mealService.getMeals({
+      startDate: startOfYesterday,
+      endDate: endOfYesterday,
+      dayOfWeek: undefined,
+      users_assigned: players.map((player) => player.firebase_id),
+    });
+
+    const today = new Date();
+    const coachAssessmentsUsers =
+      await this.coachAssessmentService.getCoachAssessmentsForAllPlayersOnDay({
+        day: today,
+      });
+
     const data: playerWithPlansData[] = [];
     for (const player of players) {
+      const readiness = await this.calculatePlayerReadiness(
+        player,
+        mealsYesterday,
+        coachAssessmentsUsers,
+      );
+
       const anyPlannedActivities = plannedActivities.some((activity) =>
         activity.players_assigned?.some(
           (assignment) => assignment.assigned_to === player.id,
@@ -211,7 +345,7 @@ export class UserService {
         email: player.email,
         display_name: player.display_name,
         age: age,
-        readiness: 0,
+        readiness: readiness,
         meal: anyMeals ?? false,
         workout: anyPlannedActivities ?? false,
         nationality: player.nationality,

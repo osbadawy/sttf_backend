@@ -3,7 +3,11 @@ import { InjectModel } from '@nestjs/sequelize';
 import { WhoopUser } from 'src/whoop/models';
 import { User } from 'src/user/models/user.model';
 import { CryptoUtil } from 'src/utils';
-import { CreateWhoopUserParams, WhoopTokenResponse } from 'src/whoop/dtos';
+import {
+  CreateWhoopUserParams,
+  WhoopTokenResponse,
+  DateRangeSummary,
+} from 'src/whoop/dtos';
 import { WhoopCycleService, WhoopSleepService, WhoopRecoveryService } from './';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -138,11 +142,11 @@ export class WhoopUserService {
     };
   }
 
-  private async getSummaryForDateRange(
+  async getSummaryForDateRange(
     firebase_id: string,
     lastDay: Date,
     days: number,
-  ) {
+  ): Promise<DateRangeSummary> {
     const lastDayCopy = new Date(lastDay); // clone to avoid mutation
 
     const startDate = new Date(lastDayCopy);
