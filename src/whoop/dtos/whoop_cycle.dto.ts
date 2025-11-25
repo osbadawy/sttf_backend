@@ -120,3 +120,42 @@ export class WhoopCycleServiceResponseData extends ServiceResponseData {
 }
 
 export class WhoopCycleServiceResponse extends ServiceResponse<WhoopCycleServiceResponseData> {}
+
+export interface DaySummaryBasic {
+  performance: number;
+  stress: number;
+  strain: number;
+}
+
+export interface DaySummarySleepStageSummary {
+  total_in_bed_time_milli: number;
+  total_awake_time_milli: number;
+  total_no_data_time_milli: number;
+  total_light_sleep_time_milli: number;
+  total_slow_wave_sleep_time_milli: number;
+  total_rem_sleep_time_milli: number;
+  sleep_cycle_count: number;
+  disturbance_count: number;
+}
+
+export interface DaySummarySleep {
+  score: number;
+  durationMilli: number;
+  neededMilli: number;
+  stage_summary: DaySummarySleepStageSummary;
+}
+
+export interface DaySummaryHeart {
+  resting: number;
+  max: number;
+  avg: number;
+  hrv: number;
+}
+
+export interface DaySummary {
+  basic: DaySummaryBasic;
+  sleep: DaySummarySleep;
+  heart: DaySummaryHeart;
+}
+
+export type DateRangeSummary = Record<string, DaySummary>;
