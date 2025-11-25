@@ -260,7 +260,7 @@ export class UserService {
       0,
     );
     const totalWeight = readinessScoreParts.reduce(
-      (acc, [value, weight]) => acc + weight,
+      (acc, [, weight]) => acc + weight,
       0,
     );
     const finalReadiness =
@@ -340,7 +340,7 @@ export class UserService {
         ? new Date().getFullYear() - new Date(player.birth_date).getFullYear()
         : null;
 
-      const playerData: playerWithPlansData | any = {
+      const playerData: playerWithPlansData = {
         id: player.firebase_id,
         email: player.email,
         display_name: player.display_name,

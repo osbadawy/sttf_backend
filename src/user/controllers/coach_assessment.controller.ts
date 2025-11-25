@@ -31,7 +31,7 @@ export class CoachAssessmentController {
   ) {}
 
   @Post('/')
-  @Roles('coach')
+  @IgnoreRoles('player')
   @ApiOperation({
     summary: 'Create coach assessment (Coach only)',
     description:
