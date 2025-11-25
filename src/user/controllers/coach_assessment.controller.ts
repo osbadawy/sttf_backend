@@ -16,7 +16,6 @@ import {
   GetCoachAssessmentsForDate,
   GetCoachAssessmentsForAllPlayersOnDayQuery,
 } from '../dtos/request.dtos';
-import { Roles } from 'src/auth/roles.decorator';
 import { UserAccessGuard } from 'src/auth/user-access.guard';
 import { validatePlayerFirebaseId } from 'src/auth/auth.utils';
 import { IgnoreRoles } from 'src/auth/roles.decorator';
