@@ -7,7 +7,7 @@ import { PlayerStats } from '../models/player_stats.model';
 import { PlayerSelfAssessment } from '../models/player_self_assessment.model';
 import { playerWithPlansData } from '../dtos/response.dtos';
 import type {
-  CreatePlayerBodyRequest,
+  CreateUserBodyRequest,
   GetPlayerDayPlanQuery,
 } from '../dtos/request.dtos';
 import { PatchUserBodyRequest } from '../dtos/request.dtos';
@@ -96,6 +96,14 @@ export class UserService {
       ],
     });
     return players;
+  }
+
+  async getCoaches() {
+    const coaches = await this.userModel.findAll({
+      where: { access: 'coach' },
+      attributes: userAttributesToReturn,
+    });
+    return coaches;
   }
 
   async patchUserByPk(
@@ -487,7 +495,10 @@ export class UserService {
     return dayPlan;
   }
 
-  async createPlayer({ email, password }: CreatePlayerBodyRequest) {
+  async createUser(
+    { email, password }: CreateUserBodyRequest,
+    access: UserAccess,
+  ) {
     // Check if user with this email already exists in database
     const existingUser = await this.userModel.findOne({
       where: { email },
@@ -545,13 +556,15 @@ export class UserService {
       const user = await this.userModel.create({
         firebase_id: firebaseUser.uid,
         email,
-        access: 'player' as UserAccess,
+        access: access,
       } as User);
 
-      // Create empty player stats entry for the new player
-      await this.playerStatsModel.create({
-        user_id: user.id,
-      } as PlayerStats);
+      if (access === 'player') {
+        // Create empty player stats entry for the new player
+        await this.playerStatsModel.create({
+          user_id: user.id,
+        } as PlayerStats);
+      }
 
       // Send password reset email to the user
       try {

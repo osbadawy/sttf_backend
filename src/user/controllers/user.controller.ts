@@ -24,7 +24,7 @@ import {
   SignUpBodyRequest,
   GetPlayerDayPlanQuery,
   PatchUserBodyRequest,
-  CreatePlayerBodyRequest,
+  CreateUserBodyRequest,
 } from '../dtos/request.dtos';
 import { UserAccessGuard } from 'src/auth/user-access.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -73,6 +73,22 @@ export class UserController {
   })
   async getPlayers() {
     return await this.userService.getPlayers();
+  }
+
+  @Get('/coaches')
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({
+    summary: 'Get all coaches (Admin only)',
+    description:
+      '**Roles:** admin\n\n' +
+      '**Access:** Admin can retrieve information about all coaches',
+  })
+  @ApiResponse({ status: 200, description: 'Coaches retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Coaches not found' })
+  async getCoaches() {
+    return await this.userService.getCoaches();
   }
 
   @Patch()
@@ -180,9 +196,23 @@ export class UserController {
   })
   @ApiResponse({ status: 200, description: 'Player created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Player not found' })
-  async createPlayer(@Body() body: CreatePlayerBodyRequest) {
-    return await this.userService.createPlayer(body);
+  async createPlayer(@Body() body: CreateUserBodyRequest) {
+    return await this.userService.createUser(body, 'player');
+  }
+
+  @Post('/coach/create')
+  @UseGuards(FirebaseAuthGuard, UserAccessGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({
+    summary: 'Create a new coach',
+    description:
+      '**Roles:** All authenticated users (admin, coach)\n\n' +
+      '**Access:** Admin can create a new coach by specifying their firebase_id',
+  })
+  @ApiResponse({ status: 200, description: 'Coach created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async createCoach(@Body() body: CreateUserBodyRequest) {
+    return await this.userService.createUser(body, 'coach');
   }
 
   @Delete('/:firebase_id')

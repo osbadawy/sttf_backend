@@ -119,7 +119,7 @@ export class SignUpBodyRequest {
   access: UserAccess;
 }
 
-export class CreatePlayerBodyRequest {
+export class CreateUserBodyRequest {
   @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
