@@ -124,7 +124,7 @@ export class UserService {
       include: [
         {
           model: PlayerStats,
-          required: true,
+          required: false,
         },
       ],
     });
